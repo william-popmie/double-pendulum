@@ -5,113 +5,193 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Double Pendulum</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #000000;
+      --surface:      #0a0a0a;
+      --border:       rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.15);
+      --text:         #ededed;
+      --text-muted:   #666666;
+      --text-dim:     #333333;
+      --accent:       #ffffff;
+    }
 
     html { height: 100%; }
 
     body {
       height: 100%;
       width: 100%;
-      background: #0e0e14;
-      color: #ccc;
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 13px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Nav bar ──────────────────────────────────────────────────────────── */
+    /* ── Nav ───────────────────────────────────────────────────────────────── */
     #nav {
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      background: #111118;
-      border-bottom: 1px solid #2a2a3a;
+      gap: 2px;
+      padding: 0 16px;
+      height: 48px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
     }
 
-    #nav h1 {
-      font-size: 1rem;
-      font-weight: 500;
-      color: #dde;
-      letter-spacing: 0.04em;
-      margin-right: 12px;
+    #nav-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      margin-right: 16px;
       white-space: nowrap;
     }
 
     .tab-btn {
       background: transparent;
-      border: 1px solid transparent;
-      border-radius: 5px;
-      color: #888;
-      padding: 4px 14px;
+      border: none;
+      border-radius: 6px;
+      color: var(--text-muted);
+      padding: 6px 10px;
       cursor: pointer;
-      font-size: 12px;
-      transition: color 0.1s, background 0.1s;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 400;
+      white-space: nowrap;
+      transition: color 0.15s, background 0.15s;
+      position: relative;
     }
-    .tab-btn:hover { color: #ccc; background: #1e1e2e; }
-    .tab-btn.active {
-      color: #dde;
-      background: #1e1e2e;
-      border-color: #3a3a5a;
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .tab-btn.active { color: var(--text); }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 6px;
+      right: 6px;
+      height: 1px;
+      background: var(--text);
+      border-radius: 1px;
     }
+    .tab-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-    /* ── Shared control bar ───────────────────────────────────────────────── */
+    /* ── Control bar ───────────────────────────────────────────────────────── */
     .ctrl-bar {
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 6px 14px;
-      background: #141420;
-      border-bottom: 1px solid #2a2a3a;
-      flex-wrap: wrap;
+      gap: 6px;
+      padding: 0 16px;
+      height: 44px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: nowrap;
+      overflow-x: auto;
     }
 
-    .ctrl-label { color: #888; font-size: 11px; white-space: nowrap; }
-    .ctrl-spacer { flex: 1; }
+    .ctrl-sep {
+      width: 1px;
+      height: 16px;
+      background: var(--border-hover);
+      flex-shrink: 0;
+      margin: 0 4px;
+    }
+
+    .ctrl-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .ctrl-value {
+      color: var(--text);
+      font-size: 11px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      min-width: 20px;
+    }
+
+    .ctrl-spacer { flex: 1; min-width: 8px; }
 
     input[type="number"] {
-      width: 62px;
-      background: #1e1e2e;
-      border: 1px solid #3a3a5a;
-      border-radius: 4px;
-      color: #e0e0e0;
-      padding: 3px 6px;
+      width: 56px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 4px 8px;
       font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
     }
-    input[type="range"] { width: 90px; accent-color: #6699ff; }
+    input[type="number"]:focus { border-color: var(--border-hover); }
+    input[type="number"]::-webkit-inner-spin-button { opacity: 0.3; }
+
+    input[type="range"] {
+      width: 80px;
+      accent-color: var(--text);
+      cursor: pointer;
+    }
 
     select {
-      background: #1e1e2e;
-      border: 1px solid #3a3a5a;
-      border-radius: 4px;
-      color: #e0e0e0;
-      padding: 3px 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 4px 8px;
       font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
     }
+    select:focus { border-color: var(--border-hover); }
+    select option { background: #111; color: var(--text); }
 
     button {
-      background: #2a2a4a;
-      border: 1px solid #4a4a7a;
-      border-radius: 5px;
-      color: #ccd;
-      padding: 4px 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      padding: 5px 12px;
       cursor: pointer;
       font-size: 12px;
+      font-family: inherit;
+      font-weight: 400;
       white-space: nowrap;
-      transition: background 0.1s;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
-    button:hover { background: #3a3a6a; }
+    button:hover { color: var(--text); border-color: var(--border-hover); background: rgba(255,255,255,0.04); }
 
-    #playPauseBtn { background: #1e3a5f; border-color: #3a6a9a; min-width: 80px; }
-    #playPauseBtn:hover { background: #2a4a7a; }
+    #playPauseBtn {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06);
+      min-width: 78px;
+      font-weight: 500;
+    }
+    #playPauseBtn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); }
 
-    #energy { color: #88aaff; font-family: monospace; font-size: 11px; }
+    #energy {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
 
-    /* ── Pendulum page ────────────────────────────────────────────────────── */
+    /* ── Pendulum page ─────────────────────────────────────────────────────── */
     #page-pendulum {
       flex: 1;
       display: flex;
@@ -124,14 +204,14 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-      gap: 2px;
-      background: #1a1a28;
+      gap: 1px;
+      background: var(--border);
       min-height: 0;
     }
 
     .quad-cell {
       position: relative;
-      background: #0d0d18;
+      background: var(--bg);
       overflow: hidden;
     }
 
@@ -139,21 +219,24 @@
       display: block;
       width: 100%;
       height: 100%;
-      background: #0d0d18;
+      background: var(--bg);
     }
 
     .quad-label {
       position: absolute;
-      top: 5px;
-      left: 8px;
+      top: 10px;
+      left: 12px;
       font-size: 10px;
-      color: #444;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-dim);
       pointer-events: none;
       z-index: 1;
       user-select: none;
     }
 
-    /* ── Phase map page ───────────────────────────────────────────────────── */
+    /* ── Phase map page ────────────────────────────────────────────────────── */
     #page-phasemap {
       flex: 1;
       display: none;
@@ -166,40 +249,43 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #0d0d18;
+      background: var(--bg);
       min-height: 0;
       overflow: hidden;
+      padding: 24px;
     }
 
     #canvas-phasemap {
       display: block;
       image-rendering: pixelated;
       cursor: crosshair;
-      /* Size is driven by CSS via PhaseMapView resize; max fills the wrap */
       max-width: 100%;
       max-height: 100%;
       aspect-ratio: 1;
       width: auto;
       height: auto;
+      border-radius: 4px;
     }
 
     #no-gpu-msg {
-      color: #f88;
-      background: #2a1414;
-      border: 1px solid #5a2a2a;
-      border-radius: 6px;
-      padding: 20px 28px;
-      font-size: 14px;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px 32px;
+      font-size: 13px;
       text-align: center;
+      line-height: 1.6;
       display: none;
+      max-width: 360px;
     }
+    #no-gpu-msg strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 14px; }
   </style>
 </head>
 <body>
 
   <!-- ── Nav ── -->
   <nav id="nav">
-    <h1>Double Pendulum</h1>
+    <span id="nav-title">Double Pendulum</span>
     <button class="tab-btn active" id="tab-pendulum">Pendulum</button>
     <button class="tab-btn" id="tab-phasemap">Phase Map</button>
   </nav>
@@ -208,24 +294,29 @@
   <div id="page-pendulum">
 
     <div class="ctrl-bar">
-      <span class="ctrl-label">Pendulums</span>
+      <span class="ctrl-label">N</span>
       <input type="number" id="numPendulums" value="5" min="1" max="50" step="1" />
 
       <span class="ctrl-label">Δ°</span>
       <input type="number" id="deltaAngle" value="1" min="0.01" max="45" step="0.1" />
 
-      <button id="playPauseBtn">⏸  Pause</button>
-      <button id="resetBtn">↺  Reset</button>
+      <div class="ctrl-sep"></div>
+
+      <button id="playPauseBtn">⏸&thinsp;Pause</button>
+      <button id="resetBtn">↺&thinsp;Reset</button>
+
+      <div class="ctrl-sep"></div>
 
       <span class="ctrl-label">Show</span>
       <select id="showSelect"></select>
 
+      <div class="ctrl-sep"></div>
+
       <span class="ctrl-label">Speed</span>
       <input type="range" id="speed" min="1" max="100" value="10" />
-      <span id="speedLabel" style="color:#99aaff;min-width:20px;font-size:11px">10</span>
+      <span class="ctrl-value" id="speedLabel">10</span>
 
       <div class="ctrl-spacer"></div>
-      <span class="ctrl-label">E:</span>
       <span id="energy">—</span>
     </div>
 
@@ -254,14 +345,16 @@
     <div class="ctrl-bar">
       <span class="ctrl-label">Resolution</span>
       <select id="mapRes">
-        <option value="10">10×10</option>
-        <option value="25">25×25</option>
-        <option value="50">50×50</option>
-        <option value="100" selected>100×100</option>
-        <option value="200">200×200</option>
-        <option value="400">400×400</option>
-        <option value="600">600×600</option>
+        <option value="10">10 × 10</option>
+        <option value="25">25 × 25</option>
+        <option value="50">50 × 50</option>
+        <option value="100" selected>100 × 100</option>
+        <option value="200">200 × 200</option>
+        <option value="400">400 × 400</option>
+        <option value="600">600 × 600</option>
       </select>
+
+      <div class="ctrl-sep"></div>
 
       <span class="ctrl-label">Mode</span>
       <select id="mapMode">
@@ -269,17 +362,21 @@
         <option value="theta2">Live θ₂</option>
       </select>
 
+      <div class="ctrl-sep"></div>
+
       <span class="ctrl-label">Speed</span>
       <input type="range" id="mapSpeed" min="1" max="50" value="10" />
-      <span id="mapSpeedLabel" style="color:#99aaff;min-width:20px;font-size:11px">10</span>
+      <span class="ctrl-value" id="mapSpeedLabel">10</span>
 
+      <div class="ctrl-spacer"></div>
       <button id="mapResetView">Reset view</button>
     </div>
 
     <div id="phasemap-wrap">
       <canvas id="canvas-phasemap"></canvas>
       <div id="no-gpu-msg">
-        WebGPU not available.<br>Phase Map requires Chrome 113+ or another WebGPU-enabled browser.
+        <strong>WebGPU unavailable</strong>
+        Phase Map requires Chrome 113+ or another WebGPU-enabled browser.
       </div>
     </div>
 
