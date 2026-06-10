@@ -259,12 +259,11 @@
       display: block;
       image-rendering: pixelated;
       cursor: crosshair;
-      max-width: 100%;
-      max-height: 100%;
-      aspect-ratio: 1;
-      width: auto;
-      height: auto;
       border-radius: 4px;
+      /* CSS display size is fixed regardless of canvas pixel resolution.
+         nav=48px + ctrl=44px + wrap-padding=48px = 140px of non-canvas height. */
+      width: min(100%, calc(100vh - 140px));
+      aspect-ratio: 1;
     }
 
     #no-gpu-msg {
