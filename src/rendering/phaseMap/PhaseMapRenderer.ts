@@ -57,6 +57,16 @@ export class PhaseMapRenderer {
     });
   }
 
+  // Call after changing canvas dimensions (resolution change).
+  // Reconfigures the WebGPU context and invalidates the cached bind group.
+  reconfigure(canvas: HTMLCanvasElement): void {
+    this.width  = canvas.width;
+    this.height = canvas.height;
+    this.context = canvas.getContext('webgpu') as GPUCanvasContext;
+    this.context.configure({ device: this.device, format: this.canvasFormat, alphaMode: 'opaque' });
+    this.bindGroup = null;
+  }
+
   // Call this once after backend.init() and again after every backend.reinitialize().
   // Caches the bind group so render() doesn't recreate it every frame.
   setStateBuffer(stateBuffer: GPUBuffer): void {

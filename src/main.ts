@@ -1,81 +1,124 @@
-import { AppState } from './core/AppState';
-import { PaneManager } from './panes/PaneManager';
+import { PendulumView } from './views/PendulumView';
+import { PhaseMapView } from './views/PhaseMapView';
 import { getGPUDevice } from './rendering/device';
-import type { PaneType } from './panes/IPane';
-
-const DEG = Math.PI / 180;
+import type { ColorMode } from './core/types';
 
 async function init(): Promise<void> {
-  const container     = document.getElementById('paneContainer')  as HTMLElement;
-  const addPaneBtn    = document.getElementById('addPaneBtn')      as HTMLButtonElement;
-  const addPaneDialog = document.getElementById('addPaneDialog')   as HTMLDialogElement;
-  const playPauseBtn  = document.getElementById('playPauseBtn')    as HTMLButtonElement;
-  const speedRange    = document.getElementById('speed')           as HTMLInputElement;
-  const speedLabel    = document.getElementById('speedLabel')      as HTMLSpanElement;
-  const theta1Input   = document.getElementById('theta1')          as HTMLInputElement;
-  const theta2Input   = document.getElementById('theta2')          as HTMLInputElement;
-  const setProbeBtn   = document.getElementById('setProbeBtn')     as HTMLButtonElement;
-  const energyDisplay = document.getElementById('energy')          as HTMLSpanElement;
+  // ── DOM refs ──────────────────────────────────────────────────────────────
+  const tabPendulum  = document.getElementById('tab-pendulum')    as HTMLButtonElement;
+  const tabPhasemap  = document.getElementById('tab-phasemap')    as HTMLButtonElement;
+  const pagePendulum = document.getElementById('page-pendulum')   as HTMLElement;
+  const pagePhasemap = document.getElementById('page-phasemap')   as HTMLElement;
 
-  const appState = new AppState();
-  appState.setProbe(120 * DEG, -10 * DEG);
+  // Pendulum page controls
+  const numPendulumsInput = document.getElementById('numPendulums') as HTMLInputElement;
+  const deltaAngleInput   = document.getElementById('deltaAngle')   as HTMLInputElement;
+  const playPauseBtn      = document.getElementById('playPauseBtn') as HTMLButtonElement;
+  const resetBtn          = document.getElementById('resetBtn')     as HTMLButtonElement;
+  const showSelect        = document.getElementById('showSelect')   as HTMLSelectElement;
+  const speedRange        = document.getElementById('speed')        as HTMLInputElement;
+  const speedLabel        = document.getElementById('speedLabel')   as HTMLSpanElement;
+  const energyEl          = document.getElementById('energy')       as HTMLSpanElement;
 
-  // ── Toolbar wiring ────────────────────────────────────────────────────────
+  // Pendulum canvases
+  const pendCanvasEl  = document.getElementById('canvas-pendulum') as HTMLCanvasElement;
+  const phaseCanvasEl = document.getElementById('canvas-phase')    as HTMLCanvasElement;
+  const t1CanvasEl    = document.getElementById('canvas-t1')       as HTMLCanvasElement;
+  const t2CanvasEl    = document.getElementById('canvas-t2')       as HTMLCanvasElement;
+
+  // Phase map page controls
+  const mapResSelect  = document.getElementById('mapRes')          as HTMLSelectElement;
+  const mapModeSelect = document.getElementById('mapMode')         as HTMLSelectElement;
+  const mapSpeedRange = document.getElementById('mapSpeed')        as HTMLInputElement;
+  const mapSpeedLabel = document.getElementById('mapSpeedLabel')   as HTMLSpanElement;
+  const mapResetBtn   = document.getElementById('mapResetView')    as HTMLButtonElement;
+  const mapCanvasEl   = document.getElementById('canvas-phasemap') as HTMLCanvasElement;
+  const noGpuMsg      = document.getElementById('no-gpu-msg')      as HTMLElement;
+
+  // ── Pendulum view ─────────────────────────────────────────────────────────
+  const pendulumView = new PendulumView(
+    pendCanvasEl, phaseCanvasEl, t1CanvasEl, t2CanvasEl,
+    energyEl, showSelect,
+  );
 
   playPauseBtn.addEventListener('click', () => {
-    appState.paused = !appState.paused;
-    playPauseBtn.textContent = appState.paused ? '▶  Play' : '⏸  Pause';
+    pendulumView.paused = !pendulumView.paused;
+    playPauseBtn.textContent = pendulumView.paused ? '▶  Play' : '⏸  Pause';
+  });
+
+  resetBtn.addEventListener('click', () => pendulumView.reset());
+
+  numPendulumsInput.addEventListener('change', () => {
+    const n = parseInt(numPendulumsInput.value, 10);
+    if (n >= 1 && n <= 50) pendulumView.setNumPendulums(n);
+  });
+
+  deltaAngleInput.addEventListener('change', () => {
+    const d = parseFloat(deltaAngleInput.value);
+    if (d > 0) pendulumView.setDeltaAngleDeg(d);
   });
 
   speedRange.addEventListener('input', () => {
-    appState.stepsPerFrame = parseInt(speedRange.value, 10);
+    pendulumView.stepsPerFrame = parseInt(speedRange.value, 10);
     speedLabel.textContent = speedRange.value;
   });
 
-  setProbeBtn.addEventListener('click', () => {
-    const t1 = parseFloat(theta1Input.value) || 0;
-    const t2 = parseFloat(theta2Input.value) || 0;
-    appState.setProbe(t1 * DEG, t2 * DEG);
-  });
-
-  // ── +Pane dialog ──────────────────────────────────────────────────────────
-
-  addPaneBtn.addEventListener('click', () => addPaneDialog.showModal());
-
-  addPaneDialog.addEventListener('click', async (e) => {
-    const target = e.target as HTMLElement;
-    const type = target.dataset.paneType as PaneType | undefined;
-    if (type) {
-      addPaneDialog.close();
-      await paneManager.add(type);
-    }
-    if (target.id === 'closeDialog') addPaneDialog.close();
-  });
-
-  // ── Pane manager + default layout ─────────────────────────────────────────
-
+  // ── Phase map view ────────────────────────────────────────────────────────
   const device = await getGPUDevice();
-  const paneManager = new PaneManager(container, appState, device);
+  let phaseMapView: PhaseMapView | null = null;
 
-  await paneManager.add('pendulum');
-  await paneManager.add('phasePortrait');
-  if (device) await paneManager.add('phaseMap');
-  await paneManager.add('timeSeries');
+  if (device) {
+    phaseMapView = new PhaseMapView(mapCanvasEl, device);
+    await phaseMapView.initGPU();
 
-  // ── Animation loop ────────────────────────────────────────────────────────
+    mapResSelect.addEventListener('change', () => {
+      phaseMapView!.changeResolution(parseInt(mapResSelect.value, 10));
+    });
 
-  function loop(): void {
-    if (!appState.paused) {
-      for (let i = 0; i < appState.stepsPerFrame; i++) {
-        appState.stepProbe();
-      }
-      energyDisplay.textContent = appState.probeEnergy.toFixed(4) + ' J';
-    }
-    paneManager.render();
-    requestAnimationFrame(loop);
+    mapModeSelect.addEventListener('change', () => {
+      phaseMapView!.setColorMode(mapModeSelect.value as ColorMode);
+    });
+
+    mapSpeedRange.addEventListener('input', () => {
+      phaseMapView!.setStepsPerDispatch(parseInt(mapSpeedRange.value, 10));
+      mapSpeedLabel.textContent = mapSpeedRange.value;
+    });
+
+    mapResetBtn.addEventListener('click', () => phaseMapView!.resetView());
+  } else {
+    tabPhasemap.disabled = true;
+    tabPhasemap.title = 'WebGPU not available in this browser';
+    noGpuMsg.style.display = 'block';
+    mapCanvasEl.style.display = 'none';
   }
 
-  requestAnimationFrame(loop);
+  // ── Tab navigation ────────────────────────────────────────────────────────
+  let currentPage: 'pendulum' | 'phasemap' = 'pendulum';
+  pendulumView.activate();
+
+  function switchTo(page: 'pendulum' | 'phasemap'): void {
+    if (page === currentPage) return;
+    currentPage = page;
+
+    if (page === 'pendulum') {
+      pagePhasemap.style.display  = 'none';
+      pagePendulum.style.display  = 'flex';
+      tabPhasemap.classList.remove('active');
+      tabPendulum.classList.add('active');
+      phaseMapView?.deactivate();
+      pendulumView.activate();
+    } else {
+      pagePendulum.style.display  = 'none';
+      pagePhasemap.style.display  = 'flex';
+      tabPendulum.classList.remove('active');
+      tabPhasemap.classList.add('active');
+      pendulumView.deactivate();
+      phaseMapView?.activate();
+    }
+  }
+
+  tabPendulum.addEventListener('click', () => switchTo('pendulum'));
+  tabPhasemap.addEventListener('click', () => switchTo('phasemap'));
 }
 
 init();

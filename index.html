@@ -7,9 +7,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html {
-      height: 100%;
-    }
+    html { height: 100%; }
 
     body {
       height: 100%;
@@ -23,36 +21,60 @@
       overflow: hidden;
     }
 
-    /* ── Toolbar ─────────────────────────────────────────────────────── */
-    #toolbar {
+    /* ── Nav bar ──────────────────────────────────────────────────────────── */
+    #nav {
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 8px 16px;
+      gap: 8px;
+      padding: 6px 14px;
       background: #111118;
+      border-bottom: 1px solid #2a2a3a;
+    }
+
+    #nav h1 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #dde;
+      letter-spacing: 0.04em;
+      margin-right: 12px;
+      white-space: nowrap;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      color: #888;
+      padding: 4px 14px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: color 0.1s, background 0.1s;
+    }
+    .tab-btn:hover { color: #ccc; background: #1e1e2e; }
+    .tab-btn.active {
+      color: #dde;
+      background: #1e1e2e;
+      border-color: #3a3a5a;
+    }
+
+    /* ── Shared control bar ───────────────────────────────────────────────── */
+    .ctrl-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      background: #141420;
       border-bottom: 1px solid #2a2a3a;
       flex-wrap: wrap;
     }
 
-    #toolbar h1 {
-      font-size: 1.1rem;
-      font-weight: 500;
-      color: #dde;
-      letter-spacing: 0.04em;
-      white-space: nowrap;
-    }
-
-    .tb-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .tb-label { color: #888; font-size: 11px; }
+    .ctrl-label { color: #888; font-size: 11px; white-space: nowrap; }
+    .ctrl-spacer { flex: 1; }
 
     input[type="number"] {
-      width: 68px;
+      width: 62px;
       background: #1e1e2e;
       border: 1px solid #3a3a5a;
       border-radius: 4px;
@@ -60,7 +82,8 @@
       padding: 3px 6px;
       font-size: 12px;
     }
-    input[type="range"] { width: 100px; accent-color: #6699ff; }
+    input[type="range"] { width: 90px; accent-color: #6699ff; }
+
     select {
       background: #1e1e2e;
       border: 1px solid #3a3a5a;
@@ -75,193 +98,192 @@
       border: 1px solid #4a4a7a;
       border-radius: 5px;
       color: #ccd;
-      padding: 4px 14px;
+      padding: 4px 12px;
       cursor: pointer;
       font-size: 12px;
       white-space: nowrap;
-      transition: background 0.12s;
+      transition: background 0.1s;
     }
     button:hover { background: #3a3a6a; }
-    button:disabled { opacity: 0.45; cursor: default; }
 
-    #playPauseBtn { background: #1e3a5f; border-color: #3a6a9a; min-width: 88px; }
+    #playPauseBtn { background: #1e3a5f; border-color: #3a6a9a; min-width: 80px; }
     #playPauseBtn:hover { background: #2a4a7a; }
 
-    #addPaneBtn { background: #1e3a22; border-color: #3a7a44; }
-    #addPaneBtn:hover { background: #2a5a30; }
+    #energy { color: #88aaff; font-family: monospace; font-size: 11px; }
 
-    .energy-row { color: #888; font-size: 11px; }
-    #energy { color: #88aaff; font-family: monospace; }
-
-    .tb-spacer { flex: 1; }
-
-    /* ── Pane grid ───────────────────────────────────────────────────── */
-    #paneContainer {
+    /* ── Pendulum page ────────────────────────────────────────────────────── */
+    #page-pendulum {
       flex: 1;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 6px;
-      overflow: hidden;
-      align-content: flex-start;
-    }
-
-    .pane-wrapper {
-      flex: 1 1 calc(50% - 3px);
-      min-width: 260px;
-      min-height: 220px;
       display: flex;
       flex-direction: column;
-      background: #141420;
-      border: 1px solid #2a2a3a;
-      border-radius: 6px;
-      overflow: hidden;
+      min-height: 0;
     }
 
-    .pane-header {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px;
-      background: #1a1a28;
-      border-bottom: 1px solid #2a2a3a;
-      font-size: 11px;
-      color: #888;
-      min-height: 32px;
-    }
-
-    .pane-title { font-weight: 500; color: #aaa; white-space: nowrap; }
-
-    .pane-header-controls {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      color: #777;
-      flex-wrap: wrap;
-    }
-    .pane-header-controls select,
-    .pane-header-controls input[type="range"] { width: 80px; }
-    .pane-header-controls span { color: #88aaff; }
-
-    .pane-ctrl-btn {
-      padding: 2px 8px;
-      font-size: 11px;
-      background: #2a2a4a;
-      border-color: #4a4a7a;
-    }
-
-    .pane-close {
-      margin-left: auto;
-      flex-shrink: 0;
-      padding: 2px 7px;
-      font-size: 13px;
-      background: transparent;
-      border: none;
-      color: #666;
-      cursor: pointer;
-      border-radius: 3px;
-      line-height: 1;
-    }
-    .pane-close:hover { background: #3a1a1a; color: #f88; }
-
-    .pane-body {
+    #pendulum-grid {
       flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 2px;
+      background: #1a1a28;
+      min-height: 0;
+    }
+
+    .quad-cell {
       position: relative;
+      background: #0d0d18;
       overflow: hidden;
     }
-    .pane-body canvas {
-      position: absolute;
-      inset: 0;
+
+    .quad-cell canvas {
+      display: block;
       width: 100%;
       height: 100%;
+      background: #0d0d18;
     }
 
-    /* ── +Pane dialog ────────────────────────────────────────────────── */
-    #addPaneDialog {
-      background: #1a1a28;
-      border: 1px solid #3a3a5a;
-      border-radius: 10px;
-      color: #ccc;
-      padding: 20px 24px;
-      min-width: 260px;
-    }
-    #addPaneDialog::backdrop { background: rgba(0,0,0,0.6); }
-
-    #addPaneDialog h3 {
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 14px;
-      color: #dde;
+    .quad-label {
+      position: absolute;
+      top: 5px;
+      left: 8px;
+      font-size: 10px;
+      color: #444;
+      pointer-events: none;
+      z-index: 1;
+      user-select: none;
     }
 
-    .pane-picker {
-      display: flex;
+    /* ── Phase map page ───────────────────────────────────────────────────── */
+    #page-phasemap {
+      flex: 1;
+      display: none;
       flex-direction: column;
-      gap: 8px;
+      min-height: 0;
     }
 
-    .pane-picker button {
-      text-align: left;
-      padding: 8px 14px;
+    #phasemap-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0d0d18;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #canvas-phasemap {
+      display: block;
+      image-rendering: pixelated;
+      cursor: crosshair;
+      /* Size is driven by CSS via PhaseMapView resize; max fills the wrap */
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 1;
+      width: auto;
+      height: auto;
+    }
+
+    #no-gpu-msg {
+      color: #f88;
+      background: #2a1414;
+      border: 1px solid #5a2a2a;
       border-radius: 6px;
-      font-size: 13px;
-    }
-    .pane-picker button:hover { background: #2a3a5a; border-color: #4a6a9a; }
-
-    #closeDialog {
-      margin-top: 8px;
-      background: transparent;
-      border-color: #3a3a5a;
-      color: #888;
-      width: 100%;
+      padding: 20px 28px;
+      font-size: 14px;
       text-align: center;
+      display: none;
     }
   </style>
 </head>
 <body>
 
-  <div id="toolbar">
+  <!-- ── Nav ── -->
+  <nav id="nav">
     <h1>Double Pendulum</h1>
+    <button class="tab-btn active" id="tab-pendulum">Pendulum</button>
+    <button class="tab-btn" id="tab-phasemap">Phase Map</button>
+  </nav>
 
-    <div class="tb-group">
-      <span class="tb-label">θ₁ (°)</span>
-      <input type="number" id="theta1" value="120" min="-180" max="180" step="1" />
-      <span class="tb-label">θ₂ (°)</span>
-      <input type="number" id="theta2" value="-10" min="-180" max="180" step="1" />
-      <button id="setProbeBtn">Set</button>
-    </div>
+  <!-- ── Page 1: Pendulum ── -->
+  <div id="page-pendulum">
 
-    <div class="tb-group">
+    <div class="ctrl-bar">
+      <span class="ctrl-label">Pendulums</span>
+      <input type="number" id="numPendulums" value="5" min="1" max="50" step="1" />
+
+      <span class="ctrl-label">Δ°</span>
+      <input type="number" id="deltaAngle" value="1" min="0.01" max="45" step="0.1" />
+
       <button id="playPauseBtn">⏸  Pause</button>
-    </div>
+      <button id="resetBtn">↺  Reset</button>
 
-    <div class="tb-group">
-      <span class="tb-label">Speed</span>
+      <span class="ctrl-label">Show</span>
+      <select id="showSelect"></select>
+
+      <span class="ctrl-label">Speed</span>
       <input type="range" id="speed" min="1" max="100" value="10" />
-      <span id="speedLabel" style="color:#99aaff;min-width:22px">10</span>
+      <span id="speedLabel" style="color:#99aaff;min-width:20px;font-size:11px">10</span>
+
+      <div class="ctrl-spacer"></div>
+      <span class="ctrl-label">E:</span>
+      <span id="energy">—</span>
     </div>
 
-    <div class="tb-spacer"></div>
+    <div id="pendulum-grid">
+      <div class="quad-cell">
+        <span class="quad-label">Pendulum</span>
+        <canvas id="canvas-pendulum"></canvas>
+      </div>
+      <div class="quad-cell">
+        <span class="quad-label">Phase portrait  θ₁ vs θ₂</span>
+        <canvas id="canvas-phase"></canvas>
+      </div>
+      <div class="quad-cell">
+        <canvas id="canvas-t1"></canvas>
+      </div>
+      <div class="quad-cell">
+        <canvas id="canvas-t2"></canvas>
+      </div>
+    </div>
 
-    <div class="energy-row">E: <span id="energy">—</span></div>
-
-    <button id="addPaneBtn">+ Pane</button>
   </div>
 
-  <div id="paneContainer"></div>
+  <!-- ── Page 2: Phase Map ── -->
+  <div id="page-phasemap">
 
-  <dialog id="addPaneDialog">
-    <h3>Add Pane</h3>
-    <div class="pane-picker">
-      <button data-pane-type="pendulum">🔵  Pendulum animation</button>
-      <button data-pane-type="phasePortrait">📈  Phase portrait  θ₁ vs θ₂</button>
-      <button data-pane-type="phaseMap">🌈  Phase map  (WebGPU)</button>
-      <button data-pane-type="timeSeries">📉  Time series  θ(t)</button>
-      <button id="closeDialog">Cancel</button>
+    <div class="ctrl-bar">
+      <span class="ctrl-label">Resolution</span>
+      <select id="mapRes">
+        <option value="10">10×10</option>
+        <option value="25">25×25</option>
+        <option value="50">50×50</option>
+        <option value="100" selected>100×100</option>
+        <option value="200">200×200</option>
+        <option value="400">400×400</option>
+        <option value="600">600×600</option>
+      </select>
+
+      <span class="ctrl-label">Mode</span>
+      <select id="mapMode">
+        <option value="flipTime">Flip time</option>
+        <option value="theta2">Live θ₂</option>
+      </select>
+
+      <span class="ctrl-label">Speed</span>
+      <input type="range" id="mapSpeed" min="1" max="50" value="10" />
+      <span id="mapSpeedLabel" style="color:#99aaff;min-width:20px;font-size:11px">10</span>
+
+      <button id="mapResetView">Reset view</button>
     </div>
-  </dialog>
+
+    <div id="phasemap-wrap">
+      <canvas id="canvas-phasemap"></canvas>
+      <div id="no-gpu-msg">
+        WebGPU not available.<br>Phase Map requires Chrome 113+ or another WebGPU-enabled browser.
+      </div>
+    </div>
+
+  </div>
 
   <script type="module" src="/src/main.ts"></script>
 </body>
