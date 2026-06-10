@@ -2,7 +2,14 @@ import type { PendulumState } from '../core/types';
 
 const TWO_PI = Math.PI * 2;
 
-// Maps theta (radians, unbounded) into [-π, π] for display
+// Hard cap on stored trail points per pendulum.
+// When exceeded, the oldest TRIM_BATCH points are dropped (amortised O(1) per push).
+const MAX_TRAIL = 4000;
+const TRIM_BATCH = 500;
+
+// How many segments we actually render per trail (stride to keep Canvas 2D fast at high N).
+const MAX_RENDER_POINTS = 600;
+
 function wrap(angle: number): number {
   let a = angle % TWO_PI;
   if (a > Math.PI) a -= TWO_PI;
@@ -19,7 +26,6 @@ export class PhaseCanvas {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly w: number;
   private readonly h: number;
-  // Trail storage per pendulum: array of (wrapped theta1, wrapped theta2) pairs
   private trails: Array<[number, number][]> = [];
 
   constructor(canvas: HTMLCanvasElement) {
@@ -38,7 +44,11 @@ export class PhaseCanvas {
     while (this.trails.length < states.length) this.trails.push([]);
 
     for (let i = 0; i < states.length; i++) {
-      this.trails[i].push([wrap(states[i].theta1), wrap(states[i].theta2)]);
+      const trail = this.trails[i];
+      trail.push([wrap(states[i].theta1), wrap(states[i].theta2)]);
+      if (trail.length > MAX_TRAIL) {
+        trail.splice(0, TRIM_BATCH);
+      }
     }
   }
 
@@ -47,6 +57,8 @@ export class PhaseCanvas {
     this.drawAxes();
 
     const n = states.length;
+    const dotRadius = n <= 1 ? 3 : 2;
+
     for (let i = 0; i < n; i++) {
       const trail = this.trails[i];
       if (trail.length < 2) continue;
@@ -54,38 +66,42 @@ export class PhaseCanvas {
       const color = pendulumColor(i, n);
       this.ctx.strokeStyle = color;
       this.ctx.lineWidth = 1;
+
+      // Stride: never render more than MAX_RENDER_POINTS segments per trail
+      const stride = Math.max(1, Math.ceil(trail.length / MAX_RENDER_POINTS));
+
       this.ctx.beginPath();
+      let prevA1 = trail[0][0];
+      let prevA2 = trail[0][1];
+      const [sx0, sy0] = this.toScreen(prevA1, prevA2);
+      this.ctx.moveTo(sx0, sy0);
 
-      // Draw trail, breaking the line when the angle wraps
-      const [x0, y0] = this.toScreen(trail[0][0], trail[0][1]);
-      this.ctx.moveTo(x0, y0);
-
-      for (let j = 1; j < trail.length; j++) {
+      for (let j = stride; j < trail.length; j += stride) {
         const [a1, a2] = trail[j];
-        const [pa1, pa2] = trail[j - 1];
-        // Break line if wrapping occurred (jump > 3 radians)
-        if (Math.abs(a1 - pa1) > 3 || Math.abs(a2 - pa2) > 3) {
-          const [nx, ny] = this.toScreen(a1, a2);
-          this.ctx.moveTo(nx, ny);
+        const [sx, sy] = this.toScreen(a1, a2);
+        // Break the path when angle wraps across the ±180° boundary
+        if (Math.abs(a1 - prevA1) > 3 || Math.abs(a2 - prevA2) > 3) {
+          this.ctx.moveTo(sx, sy);
         } else {
-          const [nx, ny] = this.toScreen(a1, a2);
-          this.ctx.lineTo(nx, ny);
+          this.ctx.lineTo(sx, sy);
         }
+        prevA1 = a1;
+        prevA2 = a2;
       }
       this.ctx.stroke();
 
-      // Current point dot
+      // Current position dot
       const [cx, cy] = this.toScreen(wrap(states[i].theta1), wrap(states[i].theta2));
       this.ctx.fillStyle = color;
       this.ctx.beginPath();
-      this.ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      this.ctx.arc(cx, cy, dotRadius, 0, Math.PI * 2);
       this.ctx.fill();
     }
   }
 
   private toScreen(theta1: number, theta2: number): [number, number] {
     const pad = 30;
-    const range = Math.PI; // -π to π
+    const range = Math.PI;
     const sx = pad + ((theta1 + range) / (2 * range)) * (this.w - 2 * pad);
     const sy = (this.h - pad) - ((theta2 + range) / (2 * range)) * (this.h - 2 * pad);
     return [sx, sy];
@@ -103,10 +119,8 @@ export class PhaseCanvas {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Border
     ctx.strokeRect(pad, pad, w - 2 * pad, h - 2 * pad);
 
-    // Center crosshair (θ₁=0, θ₂=0)
     const [cx, cy] = this.toScreen(0, 0);
     ctx.setLineDash([3, 3]);
     ctx.beginPath();
@@ -115,7 +129,6 @@ export class PhaseCanvas {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Axis labels
     ctx.fillStyle = '#888';
     ctx.fillText('θ₁', w / 2, h - 8);
     ctx.save();
@@ -124,7 +137,6 @@ export class PhaseCanvas {
     ctx.fillText('θ₂', 0, 0);
     ctx.restore();
 
-    // Tick marks and degree labels at ±180 and 0
     const ticks: [number, string][] = [[-Math.PI, '−180°'], [0, '0°'], [Math.PI, '180°']];
     for (const [angle, label] of ticks) {
       const [tx] = this.toScreen(angle, 0);
