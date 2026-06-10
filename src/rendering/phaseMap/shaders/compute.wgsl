@@ -51,7 +51,6 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   if idx >= arrayLength(&states) / 8u { return; }
 
   let base = idx * 8u;
-  if states[base + 7u] > 0.5 { return; }  // frozen
 
   var s = vec4f(states[base], states[base + 1u], states[base + 2u], states[base + 3u]);
   var flipCount    = states[base + 4u];
@@ -68,18 +67,6 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       flipCount += 1.0;
       if firstFlipTime < 0.0 {
         firstFlipTime = elapsed;
-        if uni.freeze == 1u {
-          // Write back and freeze immediately
-          states[base]      = s.x;
-          states[base + 1u] = s.y;
-          states[base + 2u] = s.z;
-          states[base + 3u] = s.w;
-          states[base + 4u] = flipCount;
-          states[base + 5u] = firstFlipTime;
-          states[base + 6u] = elapsed;
-          states[base + 7u] = 1.0;
-          return;
-        }
       }
     }
   }

@@ -1,6 +1,8 @@
 import { PhaseMapBackend } from '../rendering/phaseMap/PhaseMapBackend';
 import { PhaseMapRenderer } from '../rendering/phaseMap/PhaseMapRenderer';
-import type { ColorMode, PhaseRegion } from '../core/types';
+import { PendulumCanvas } from '../rendering/pendulumCanvas';
+import { PhaseCanvas } from '../rendering/phaseCanvas';
+import type { ColorMode, PhaseRegion, PendulumState } from '../core/types';
 
 export class PhaseMapView {
   private backend!: PhaseMapBackend;
@@ -23,10 +25,39 @@ export class PhaseMapView {
   private lastY = 0;
   private reinitTimer = 0;
 
+  // Probe state
+  private readonly probePendulumCanvas: PendulumCanvas;
+  private readonly probePhaseCanvas: PhaseCanvas;
+  private readonly probePendulumEl: HTMLCanvasElement;
+  private readonly probePhaseEl: HTMLCanvasElement;
+  private readonly resizeObserver: ResizeObserver;
+  private stagingBuffer!: GPUBuffer;
+  private probeIndex: number | null = null;
+  private probeState: PendulumState | null = null;
+  private readInFlight = false;
+
   constructor(
     private readonly canvas: HTMLCanvasElement,
     private readonly device: GPUDevice,
-  ) {}
+    probePendulumEl: HTMLCanvasElement,
+    probePhaseEl: HTMLCanvasElement,
+  ) {
+    this.probePendulumEl     = probePendulumEl;
+    this.probePhaseEl        = probePhaseEl;
+    this.probePendulumCanvas = new PendulumCanvas(probePendulumEl);
+    this.probePhaseCanvas    = new PhaseCanvas(probePhaseEl);
+
+    this.resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const c = entry.target as HTMLCanvasElement;
+        const { width, height } = entry.contentRect;
+        c.width  = Math.max(1, Math.floor(width));
+        c.height = Math.max(1, Math.floor(height));
+      }
+    });
+    this.resizeObserver.observe(probePendulumEl);
+    this.resizeObserver.observe(probePhaseEl);
+  }
 
   async initGPU(): Promise<void> {
     this.canvas.width  = this.gridRes;
@@ -36,6 +67,12 @@ export class PhaseMapView {
     await this.backend.init(this.device, this.gridRes, this.gridRes, this.region);
     await this.renderer.init(this.device, this.canvas);
     this.renderer.setStateBuffer(this.backend.getStateBuffer());
+
+    this.stagingBuffer = this.device.createBuffer({
+      size: 8 * 4,  // 8 floats × 4 bytes — full pendulum state slot
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
+
     this.ready = true;
   }
 
@@ -64,6 +101,8 @@ export class PhaseMapView {
     clearTimeout(this.reinitTimer);
     this.backend?.destroy();
     this.renderer?.destroy();
+    this.stagingBuffer?.destroy();
+    this.resizeObserver.disconnect();
   }
 
   // ── Controls ──────────────────────────────────────────────────────────────
@@ -81,6 +120,8 @@ export class PhaseMapView {
     this.backend = new PhaseMapBackend();
     await this.backend.init(this.device, n, n, this.region);
     this.renderer.setStateBuffer(this.backend.getStateBuffer());
+    this.probeIndex = null;
+    this.probeState = null;
     this.ready = true;
   }
 
@@ -99,8 +140,59 @@ export class PhaseMapView {
       const freeze = this.colorMode === 'flipTime';
       this.backend.step(9.81, 0.005, this.stepsPerDispatch, freeze);
       this.renderer.render({ colorMode: this.colorMode, maxFlipTime: this.maxFlipTime });
+      this.fetchProbeState();
     }
+
+    if (this.probeState) {
+      this.probePendulumCanvas.draw([this.probeState], 1, 1, 'all');
+      this.probePhaseCanvas.addPoints([this.probeState]);
+      this.probePhaseCanvas.draw([this.probeState], 'all');
+    } else {
+      this.drawProbePlaceholder();
+    }
+
     this.rafId = requestAnimationFrame(() => this.loop());
+  }
+
+  private drawProbePlaceholder(): void {
+    for (const el of [this.probePendulumEl, this.probePhaseEl]) {
+      const ctx = el.getContext('2d')!;
+      const { width: w, height: h } = el;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('click phase map to probe', w / 2, h / 2);
+    }
+  }
+
+  // ── Probe ─────────────────────────────────────────────────────────────────
+
+  private probe(clientX: number, clientY: number): void {
+    const rect = this.canvas.getBoundingClientRect();
+    const i = Math.round(((clientX - rect.left) / rect.width)  * (this.gridRes - 1));
+    const j = Math.round(((clientY - rect.top)  / rect.height) * (this.gridRes - 1));
+    this.probeIndex = j * this.gridRes + i;
+    this.probeState = null;
+    this.probePhaseCanvas.reset(1);
+  }
+
+  private fetchProbeState(): void {
+    if (this.readInFlight || this.probeIndex === null) return;
+    this.readInFlight = true;
+    void this.doFetch(this.probeIndex);
+  }
+
+  private async doFetch(index: number): Promise<void> {
+    const enc = this.device.createCommandEncoder();
+    enc.copyBufferToBuffer(this.backend.getStateBuffer(), index * 32, this.stagingBuffer, 0, 32);
+    this.device.queue.submit([enc.finish()]);
+    await this.stagingBuffer.mapAsync(GPUMapMode.READ, 0, 32);
+    const f = new Float32Array(this.stagingBuffer.getMappedRange(0, 32));
+    this.probeState = { theta1: f[0], omega1: f[1], theta2: f[2], omega2: f[3] };
+    this.stagingBuffer.unmap();
+    this.readInFlight = false;
   }
 
   // ── Pan / zoom ────────────────────────────────────────────────────────────
@@ -111,6 +203,7 @@ export class PhaseMapView {
       if (!this.ready) return;
       this.backend.reinitialize(this.region);
       this.renderer.setStateBuffer(this.backend.getStateBuffer());
+      if (this.probeIndex !== null) this.probePhaseCanvas.reset(1);
     }, 200);
   }
 
@@ -141,8 +234,12 @@ export class PhaseMapView {
     };
   };
 
-  private onPointerUp = (): void => {
-    if (this.wasDragging) this.scheduleReinit();
+  private onPointerUp = (e: PointerEvent): void => {
+    if (this.wasDragging) {
+      this.scheduleReinit();
+    } else {
+      this.probe(e.clientX, e.clientY);
+    }
     this.wasDragging = false;
   };
 

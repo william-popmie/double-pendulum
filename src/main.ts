@@ -31,13 +31,15 @@ async function init(): Promise<void> {
   const t2CanvasEl    = document.getElementById('canvas-t2')       as HTMLCanvasElement;
 
   // Phase map page controls
-  const mapResSelect  = document.getElementById('mapRes')          as HTMLSelectElement;
-  const mapModeSelect = document.getElementById('mapMode')         as HTMLSelectElement;
-  const mapSpeedRange = document.getElementById('mapSpeed')        as HTMLInputElement;
-  const mapSpeedLabel = document.getElementById('mapSpeedLabel')   as HTMLSpanElement;
-  const mapResetBtn   = document.getElementById('mapResetView')    as HTMLButtonElement;
-  const mapCanvasEl   = document.getElementById('canvas-phasemap') as HTMLCanvasElement;
-  const noGpuMsg      = document.getElementById('no-gpu-msg')      as HTMLElement;
+  const mapResSelect      = document.getElementById('mapRes')               as HTMLSelectElement;
+  const mapModeSelect     = document.getElementById('mapMode')              as HTMLSelectElement;
+  const mapSpeedRange     = document.getElementById('mapSpeed')             as HTMLInputElement;
+  const mapSpeedLabel     = document.getElementById('mapSpeedLabel')        as HTMLSpanElement;
+  const mapResetBtn       = document.getElementById('mapResetView')         as HTMLButtonElement;
+  const mapCanvasEl       = document.getElementById('canvas-phasemap')      as HTMLCanvasElement;
+  const probePendulumEl   = document.getElementById('canvas-probe-pendulum') as HTMLCanvasElement;
+  const probePhaseEl      = document.getElementById('canvas-probe-phase')   as HTMLCanvasElement;
+  const noGpuMsg          = document.getElementById('no-gpu-msg')           as HTMLElement;
 
   // ── Pendulum view ─────────────────────────────────────────────────────────
   const pendulumView = new PendulumView(
@@ -86,7 +88,7 @@ async function init(): Promise<void> {
   let phaseMapView: PhaseMapView | null = null;
 
   if (device) {
-    phaseMapView = new PhaseMapView(mapCanvasEl, device);
+    phaseMapView = new PhaseMapView(mapCanvasEl, device, probePendulumEl, probePhaseEl);
     await phaseMapView.initGPU();
 
     mapResSelect.addEventListener('change', () => {

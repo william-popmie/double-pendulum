@@ -22,7 +22,7 @@ export class PhaseMapBackend {
 
     this.stateBuffer = device.createBuffer({
       size: n * 8 * 4,  // N × 8 floats × 4 bytes
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
 
     // Uniforms: g(f32), dt(f32), steps(u32), freeze(u32) = 16 bytes
