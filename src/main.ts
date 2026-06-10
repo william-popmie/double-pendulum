@@ -4,7 +4,7 @@ import { PendulumCanvas } from './rendering/pendulumCanvas';
 import { PhaseCanvas } from './rendering/phaseCanvas';
 import { Controls } from './ui/controls';
 import { DEFAULT_PHYSICS, DEFAULT_SIM } from './core/config';
-import type { PendulumState, SimConfig } from './core/types';
+import type { PendulumState } from './core/types';
 
 const DEG = Math.PI / 180;
 
@@ -30,38 +30,67 @@ function buildInitialStates(
 function init(): void {
   const pendulumEl = document.getElementById('pendulumCanvas') as HTMLCanvasElement;
   const phaseEl = document.getElementById('phaseCanvas') as HTMLCanvasElement;
+  const playPauseBtn = document.getElementById('playPauseBtn') as HTMLButtonElement;
 
   const pendulumRenderer = new PendulumCanvas(pendulumEl);
   const phaseRenderer = new PhaseCanvas(phaseEl);
   const controls = new Controls();
 
-  let cfg: SimConfig = { ...DEFAULT_SIM };
-  let initialStates = buildInitialStates(
-    controls.state.theta1Deg,
-    controls.state.theta2Deg,
-    controls.state.pendulumCount,
-    controls.state.spreadDeg,
+  let paused = true; // start paused so user can configure before running
+
+  function applyPauseUI(): void {
+    playPauseBtn.textContent = paused ? '▶  Play' : '⏸  Pause';
+  }
+
+  playPauseBtn.addEventListener('click', () => {
+    paused = !paused;
+    applyPauseUI();
+  });
+
+  let sim = new Simulation(
+    buildInitialStates(
+      controls.state.theta1Deg,
+      controls.state.theta2Deg,
+      controls.state.pendulumCount,
+      controls.state.spreadDeg,
+    ),
+    DEFAULT_PHYSICS,
+    DEFAULT_SIM,
   );
-  let sim = new Simulation(initialStates, DEFAULT_PHYSICS, cfg);
   phaseRenderer.reset(sim.states.length);
+  controls.setEnergy(totalEnergy(sim.states[0], DEFAULT_PHYSICS));
 
   controls.onReset = (s) => {
-    cfg = { ...DEFAULT_SIM, stepsPerFrame: s.stepsPerFrame };
-    initialStates = buildInitialStates(s.theta1Deg, s.theta2Deg, s.pendulumCount, s.spreadDeg);
-    sim = new Simulation(initialStates, DEFAULT_PHYSICS, cfg);
+    sim = new Simulation(
+      buildInitialStates(s.theta1Deg, s.theta2Deg, s.pendulumCount, s.spreadDeg),
+      DEFAULT_PHYSICS,
+      DEFAULT_SIM,
+    );
     phaseRenderer.reset(sim.states.length);
+    controls.setEnergy(totalEnergy(sim.states[0], DEFAULT_PHYSICS));
+    paused = true;
+    applyPauseUI();
   };
 
+  applyPauseUI();
+
   function loop(): void {
-    cfg.stepsPerFrame = controls.state.stepsPerFrame;
+    if (!paused) {
+      const steps = controls.state.stepsPerFrame;
 
-    sim.step();
-    phaseRenderer.addPoints(sim.states);
+      // Step physics + record phase point after EVERY RK4 step.
+      // Rendering happens only once below — phase trail is smooth regardless of speed.
+      for (let i = 0; i < steps; i++) {
+        sim.stepOnce();
+        phaseRenderer.addPoints(sim.states);
+      }
 
+      controls.setEnergy(totalEnergy(sim.states[0], DEFAULT_PHYSICS));
+    }
+
+    // Render once per animation frame whether paused or not
     pendulumRenderer.draw(sim.states, DEFAULT_PHYSICS.L1, DEFAULT_PHYSICS.L2);
     phaseRenderer.draw(sim.states);
-
-    controls.setEnergy(totalEnergy(sim.states[0], DEFAULT_PHYSICS));
 
     requestAnimationFrame(loop);
   }

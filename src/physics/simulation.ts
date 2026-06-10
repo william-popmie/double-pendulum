@@ -12,11 +12,11 @@ export class Simulation {
     this.cfg = cfg;
   }
 
-  step(): void {
-    for (let i = 0; i < this.cfg.stepsPerFrame; i++) {
-      for (let j = 0; j < this.states.length; j++) {
-        this.states[j] = rk4Step(this.states[j], this.params, this.cfg.dt);
-      }
+  // Advance every pendulum by exactly one RK4 step (dt).
+  // Call this in a loop from main.ts so phase points can be sampled after each step.
+  stepOnce(): void {
+    for (let j = 0; j < this.states.length; j++) {
+      this.states[j] = rk4Step(this.states[j], this.params, this.cfg.dt);
     }
   }
 
