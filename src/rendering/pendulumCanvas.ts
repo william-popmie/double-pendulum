@@ -16,13 +16,12 @@ function pendulumColor(index: number, total: number, alpha = 1): string {
 
 export class PendulumCanvas {
   private readonly ctx: CanvasRenderingContext2D;
-  private readonly cx: number;
-  private readonly cy: number;
+
+  private get cx(): number { return this.ctx.canvas.width / 2; }
+  private get cy(): number { return this.ctx.canvas.height * 0.25; }
 
   constructor(canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
-    this.cx = canvas.width / 2;
-    this.cy = canvas.height * 0.25;
   }
 
   draw(states: PendulumState[], L1: number, L2: number): void {

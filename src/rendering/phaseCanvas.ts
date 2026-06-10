@@ -24,14 +24,12 @@ function pendulumColor(index: number, total: number): string {
 
 export class PhaseCanvas {
   private readonly ctx: CanvasRenderingContext2D;
-  private readonly w: number;
-  private readonly h: number;
+  private get w(): number { return this.ctx.canvas.width; }
+  private get h(): number { return this.ctx.canvas.height; }
   private trails: Array<[number, number][]> = [];
 
   constructor(canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
-    this.w = canvas.width;
-    this.h = canvas.height;
   }
 
   reset(count: number): void {
