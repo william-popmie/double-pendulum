@@ -3,6 +3,14 @@ import { DEFAULT_SIM } from '../core/config';
 
 const PAD = { top: 20, right: 16, bottom: 36, left: 48 };
 const MAX_DRAW_PTS = 800;
+const TWO_PI = Math.PI * 2;
+
+function wrap(a: number): number {
+  a = a % TWO_PI;
+  if (a > Math.PI) a -= TWO_PI;
+  if (a < -Math.PI) a += TWO_PI;
+  return a;
+}
 
 function pendulumColor(index: number, total: number, alpha = 1): string {
   const hue = total <= 1 ? 200 : Math.round((index / total) * 300);
@@ -55,10 +63,17 @@ export class TimeSeriesCanvas {
       const stride = Math.max(1, Math.floor(trail.length / MAX_DRAW_PTS));
       ctx.beginPath();
       let first = true;
+      let prevAngle = 0;
       for (let j = 0; j < trail.length; j += stride) {
+        const angle = wrap(this.getAngle(trail[j]));
         const x = toX(j);
-        const y = toY(this.getAngle(trail[j]));
-        first ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        const y = toY(angle);
+        if (first || Math.abs(angle - prevAngle) > Math.PI) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+        prevAngle = angle;
         first = false;
       }
       ctx.stroke();

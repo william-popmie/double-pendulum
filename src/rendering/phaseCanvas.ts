@@ -2,12 +2,8 @@ import type { PendulumState } from '../core/types';
 
 const TWO_PI = Math.PI * 2;
 
-// Hard cap on stored trail points per pendulum.
-// When exceeded, the oldest TRIM_BATCH points are dropped (amortised O(1) per push).
 const MAX_TRAIL = 4000;
 const TRIM_BATCH = 500;
-
-// How many segments we actually render per trail (stride to keep Canvas 2D fast at high N).
 const MAX_RENDER_POINTS = 600;
 
 function wrap(angle: number): number {
@@ -17,9 +13,9 @@ function wrap(angle: number): number {
   return a;
 }
 
-function pendulumColor(index: number, total: number): string {
+function pendulumColor(index: number, total: number, alpha = 1): string {
   const hue = total <= 1 ? 200 : Math.round((index / total) * 300);
-  return `hsl(${hue},90%,65%)`;
+  return `hsla(${hue},90%,65%,${alpha})`;
 }
 
 export class PhaseCanvas {
@@ -50,22 +46,29 @@ export class PhaseCanvas {
     }
   }
 
-  draw(states: PendulumState[]): void {
+  draw(states: PendulumState[], highlight: number | 'all' = 'all'): void {
     this.ctx.clearRect(0, 0, this.w, this.h);
     this.drawAxes();
 
     const n = states.length;
     const dotRadius = n <= 1 ? 3 : 2;
 
-    for (let i = 0; i < n; i++) {
+    // Draw dimmed trails first, highlighted on top
+    const order = highlight === 'all'
+      ? Array.from({ length: n }, (_, i) => i)
+      : [...Array.from({ length: n }, (_, i) => i).filter(i => i !== highlight), highlight as number];
+
+    for (const i of order) {
       const trail = this.trails[i];
       if (trail.length < 2) continue;
 
-      const color = pendulumColor(i, n);
-      this.ctx.strokeStyle = color;
-      this.ctx.lineWidth = 1;
+      const isHighlighted = highlight === 'all' || highlight === i;
+      const alpha = isHighlighted ? 1 : 0.1;
+      const color = pendulumColor(i, n, alpha);
 
-      // Stride: never render more than MAX_RENDER_POINTS segments per trail
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = isHighlighted ? 1 : 0.8;
+
       const stride = Math.max(1, Math.ceil(trail.length / MAX_RENDER_POINTS));
 
       this.ctx.beginPath();
@@ -77,7 +80,6 @@ export class PhaseCanvas {
       for (let j = stride; j < trail.length; j += stride) {
         const [a1, a2] = trail[j];
         const [sx, sy] = this.toScreen(a1, a2);
-        // Break the path when angle wraps across the ±180° boundary
         if (Math.abs(a1 - prevA1) > 3 || Math.abs(a2 - prevA2) > 3) {
           this.ctx.moveTo(sx, sy);
         } else {
@@ -90,7 +92,7 @@ export class PhaseCanvas {
 
       // Current position dot
       const [cx, cy] = this.toScreen(wrap(states[i].theta1), wrap(states[i].theta2));
-      this.ctx.fillStyle = color;
+      this.ctx.fillStyle = pendulumColor(i, n, isHighlighted ? 1 : 0.15);
       this.ctx.beginPath();
       this.ctx.arc(cx, cy, dotRadius, 0, Math.PI * 2);
       this.ctx.fill();

@@ -1,13 +1,9 @@
 import { pendulumPositions } from '../physics/equations';
 import type { PendulumState } from '../core/types';
 
-const SCALE = 160; // pixels per meter
-const BOB_RADIUS = 12;
+const SCALE = 100;       // pixels per meter — reduced so full 2m reach fits comfortably
+const BOB_RADIUS = 8;
 const PIVOT_RADIUS = 5;
-
-// At high pendulum counts the rods become visual noise.
-// Above this threshold we switch to dot-only mode (just the lower bob).
-const DOT_MODE_THRESHOLD = 10;
 
 function pendulumColor(index: number, total: number, alpha = 1): string {
   const hue = total <= 1 ? 200 : Math.round((index / total) * 360);
@@ -18,23 +14,17 @@ export class PendulumCanvas {
   private readonly ctx: CanvasRenderingContext2D;
 
   private get cx(): number { return this.ctx.canvas.width / 2; }
-  private get cy(): number { return this.ctx.canvas.height * 0.25; }
+  private get cy(): number { return this.ctx.canvas.height * 0.22; }
 
   constructor(canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
   }
 
-  draw(states: PendulumState[], L1: number, L2: number): void {
+  draw(states: PendulumState[], L1: number, L2: number, highlight: number | 'all' = 'all'): void {
     const { ctx, cx, cy } = this;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    const n = states.length;
-
-    if (n > DOT_MODE_THRESHOLD) {
-      this.drawDotMode(states, L1, L2);
-    } else {
-      this.drawRodMode(states, L1, L2);
-    }
+    this.drawRodMode(states, L1, L2, highlight);
 
     // Pivot
     ctx.fillStyle = '#888';
@@ -43,24 +33,40 @@ export class PendulumCanvas {
     ctx.fill();
   }
 
-  // Full rod + bob rendering — used for N ≤ DOT_MODE_THRESHOLD
-  private drawRodMode(states: PendulumState[], L1: number, L2: number): void {
+  private drawRodMode(
+    states: PendulumState[],
+    L1: number,
+    L2: number,
+    highlight: number | 'all',
+  ): void {
     const { ctx, cx, cy } = this;
     const n = states.length;
-    const bobR = n <= 1 ? BOB_RADIUS : Math.max(4, BOB_RADIUS - n);
-    const lineW = n <= 1 ? 3 : 2;
+    const bobR = Math.max(3, BOB_RADIUS - Math.floor(n / 10));
+    const lineW = n <= 5 ? 2 : 1.5;
 
     // Ceiling mount
-    ctx.strokeStyle = '#444';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(cx - 30, cy); ctx.lineTo(cx + 30, cy);
+    ctx.moveTo(cx - 24, cy); ctx.lineTo(cx + 24, cy);
     ctx.stroke();
 
-    for (let i = 0; i < n; i++) {
+    // Draw dimmed pendulums first, highlighted on top
+    const order = highlight === 'all'
+      ? Array.from({ length: n }, (_, i) => i)
+      : [...Array.from({ length: n }, (_, i) => i).filter(i => i !== highlight), highlight];
+
+    for (const i of order) {
       const s = states[i];
       const { x1, y1, x2, y2 } = pendulumPositions(s, L1, L2);
-      const alpha = n <= 1 ? 1 : 0.2 + 0.8 * (i / (n - 1));
+
+      let alpha: number;
+      if (highlight === 'all') {
+        alpha = n <= 1 ? 1 : 0.25 + 0.75 * (i / (n - 1));
+      } else {
+        alpha = i === highlight ? 1 : 0.07;
+      }
+
       const color = pendulumColor(i, n, alpha);
 
       const sx1 = cx + x1 * SCALE;
@@ -86,27 +92,6 @@ export class PendulumCanvas {
 
       ctx.beginPath();
       ctx.arc(sx2, sy2, bobR, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // Dot-only rendering — used for N > DOT_MODE_THRESHOLD.
-  // Shows only the lower bob (bob 2) as a small colored dot.
-  // Gives a clean particle-cloud view of the diverging swarm.
-  private drawDotMode(states: PendulumState[], L1: number, L2: number): void {
-    const { ctx, cx, cy } = this;
-    const n = states.length;
-    const dotR = Math.max(2, 5 - Math.floor(n / 40));
-
-    for (let i = 0; i < n; i++) {
-      const { x2, y2 } = pendulumPositions(states[i], L1, L2);
-      const color = pendulumColor(i, n);
-      const sx2 = cx + x2 * SCALE;
-      const sy2 = cy - y2 * SCALE;
-
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(sx2, sy2, dotR, 0, Math.PI * 2);
       ctx.fill();
     }
   }

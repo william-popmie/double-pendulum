@@ -1,4 +1,5 @@
 import { PendulumView } from './views/PendulumView';
+import type { OffsetDirection } from './views/PendulumView';
 import { PhaseMapView } from './views/PhaseMapView';
 import { getGPUDevice } from './rendering/device';
 import type { ColorMode } from './core/types';
@@ -12,7 +13,10 @@ async function init(): Promise<void> {
 
   // Pendulum page controls
   const numPendulumsInput = document.getElementById('numPendulums') as HTMLInputElement;
+  const baseAngleInput    = document.getElementById('baseAngle')    as HTMLInputElement;
+  const baseAngle2Input   = document.getElementById('baseAngle2')   as HTMLInputElement;
   const deltaAngleInput   = document.getElementById('deltaAngle')   as HTMLInputElement;
+  const directionSelect   = document.getElementById('direction')    as HTMLSelectElement;
   const playPauseBtn      = document.getElementById('playPauseBtn') as HTMLButtonElement;
   const resetBtn          = document.getElementById('resetBtn')     as HTMLButtonElement;
   const showSelect        = document.getElementById('showSelect')   as HTMLSelectElement;
@@ -53,9 +57,23 @@ async function init(): Promise<void> {
     if (n >= 1 && n <= 50) pendulumView.setNumPendulums(n);
   });
 
+  baseAngleInput.addEventListener('change', () => {
+    const deg = parseFloat(baseAngleInput.value);
+    if (isFinite(deg)) pendulumView.setBaseAngleDeg(deg);
+  });
+
+  baseAngle2Input.addEventListener('change', () => {
+    const deg = parseFloat(baseAngle2Input.value);
+    if (isFinite(deg)) pendulumView.setBaseAngle2Deg(deg);
+  });
+
   deltaAngleInput.addEventListener('change', () => {
     const d = parseFloat(deltaAngleInput.value);
     if (d > 0) pendulumView.setDeltaAngleDeg(d);
+  });
+
+  directionSelect.addEventListener('change', () => {
+    pendulumView.setDirection(directionSelect.value as OffsetDirection);
   });
 
   speedRange.addEventListener('input', () => {

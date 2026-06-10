@@ -7,9 +7,10 @@ import { DEFAULT_PHYSICS, DEFAULT_SIM } from '../core/config';
 import type { PendulumState } from '../core/types';
 
 const DEG = Math.PI / 180;
-const BASE_THETA1 = 120 * DEG;
 const MAX_TRAIL = 4000;
 const TRIM_BATCH = 500;
+
+export type OffsetDirection = 'symmetric' | 'clockwise' | 'counterclockwise';
 
 export class PendulumView {
   private sim: Simulation;
@@ -17,6 +18,9 @@ export class PendulumView {
   private highlight: number | 'all' = 'all';
   private numPendulums: number;
   private deltaAngle: number;
+  private baseAngle: number;         // radians — θ₁ starting angle
+  private baseAngle2: number;        // radians — θ₂ starting angle
+  private direction: OffsetDirection;
 
   paused = false;
   stepsPerFrame = 10;
@@ -38,9 +42,15 @@ export class PendulumView {
     private readonly showSelect: HTMLSelectElement,
     initialN = 5,
     initialDeltaDeg = 1,
+    initialBaseAngleDeg = 120,
+    initialBaseAngle2Deg = -10,
+    initialDirection: OffsetDirection = 'symmetric',
   ) {
     this.numPendulums = initialN;
-    this.deltaAngle = initialDeltaDeg * DEG;
+    this.deltaAngle   = initialDeltaDeg * DEG;
+    this.baseAngle    = initialBaseAngleDeg * DEG;
+    this.baseAngle2   = initialBaseAngle2Deg * DEG;
+    this.direction    = initialDirection;
 
     this.pendulumCanvas = new PendulumCanvas(pendCanvasEl);
     this.phaseCanvas    = new PhaseCanvas(phaseCanvasEl);
@@ -71,18 +81,9 @@ export class PendulumView {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
-  activate(): void {
-    this.loop();
-  }
-
-  deactivate(): void {
-    cancelAnimationFrame(this.rafId);
-  }
-
-  destroy(): void {
-    this.deactivate();
-    this.resizeObserver.disconnect();
-  }
+  activate(): void  { this.loop(); }
+  deactivate(): void { cancelAnimationFrame(this.rafId); }
+  destroy(): void   { this.deactivate(); this.resizeObserver.disconnect(); }
 
   // ── Controls ──────────────────────────────────────────────────────────────
 
@@ -93,6 +94,21 @@ export class PendulumView {
 
   setDeltaAngleDeg(deg: number): void {
     this.deltaAngle = deg * DEG;
+    this.reset();
+  }
+
+  setBaseAngleDeg(deg: number): void {
+    this.baseAngle = deg * DEG;
+    this.reset();
+  }
+
+  setBaseAngle2Deg(deg: number): void {
+    this.baseAngle2 = deg * DEG;
+    this.reset();
+  }
+
+  setDirection(dir: OffsetDirection): void {
+    this.direction = dir;
     this.reset();
   }
 
@@ -108,12 +124,15 @@ export class PendulumView {
 
   private buildInitialStates(): PendulumState[] {
     const N = this.numPendulums;
-    return Array.from({ length: N }, (_, i) => ({
-      theta1: BASE_THETA1 + (i - Math.floor(N / 2)) * this.deltaAngle,
-      omega1: 0,
-      theta2: 0,
-      omega2: 0,
-    }));
+    return Array.from({ length: N }, (_, i) => {
+      let offset: number;
+      switch (this.direction) {
+        case 'clockwise':        offset =  i * this.deltaAngle; break;
+        case 'counterclockwise': offset = -i * this.deltaAngle; break;
+        default:                 offset = (i - Math.floor(N / 2)) * this.deltaAngle;
+      }
+      return { theta1: this.baseAngle + offset, omega1: 0, theta2: this.baseAngle2, omega2: 0 };
+    });
   }
 
   private initTrails(): void {
@@ -125,7 +144,7 @@ export class PendulumView {
   }
 
   private loop(): void {
-    if (!this.paused) {
+    if (!this.paused && this.stepsPerFrame > 0) {
       const N = this.numPendulums;
       for (let step = 0; step < this.stepsPerFrame; step++) {
         this.sim.stepOnce();
@@ -149,8 +168,8 @@ export class PendulumView {
   }
 
   private render(): void {
-    this.pendulumCanvas.draw(this.sim.states, 1, 1);
-    this.phaseCanvas.draw(this.sim.states);
+    this.pendulumCanvas.draw(this.sim.states, 1, 1, this.highlight);
+    this.phaseCanvas.draw(this.sim.states, this.highlight);
     this.t1Canvas.draw(this.trails, this.highlight);
     this.t2Canvas.draw(this.trails, this.highlight);
   }
@@ -165,7 +184,6 @@ export class PendulumView {
       opt.textContent = `Pendulum ${i + 1}`;
       sel.appendChild(opt);
     }
-    // Preserve current highlight if still in range
     if (typeof this.highlight === 'number' && this.highlight >= N) {
       this.highlight = 'all';
     }
