@@ -82,7 +82,6 @@ export class PhaseMapView {
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerup',   this.onPointerUp);
-    this.canvas.addEventListener('pointerleave', this.onPointerUp);
     this.canvas.addEventListener('wheel', this.onWheel, { passive: false });
     this.loop();
   }
@@ -92,7 +91,6 @@ export class PhaseMapView {
     this.canvas.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas.removeEventListener('pointermove', this.onPointerMove);
     this.canvas.removeEventListener('pointerup',   this.onPointerUp);
-    this.canvas.removeEventListener('pointerleave', this.onPointerUp);
     this.canvas.removeEventListener('wheel', this.onWheel);
   }
 
@@ -185,14 +183,19 @@ export class PhaseMapView {
   }
 
   private async doFetch(index: number): Promise<void> {
-    const enc = this.device.createCommandEncoder();
-    enc.copyBufferToBuffer(this.backend.getStateBuffer(), index * 32, this.stagingBuffer, 0, 32);
-    this.device.queue.submit([enc.finish()]);
-    await this.stagingBuffer.mapAsync(GPUMapMode.READ, 0, 32);
-    const f = new Float32Array(this.stagingBuffer.getMappedRange(0, 32));
-    this.probeState = { theta1: f[0], omega1: f[1], theta2: f[2], omega2: f[3] };
-    this.stagingBuffer.unmap();
-    this.readInFlight = false;
+    try {
+      const enc = this.device.createCommandEncoder();
+      enc.copyBufferToBuffer(this.backend.getStateBuffer(), index * 32, this.stagingBuffer, 0, 32);
+      this.device.queue.submit([enc.finish()]);
+      await this.stagingBuffer.mapAsync(GPUMapMode.READ, 0, 32);
+      const f = new Float32Array(this.stagingBuffer.getMappedRange(0, 32));
+      this.probeState = { theta1: f[0], omega1: f[1], theta2: f[2], omega2: f[3] };
+      this.stagingBuffer.unmap();
+    } catch {
+      // GPU error or buffer contention — ignore, retry next frame
+    } finally {
+      this.readInFlight = false;
+    }
   }
 
   // ── Pan / zoom ────────────────────────────────────────────────────────────

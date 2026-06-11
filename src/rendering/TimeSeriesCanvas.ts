@@ -2,7 +2,7 @@ import type { PendulumState } from '../core/types';
 import { DEFAULT_SIM } from '../core/config';
 
 const PAD = { top: 20, right: 16, bottom: 36, left: 48 };
-const MAX_DRAW_PTS = 800;
+const DISPLAY_WINDOW = 800;
 const TWO_PI = Math.PI * 2;
 
 function wrap(a: number): number {
@@ -38,33 +38,38 @@ export class TimeSeriesCanvas {
     const H = ctx.canvas.height;
     ctx.clearRect(0, 0, W, H);
 
-    const maxLen = trails.reduce((m, t) => Math.max(m, t.length), 0);
-    this.drawAxes(maxLen, W, H);
+    const maxLen    = trails.reduce((m, t) => Math.max(m, t.length), 0);
+    const startIdx  = Math.max(0, maxLen - DISPLAY_WINDOW);
+    const displayLen = maxLen - startIdx;   // grows 1..DISPLAY_WINDOW, then stays fixed
 
-    if (maxLen < 2) return;
+    this.drawAxes(displayLen, W, H);
+
+    if (displayLen < 2) return;
 
     const plotW = W - PAD.left - PAD.right;
     const plotH = H - PAD.top - PAD.bottom;
     const n = trails.length;
 
-    const toX = (idx: number): number => PAD.left + (idx / (maxLen - 1)) * plotW;
+    const toX = (idx: number): number =>
+      PAD.left + ((idx - startIdx) / (displayLen - 1)) * plotW;
     const toY = (angle: number): number =>
       PAD.top + plotH / 2 - (angle / Math.PI) * (plotH / 2);
 
     for (let i = 0; i < n; i++) {
       const trail = trails[i];
-      if (trail.length < 2) continue;
+      const trailStart = Math.max(startIdx, 0);
+      if (trail.length - trailStart < 2) continue;
 
       const isHighlighted = highlight === 'all' || highlight === i;
       const alpha = isHighlighted ? 1 : 0.15;
       ctx.strokeStyle = pendulumColor(i, n, alpha);
       ctx.lineWidth = isHighlighted ? 1.5 : 0.8;
 
-      const stride = Math.max(1, Math.floor(trail.length / MAX_DRAW_PTS));
+      const stride = Math.max(1, Math.floor(displayLen / DISPLAY_WINDOW));
       ctx.beginPath();
       let first = true;
       let prevAngle = 0;
-      for (let j = 0; j < trail.length; j += stride) {
+      for (let j = trailStart; j < trail.length; j += stride) {
         const angle = wrap(this.getAngle(trail[j]));
         const x = toX(j);
         const y = toY(angle);
