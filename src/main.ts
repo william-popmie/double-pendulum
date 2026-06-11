@@ -41,6 +41,7 @@ async function init(): Promise<void> {
   const probePendulumEl   = document.getElementById('canvas-probe-pendulum') as HTMLCanvasElement;
   const probePhaseEl      = document.getElementById('canvas-probe-phase')   as HTMLCanvasElement;
   const noGpuMsg          = document.getElementById('no-gpu-msg')           as HTMLElement;
+  const probeMapHint      = document.getElementById('probe-map-hint')       as HTMLElement;
 
   // ── Pendulum view ─────────────────────────────────────────────────────────
   const pendulumView = new PendulumView(
@@ -111,6 +112,10 @@ async function init(): Promise<void> {
       mapPlayPauseBtn.textContent = phaseMapView!.paused ? '▶ Play' : '⏸ Pause';
       mapPlayPauseBtn.className = phaseMapView!.paused ? 'btn-play' : 'btn-pause';
     });
+
+    mapCanvasEl.addEventListener('pointerdown', () => {
+      probeMapHint.classList.add('hidden');
+    }, { once: true });
 
     mapResetBtn.addEventListener('click', () => phaseMapView!.resetView());
   } else {

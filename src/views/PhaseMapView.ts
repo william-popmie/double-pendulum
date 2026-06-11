@@ -153,11 +153,14 @@ export class PhaseMapView {
       const ctx = el.getContext('2d')!;
       const { width: w, height: h } = el;
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = 'rgba(255,255,255,0.15)';
-      ctx.font = '12px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('click phase map to probe', w / 2, h / 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('→', w / 2, h / 2 - 18);
+      ctx.font = '12px monospace';
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillText('click map to probe', w / 2, h / 2 + 10);
     }
   }
 
