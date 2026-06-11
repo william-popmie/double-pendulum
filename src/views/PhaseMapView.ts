@@ -27,6 +27,11 @@ export class PhaseMapView {
   private lastX = 0;
   private lastY = 0;
   private reinitTimer = 0;
+  private dragStartX = 0;
+  private dragStartY = 0;
+  private zoomScale = 1;
+  private zoomOriginX = 0;
+  private zoomOriginY = 0;
 
   // Probe state
   private readonly probePendulumCanvas: PendulumCanvas;
@@ -199,10 +204,17 @@ export class PhaseMapView {
 
   // ── Pan / zoom ────────────────────────────────────────────────────────────
 
+  private clearVisualTransform(): void {
+    this.canvas.style.transform = '';
+    this.canvas.style.transformOrigin = '';
+    this.zoomScale = 1;
+  }
+
   private scheduleReinit(): void {
     clearTimeout(this.reinitTimer);
     this.reinitTimer = window.setTimeout(() => {
       if (!this.ready) return;
+      this.clearVisualTransform();
       this.backend.reinitialize(this.region);
       this.renderer.setStateBuffer(this.backend.getStateBuffer());
       if (this.probeIndex !== null) this.probePhaseCanvas.reset(1);
@@ -213,6 +225,8 @@ export class PhaseMapView {
     this.wasDragging = false;
     this.lastX = e.clientX;
     this.lastY = e.clientY;
+    this.dragStartX = e.clientX;
+    this.dragStartY = e.clientY;
     this.canvas.setPointerCapture(e.pointerId);
   };
 
@@ -234,6 +248,9 @@ export class PhaseMapView {
       theta2Min: this.region.theta2Min + dy * scaleY,
       theta2Max: this.region.theta2Max + dy * scaleY,
     };
+
+    this.canvas.style.transform =
+      `translate(${e.clientX - this.dragStartX}px, ${e.clientY - this.dragStartY}px)`;
   };
 
   private onPointerUp = (e: PointerEvent): void => {
@@ -268,6 +285,15 @@ export class PhaseMapView {
       theta2Max: pT2 + fracY * newH,
       theta2Min: pT2 - (1 - fracY) * newH,
     };
+
+    if (this.zoomScale === 1) {
+      this.zoomOriginX = px;
+      this.zoomOriginY = py;
+    }
+    this.zoomScale *= factor;
+    this.canvas.style.transformOrigin = `${this.zoomOriginX}px ${this.zoomOriginY}px`;
+    this.canvas.style.transform = `scale(${this.zoomScale})`;
+
     this.scheduleReinit();
   };
 }
