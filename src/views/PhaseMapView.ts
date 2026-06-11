@@ -18,7 +18,7 @@ export class PhaseMapView {
   private colorMode: ColorMode = 'theta2';
   private stepsPerDispatch = 10;
   private maxFlipTime = 50;
-  private gridRes = 100;
+  private gridRes = 800;
 
   paused = true;
 
