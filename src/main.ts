@@ -1,3 +1,4 @@
+import { inject } from '@vercel/analytics';
 import { PendulumView } from './views/PendulumView';
 import type { OffsetDirection } from './views/PendulumView';
 import { PhaseMapView } from './views/PhaseMapView';
@@ -154,5 +155,8 @@ async function init(): Promise<void> {
   tabPendulum.addEventListener('click', () => switchTo('pendulum'));
   tabPhasemap.addEventListener('click', () => switchTo('phasemap'));
 }
+
+// Initialize Vercel Web Analytics
+inject({ mode: 'production' });
 
 init();
