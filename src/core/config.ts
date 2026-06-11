@@ -15,3 +15,5 @@ export const DEFAULT_SIM: SimConfig = {
 
 export const TRAIL_MAX  = 4000;
 export const TRAIL_TRIM = 500;
+
+export const MAX_RENDER_POINTS = 600;

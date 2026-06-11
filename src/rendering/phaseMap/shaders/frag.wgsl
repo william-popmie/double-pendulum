@@ -1,4 +1,5 @@
-const PI: f32 = 3.14159265358979;
+const PI:     f32 = 3.14159265358979;
+const TWO_PI: f32 = 2.0 * PI;
 
 struct RenderParams {
   width:       u32,
@@ -38,7 +39,7 @@ fn fs_main(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
   if params.colorMode == 0u {
     // Live theta2 mode: map current angle to hue
     let theta2 = states[base + 2u];
-    let hue = fract(theta2 / (2.0 * PI) + 2.0);  // +2 ensures positive before fract
+    let hue = fract(theta2 / TWO_PI + 2.0);  // +2 ensures positive before fract
     return vec4f(hsv2rgb(hue, 0.9, 0.9), 1.0);
   } else {
     // Flip-time mode: colour = time until first flip, white = never flipped (stable)

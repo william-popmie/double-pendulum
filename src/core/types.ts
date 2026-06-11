@@ -26,3 +26,10 @@ export interface PhaseRegion {
 }
 
 export type ColorMode = 'theta2' | 'flipTime';
+
+export interface View {
+  paused: boolean;
+  activate(): void;
+  deactivate(): void;
+  destroy(): void;
+}

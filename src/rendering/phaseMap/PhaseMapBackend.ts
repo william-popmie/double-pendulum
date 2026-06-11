@@ -1,5 +1,6 @@
 import type { PhaseRegion } from '../../core/types';
 import computeShaderCode from './shaders/compute.wgsl';
+import reinitShaderCode from './shaders/reinit.wgsl';
 
 // GPU compute backend for the phase space map.
 // Owns the state buffer and compute pipeline.
@@ -10,6 +11,9 @@ export class PhaseMapBackend {
   private uniformBuffer!: GPUBuffer;
   private computePipeline!: GPUComputePipeline;
   private bindGroup!: GPUBindGroup;
+  private reinitPipeline!: GPUComputePipeline;
+  private reinitBindGroup!: GPUBindGroup;
+  private reinitUniform!: GPUBuffer;
   width = 0;
   height = 0;
 
@@ -53,55 +57,65 @@ export class PhaseMapBackend {
       ],
     });
 
+    // GPU-side reinit pipeline — replaces the CPU loop + 20MB writeBuffer
+    const reinitModule = device.createShaderModule({ code: reinitShaderCode });
+    this.reinitUniform = device.createBuffer({
+      size: 32,  // 4×f32 + 2×u32 + 2 pad = 32 bytes
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+    this.reinitPipeline = await device.createComputePipelineAsync({
+      layout: 'auto',
+      compute: { module: reinitModule, entryPoint: 'main' },
+    });
+    this.reinitBindGroup = device.createBindGroup({
+      layout: this.reinitPipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: { buffer: this.stateBuffer } },
+        { binding: 1, resource: { buffer: this.reinitUniform } },
+      ],
+    });
+
     this.reinitialize(region);
   }
 
-  // Write fresh initial conditions for every pixel, reset all tracking slots.
-  // Called on init and whenever the viewport region changes (zoom/pan).
+  // Reset all pendulum initial conditions to the new region via GPU compute.
+  // 32-byte uniform write + one dispatch replaces the old 640k JS loop + 20MB transfer.
   reinitialize(region: PhaseRegion): void {
-    const { theta1Min, theta1Max, theta2Min, theta2Max } = region;
-    const { width, height } = this;
-    const n = width * height;
-    const data = new Float32Array(n * 8);
-
-    for (let py = 0; py < height; py++) {
-      for (let px = 0; px < width; px++) {
-        const idx = py * width + px;
-        const base = idx * 8;
-        // θ₁ increases left→right, θ₂ increases bottom→top (screen y is inverted)
-        const theta1 = theta1Min + (px / (width  - 1)) * (theta1Max - theta1Min);
-        const theta2 = theta2Max - (py / (height - 1)) * (theta2Max - theta2Min);
-        data[base]     = theta1;
-        data[base + 1] = 0;   // omega1
-        data[base + 2] = theta2;
-        data[base + 3] = 0;   // omega2
-        data[base + 4] = 0;   // flipCount
-        data[base + 5] = -1;  // firstFlipTime sentinel
-        data[base + 6] = 0;   // elapsed
-        data[base + 7] = 0;   // frozen
-      }
-    }
-
-    this.device.queue.writeBuffer(this.stateBuffer, 0, data);
+    const u = new ArrayBuffer(32);
+    const f = new Float32Array(u);
+    const i = new Uint32Array(u);
+    f[0] = region.theta1Min;
+    f[1] = region.theta1Max;
+    f[2] = region.theta2Min;
+    f[3] = region.theta2Max;
+    i[4] = this.width;
+    i[5] = this.height;
+    this.device.queue.writeBuffer(this.reinitUniform, 0, u);
+    this.dispatchCompute(this.reinitPipeline, this.reinitBindGroup);
   }
 
   // Advance all pendulums by stepsPerDispatch RK4 steps.
   // freeze=true locks a pendulum after its first flip (used in flip-time mode).
   step(g: number, dt: number, stepsPerDispatch: number, freeze: boolean): void {
     const buf = new ArrayBuffer(16);
-    new Float32Array(buf)[0] = g;
-    new Float32Array(buf)[1] = dt;
-    new Uint32Array(buf)[2]  = stepsPerDispatch;
-    new Uint32Array(buf)[3]  = freeze ? 1 : 0;
+    const f = new Float32Array(buf);
+    const u = new Uint32Array(buf);
+    f[0] = g;
+    f[1] = dt;
+    u[2] = stepsPerDispatch;
+    u[3] = freeze ? 1 : 0;
     this.device.queue.writeBuffer(this.uniformBuffer, 0, buf);
+    this.dispatchCompute(this.computePipeline, this.bindGroup);
+  }
 
-    const encoder = this.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(this.computePipeline);
-    pass.setBindGroup(0, this.bindGroup);
-    pass.dispatchWorkgroups(Math.ceil((this.width * this.height) / 256));
+  private dispatchCompute(pipeline: GPUComputePipeline, bindGroup: GPUBindGroup): void {
+    const enc = this.device.createCommandEncoder();
+    const pass = enc.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatchWorkgroups(Math.ceil(this.width * this.height / 256));
     pass.end();
-    this.device.queue.submit([encoder.finish()]);
+    this.device.queue.submit([enc.finish()]);
   }
 
   // Expose buffer for zero-copy access by the renderer.
@@ -110,5 +124,6 @@ export class PhaseMapBackend {
   destroy(): void {
     this.stateBuffer.destroy();
     this.uniformBuffer.destroy();
+    this.reinitUniform?.destroy();
   }
 }

@@ -21,17 +21,19 @@ fn derivatives(s: vec4f, g: f32) -> vec4f {
   let t2 = s.z;
   let w2 = s.w;
 
-  let d = t1 - t2;
+  let d     = t1 - t2;
+  let sin_d = sin(d);
+  let cos_d = cos(d);
   let denom = 3.0 - cos(2.0 * d);
 
   let dw1 = (
     -3.0 * g * sin(t1)
     - g * sin(t1 - 2.0 * t2)
-    - 2.0 * sin(d) * (w2 * w2 + w1 * w1 * cos(d))
+    - 2.0 * sin_d * (w2 * w2 + w1 * w1 * cos_d)
   ) / denom;
 
   let dw2 = (
-    2.0 * sin(d) * (2.0 * w1 * w1 + 2.0 * g * cos(t1) + w2 * w2 * cos(d))
+    2.0 * sin_d * (2.0 * w1 * w1 + 2.0 * g * cos(t1) + w2 * w2 * cos_d)
   ) / denom;
 
   return vec4f(w1, dw1, w2, dw2);

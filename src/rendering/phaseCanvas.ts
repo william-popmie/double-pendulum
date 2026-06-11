@@ -1,9 +1,7 @@
 import type { PendulumState } from '../core/types';
-import { pendulumColor } from './colors';
+import { pendulumColor, drawOrder } from './colors';
 import { wrap } from '../core/math';
-import { TRAIL_MAX, TRAIL_TRIM } from '../core/config';
-
-const MAX_RENDER_POINTS = 600;
+import { TRAIL_MAX, TRAIL_TRIM, MAX_RENDER_POINTS } from '../core/config';
 
 export class PhaseCanvas {
   private readonly ctx: CanvasRenderingContext2D;
@@ -41,9 +39,7 @@ export class PhaseCanvas {
     const dotRadius = n <= 1 ? 3 : 2;
 
     // Draw dimmed trails first, highlighted on top
-    const order = highlight === 'all'
-      ? Array.from({ length: n }, (_, i) => i)
-      : [...Array.from({ length: n }, (_, i) => i).filter(i => i !== highlight), highlight as number];
+    const order = drawOrder(n, highlight);
 
     for (const i of order) {
       const trail = this.trails[i];

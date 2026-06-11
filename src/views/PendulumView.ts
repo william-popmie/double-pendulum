@@ -8,9 +8,9 @@ import { observeCanvasSize } from '../rendering/canvasResize';
 import { totalEnergy } from '../physics/equations';
 import { DEFAULT_PHYSICS, DEFAULT_SIM, TRAIL_MAX, TRAIL_TRIM } from '../core/config';
 import { DEG } from '../core/math';
-import type { PendulumState } from '../core/types';
+import type { PendulumState, View } from '../core/types';
 
-export class PendulumView {
+export class PendulumView implements View {
   private sim: Simulation;
   private trails: PendulumState[][] = [];
   private highlight: number | 'all' = 'all';

@@ -3,9 +3,10 @@ import { PhaseMapRenderer } from '../rendering/phaseMap/PhaseMapRenderer';
 import { PendulumCanvas } from '../rendering/pendulumCanvas';
 import { PhaseCanvas } from '../rendering/phaseCanvas';
 import { observeCanvasSize } from '../rendering/canvasResize';
-import type { ColorMode, PhaseRegion, PendulumState } from '../core/types';
+import { DEFAULT_PHYSICS, DEFAULT_SIM } from '../core/config';
+import type { ColorMode, PhaseRegion, PendulumState, View } from '../core/types';
 
-export class PhaseMapView {
+export class PhaseMapView implements View {
   private backend!: PhaseMapBackend;
   private renderer!: PhaseMapRenderer;
   private ready = false;
@@ -21,6 +22,8 @@ export class PhaseMapView {
   private gridRes = 800;
 
   paused = true;
+
+  private static readonly DRAG_THRESHOLD = 3;
 
   // Pan/zoom interaction state
   private wasDragging = false;
@@ -140,7 +143,7 @@ export class PhaseMapView {
     if (this.ready) {
       if (!this.paused) {
         const freeze = this.colorMode === 'flipTime';
-        this.backend.step(9.81, 0.005, this.stepsPerDispatch, freeze);
+        this.backend.step(DEFAULT_PHYSICS.g, DEFAULT_SIM.dt, this.stepsPerDispatch, freeze);
       }
       this.renderer.render({ colorMode: this.colorMode, maxFlipTime: this.maxFlipTime });
       this.fetchProbeState();
@@ -245,7 +248,7 @@ export class PhaseMapView {
     if (!(e.buttons & 1)) return;
     const dx = e.clientX - this.lastX;
     const dy = e.clientY - this.lastY;
-    if (Math.abs(dx) + Math.abs(dy) > 3) this.wasDragging = true;
+    if (Math.abs(dx) + Math.abs(dy) > PhaseMapView.DRAG_THRESHOLD) this.wasDragging = true;
     this.lastX = e.clientX;
     this.lastY = e.clientY;
 

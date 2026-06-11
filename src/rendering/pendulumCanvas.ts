@@ -1,6 +1,6 @@
 import { pendulumPositions } from '../physics/equations';
 import type { PendulumState } from '../core/types';
-import { pendulumColor } from './colors';
+import { pendulumColor, drawOrder } from './colors';
 
 const BOB_RADIUS = 8;
 const PIVOT_RADIUS = 5;
@@ -115,9 +115,7 @@ export class PendulumCanvas {
     ctx.stroke();
 
     // Draw dimmed pendulums first, highlighted on top
-    const order = highlight === 'all'
-      ? Array.from({ length: n }, (_, i) => i)
-      : [...Array.from({ length: n }, (_, i) => i).filter(i => i !== highlight), highlight];
+    const order = drawOrder(n, highlight);
 
     for (const i of order) {
       const s = states[i];
