@@ -1,21 +1,10 @@
 import type { PendulumState } from '../core/types';
 import { DEFAULT_SIM } from '../core/config';
+import { pendulumColor } from './colors';
+import { wrap } from '../core/math';
 
 const PAD = { top: 20, right: 16, bottom: 36, left: 48 };
 const DISPLAY_WINDOW = 800;
-const TWO_PI = Math.PI * 2;
-
-function wrap(a: number): number {
-  a = a % TWO_PI;
-  if (a > Math.PI) a -= TWO_PI;
-  if (a < -Math.PI) a += TWO_PI;
-  return a;
-}
-
-function pendulumColor(index: number, total: number, alpha = 1): string {
-  const hue = total <= 1 ? 200 : Math.round((index / total) * 300);
-  return `hsla(${hue},90%,65%,${alpha})`;
-}
 
 export class TimeSeriesCanvas {
   private readonly ctx: CanvasRenderingContext2D;

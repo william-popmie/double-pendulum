@@ -1,14 +1,10 @@
 import { pendulumPositions } from '../physics/equations';
 import type { PendulumState } from '../core/types';
+import { pendulumColor } from './colors';
 
 const SCALE = 100;       // pixels per meter — reduced so full 2m reach fits comfortably
 const BOB_RADIUS = 8;
 const PIVOT_RADIUS = 5;
-
-function pendulumColor(index: number, total: number, alpha = 1): string {
-  const hue = total <= 1 ? 200 : Math.round((index / total) * 360);
-  return `hsla(${hue},90%,60%,${alpha})`;
-}
 
 export class PendulumCanvas {
   private readonly ctx: CanvasRenderingContext2D;

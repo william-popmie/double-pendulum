@@ -1,22 +1,9 @@
 import type { PendulumState } from '../core/types';
+import { pendulumColor } from './colors';
+import { wrap } from '../core/math';
+import { TRAIL_MAX, TRAIL_TRIM } from '../core/config';
 
-const TWO_PI = Math.PI * 2;
-
-const MAX_TRAIL = 4000;
-const TRIM_BATCH = 500;
 const MAX_RENDER_POINTS = 600;
-
-function wrap(angle: number): number {
-  let a = angle % TWO_PI;
-  if (a > Math.PI) a -= TWO_PI;
-  if (a < -Math.PI) a += TWO_PI;
-  return a;
-}
-
-function pendulumColor(index: number, total: number, alpha = 1): string {
-  const hue = total <= 1 ? 200 : Math.round((index / total) * 300);
-  return `hsla(${hue},90%,65%,${alpha})`;
-}
 
 export class PhaseCanvas {
   private readonly ctx: CanvasRenderingContext2D;
@@ -40,8 +27,8 @@ export class PhaseCanvas {
     for (let i = 0; i < states.length; i++) {
       const trail = this.trails[i];
       trail.push([wrap(states[i].theta1), wrap(states[i].theta2)]);
-      if (trail.length > MAX_TRAIL) {
-        trail.splice(0, TRIM_BATCH);
+      if (trail.length > TRAIL_MAX) {
+        trail.splice(0, TRAIL_TRIM);
       }
     }
   }

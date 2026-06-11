@@ -2,13 +2,11 @@ import { Simulation } from '../physics/simulation';
 import { PendulumCanvas } from '../rendering/pendulumCanvas';
 import { PhaseCanvas } from '../rendering/phaseCanvas';
 import { TimeSeriesCanvas } from '../rendering/TimeSeriesCanvas';
+import { observeCanvasSize } from '../rendering/canvasResize';
 import { totalEnergy } from '../physics/equations';
-import { DEFAULT_PHYSICS, DEFAULT_SIM } from '../core/config';
+import { DEFAULT_PHYSICS, DEFAULT_SIM, TRAIL_MAX, TRAIL_TRIM } from '../core/config';
+import { DEG } from '../core/math';
 import type { PendulumState } from '../core/types';
-
-const DEG = Math.PI / 180;
-const MAX_TRAIL = 4000;
-const TRIM_BATCH = 500;
 
 export type OffsetDirection = 'symmetric' | 'clockwise' | 'counterclockwise';
 
@@ -59,17 +57,7 @@ export class PendulumView {
 
     this.sim = new Simulation(this.buildInitialStates(), DEFAULT_PHYSICS, DEFAULT_SIM);
 
-    this.resizeObserver = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const canvas = entry.target as HTMLCanvasElement;
-        const { width, height } = entry.contentRect;
-        canvas.width  = Math.max(1, Math.floor(width));
-        canvas.height = Math.max(1, Math.floor(height));
-      }
-    });
-    [pendCanvasEl, phaseCanvasEl, t1CanvasEl, t2CanvasEl].forEach(c =>
-      this.resizeObserver.observe(c),
-    );
+    this.resizeObserver = observeCanvasSize(pendCanvasEl, phaseCanvasEl, t1CanvasEl, t2CanvasEl);
 
     this.initTrails();
     this.updateShowSelect();
@@ -163,7 +151,7 @@ export class PendulumView {
 
   private trimTrails(): void {
     for (const trail of this.trails) {
-      if (trail.length > MAX_TRAIL) trail.splice(0, TRIM_BATCH);
+      if (trail.length > TRAIL_MAX) trail.splice(0, TRAIL_TRIM);
     }
   }
 

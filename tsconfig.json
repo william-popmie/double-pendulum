@@ -1,11 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["@webgpu/types"],
+    "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "rootDir": "./src",
     "outDir": "dist"
   },
   "include": ["src"]

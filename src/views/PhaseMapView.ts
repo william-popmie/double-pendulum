@@ -2,6 +2,7 @@ import { PhaseMapBackend } from '../rendering/phaseMap/PhaseMapBackend';
 import { PhaseMapRenderer } from '../rendering/phaseMap/PhaseMapRenderer';
 import { PendulumCanvas } from '../rendering/pendulumCanvas';
 import { PhaseCanvas } from '../rendering/phaseCanvas';
+import { observeCanvasSize } from '../rendering/canvasResize';
 import type { ColorMode, PhaseRegion, PendulumState } from '../core/types';
 
 export class PhaseMapView {
@@ -47,16 +48,7 @@ export class PhaseMapView {
     this.probePendulumCanvas = new PendulumCanvas(probePendulumEl);
     this.probePhaseCanvas    = new PhaseCanvas(probePhaseEl);
 
-    this.resizeObserver = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const c = entry.target as HTMLCanvasElement;
-        const { width, height } = entry.contentRect;
-        c.width  = Math.max(1, Math.floor(width));
-        c.height = Math.max(1, Math.floor(height));
-      }
-    });
-    this.resizeObserver.observe(probePendulumEl);
-    this.resizeObserver.observe(probePhaseEl);
+    this.resizeObserver = observeCanvasSize(probePendulumEl, probePhaseEl);
   }
 
   async initGPU(): Promise<void> {
