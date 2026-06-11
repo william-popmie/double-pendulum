@@ -283,7 +283,7 @@ export class PhaseMapView {
     const pT1 = this.region.theta1Min + px * scaleX;
     const pT2 = this.region.theta2Max - py * scaleY;
 
-    const factor = e.deltaY > 0 ? 1 / 1.25 : 1.25;
+    const factor = e.deltaY > 0 ? 1.25 : 1 / 1.25;
     const newW = (this.region.theta1Max - this.region.theta1Min) * factor;
     const newH = (this.region.theta2Max - this.region.theta2Min) * factor;
     const fracX = px / rect.width;
