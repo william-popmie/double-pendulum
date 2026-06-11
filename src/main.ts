@@ -1,6 +1,5 @@
 import { inject } from '@vercel/analytics';
 import { PendulumView } from './views/PendulumView';
-import type { OffsetDirection } from './views/PendulumView';
 import { PhaseMapView } from './views/PhaseMapView';
 import { getGPUDevice } from './rendering/device';
 import type { ColorMode } from './core/types';
@@ -13,17 +12,14 @@ async function init(): Promise<void> {
   const pagePhasemap = document.getElementById('page-phasemap')   as HTMLElement;
 
   // Pendulum page controls
-  const numPendulumsInput = document.getElementById('numPendulums') as HTMLInputElement;
-  const baseAngleInput    = document.getElementById('baseAngle')    as HTMLInputElement;
-  const baseAngle2Input   = document.getElementById('baseAngle2')   as HTMLInputElement;
-  const deltaAngleInput   = document.getElementById('deltaAngle')   as HTMLInputElement;
-  const directionSelect   = document.getElementById('direction')    as HTMLSelectElement;
-  const playPauseBtn      = document.getElementById('playPauseBtn') as HTMLButtonElement;
-  const resetBtn          = document.getElementById('resetBtn')     as HTMLButtonElement;
-  const showSelect        = document.getElementById('showSelect')   as HTMLSelectElement;
-  const speedRange        = document.getElementById('speed')        as HTMLInputElement;
-  const speedLabel        = document.getElementById('speedLabel')   as HTMLSpanElement;
-  const energyEl          = document.getElementById('energy')       as HTMLSpanElement;
+  const numPendulumsInput   = document.getElementById('numPendulums')       as HTMLInputElement;
+  const deltaAngleInput     = document.getElementById('deltaAngle')         as HTMLInputElement;
+  const playPauseBtn        = document.getElementById('playPauseBtn')       as HTMLButtonElement;
+  const resetBtn            = document.getElementById('resetBtn')           as HTMLButtonElement;
+  const showSelectContainer = document.getElementById('showSelectContainer') as HTMLElement;
+  const speedRange          = document.getElementById('speed')              as HTMLInputElement;
+  const speedLabel          = document.getElementById('speedLabel')         as HTMLSpanElement;
+  const energyEl            = document.getElementById('energy')             as HTMLSpanElement;
 
   // Pendulum canvases
   const pendCanvasEl  = document.getElementById('canvas-pendulum') as HTMLCanvasElement;
@@ -32,27 +28,27 @@ async function init(): Promise<void> {
   const t2CanvasEl    = document.getElementById('canvas-t2')       as HTMLCanvasElement;
 
   // Phase map page controls
-  const mapResSelect      = document.getElementById('mapRes')               as HTMLSelectElement;
-  const mapModeSelect     = document.getElementById('mapMode')              as HTMLSelectElement;
-  const mapSpeedRange     = document.getElementById('mapSpeed')             as HTMLInputElement;
-  const mapSpeedLabel     = document.getElementById('mapSpeedLabel')        as HTMLSpanElement;
-  const mapPlayPauseBtn   = document.getElementById('mapPlayPauseBtn')       as HTMLButtonElement;
-  const mapResetBtn       = document.getElementById('mapResetView')         as HTMLButtonElement;
-  const mapCanvasEl       = document.getElementById('canvas-phasemap')      as HTMLCanvasElement;
-  const probePendulumEl   = document.getElementById('canvas-probe-pendulum') as HTMLCanvasElement;
-  const probePhaseEl      = document.getElementById('canvas-probe-phase')   as HTMLCanvasElement;
-  const noGpuMsg          = document.getElementById('no-gpu-msg')           as HTMLElement;
-  const probeMapHint      = document.getElementById('probe-map-hint')       as HTMLElement;
+  const mapResSelect    = document.getElementById('mapRes')               as HTMLSelectElement;
+  const mapModeSelect   = document.getElementById('mapMode')              as HTMLSelectElement;
+  const mapSpeedRange   = document.getElementById('mapSpeed')             as HTMLInputElement;
+  const mapSpeedLabel   = document.getElementById('mapSpeedLabel')        as HTMLSpanElement;
+  const mapPlayPauseBtn = document.getElementById('mapPlayPauseBtn')       as HTMLButtonElement;
+  const mapResetBtn     = document.getElementById('mapResetView')         as HTMLButtonElement;
+  const mapCanvasEl     = document.getElementById('canvas-phasemap')      as HTMLCanvasElement;
+  const probePendulumEl = document.getElementById('canvas-probe-pendulum') as HTMLCanvasElement;
+  const probePhaseEl    = document.getElementById('canvas-probe-phase')   as HTMLCanvasElement;
+  const noGpuMsg        = document.getElementById('no-gpu-msg')           as HTMLElement;
+  const probeMapHint    = document.getElementById('probe-map-hint')       as HTMLElement;
 
   // ── Pendulum view ─────────────────────────────────────────────────────────
   const pendulumView = new PendulumView(
     pendCanvasEl, phaseCanvasEl, t1CanvasEl, t2CanvasEl,
-    energyEl, showSelect,
+    energyEl, showSelectContainer,
   );
 
   playPauseBtn.addEventListener('click', () => {
     pendulumView.paused = !pendulumView.paused;
-    playPauseBtn.textContent = pendulumView.paused ? '▶ Play' : '⏸ Pause';
+    playPauseBtn.textContent = pendulumView.paused ? '▶ Play' : '⏸ Pause';
     playPauseBtn.className = pendulumView.paused ? 'btn-play' : 'btn-pause';
   });
 
@@ -63,23 +59,9 @@ async function init(): Promise<void> {
     if (n >= 1 && n <= 50) pendulumView.setNumPendulums(n);
   });
 
-  baseAngleInput.addEventListener('change', () => {
-    const deg = parseFloat(baseAngleInput.value);
-    if (isFinite(deg)) pendulumView.setBaseAngleDeg(deg);
-  });
-
-  baseAngle2Input.addEventListener('change', () => {
-    const deg = parseFloat(baseAngle2Input.value);
-    if (isFinite(deg)) pendulumView.setBaseAngle2Deg(deg);
-  });
-
   deltaAngleInput.addEventListener('change', () => {
     const d = parseFloat(deltaAngleInput.value);
     if (d > 0) pendulumView.setDeltaAngleDeg(d);
-  });
-
-  directionSelect.addEventListener('change', () => {
-    pendulumView.setDirection(directionSelect.value as OffsetDirection);
   });
 
   speedRange.addEventListener('input', () => {
@@ -110,7 +92,7 @@ async function init(): Promise<void> {
 
     mapPlayPauseBtn.addEventListener('click', () => {
       phaseMapView!.paused = !phaseMapView!.paused;
-      mapPlayPauseBtn.textContent = phaseMapView!.paused ? '▶ Play' : '⏸ Pause';
+      mapPlayPauseBtn.textContent = phaseMapView!.paused ? '▶ Play' : '⏸ Pause';
       mapPlayPauseBtn.className = phaseMapView!.paused ? 'btn-play' : 'btn-pause';
     });
 

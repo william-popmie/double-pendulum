@@ -95,8 +95,84 @@
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       flex-wrap: nowrap;
-      overflow-x: auto;
+      overflow: visible;
     }
+
+    .help-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.16);
+      color: var(--text-muted);
+      font-size: 9px;
+      cursor: default;
+      position: relative;
+      flex-shrink: 0;
+      font-weight: 600;
+      line-height: 1;
+      user-select: none;
+    }
+    .help-icon::after {
+      content: attr(data-tip);
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #151515;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text);
+      white-space: normal;
+      max-width: 200px;
+      word-break: normal;
+      pointer-events: none;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.15s;
+      font-weight: 400;
+      font-family: inherit;
+    }
+    .help-icon:hover::after { opacity: 1; }
+    .help-icon.tip-left::after { left: 0; right: auto; transform: none; }
+
+    /* ── Custom colored select ─────────────────────────────────────────────── */
+    .custom-select { position: relative; display: inline-flex; flex-shrink: 0; }
+
+    .cs-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 4px 8px; font-size: 12px;
+      font-family: inherit; cursor: pointer; min-width: 120px;
+      transition: border-color 0.15s;
+    }
+    .cs-btn:hover { border-color: var(--border-hover); }
+    .cs-text { flex: 1; text-align: left; }
+
+    .cs-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    .cs-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0;
+      background: #111; border: 1px solid var(--border); border-radius: 6px;
+      z-index: 150; min-width: 100%; overflow: hidden;
+    }
+    .cs-dropdown.open { display: block; }
+
+    .cs-option {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 10px; font-size: 12px; color: var(--text);
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.1s;
+    }
+    .cs-option:hover    { background: rgba(255,255,255,0.06); }
+    .cs-option.selected { background: rgba(255,255,255,0.04); }
 
     .ctrl-sep {
       width: 1px;
@@ -329,23 +405,16 @@
   <div id="page-pendulum">
 
     <div class="ctrl-bar">
-      <span class="ctrl-label">N</span>
+      <span class="ctrl-label">Pendulums</span>
       <input type="number" id="numPendulums" value="10" min="1" max="50" step="1" />
+      <span class="help-icon tip-left" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle — tiny differences grow into completely different trajectories, revealing chaos.">?</span>
 
-      <span class="ctrl-label">θ₁°</span>
-      <input type="number" id="baseAngle" value="75" min="-180" max="180" step="1" />
+      <div class="ctrl-sep"></div>
 
-      <span class="ctrl-label">θ₂°</span>
-      <input type="number" id="baseAngle2" value="45" min="-180" max="180" step="1" />
-
-      <span class="ctrl-label">Δ°</span>
+      <span class="ctrl-label">Spread</span>
       <input type="number" id="deltaAngle" value="1" min="0.01" max="45" step="0.1" />
+      <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions; larger values spread them across a wider range.">?</span>
 
-      <select id="direction" title="Offset direction">
-        <option value="symmetric">Symmetric</option>
-        <option value="clockwise">Clockwise</option>
-        <option value="counterclockwise">Counter-CW</option>
-      </select>
 
       <div class="ctrl-sep"></div>
 
@@ -354,8 +423,8 @@
 
       <div class="ctrl-sep"></div>
 
-      <span class="ctrl-label">Show</span>
-      <select id="showSelect"></select>
+      <span class="ctrl-label">Show Pendulum</span>
+      <div id="showSelectContainer" class="custom-select"></div>
 
       <div class="ctrl-sep"></div>
 

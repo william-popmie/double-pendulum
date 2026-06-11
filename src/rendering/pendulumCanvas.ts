@@ -2,31 +2,97 @@ import { pendulumPositions } from '../physics/equations';
 import type { PendulumState } from '../core/types';
 import { pendulumColor } from './colors';
 
-const SCALE = 100;       // pixels per meter — reduced so full 2m reach fits comfortably
 const BOB_RADIUS = 8;
 const PIVOT_RADIUS = 5;
+
+export function pendulumScale(w: number, h: number): number {
+  return Math.min(w, h) / 4.5;
+}
+
+export interface AngleHint {
+  target: 'rod1' | 'rod2';
+  theta1: number;   // rod1 angle — used to compute rod2 pivot position
+  angle: number;    // angle to display (radians, from downward vertical)
+}
 
 export class PendulumCanvas {
   private readonly ctx: CanvasRenderingContext2D;
 
   private get cx(): number { return this.ctx.canvas.width / 2; }
-  private get cy(): number { return this.ctx.canvas.height * 0.22; }
+  private get cy(): number { return this.ctx.canvas.height / 2; }
 
   constructor(canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
   }
 
-  draw(states: PendulumState[], L1: number, L2: number, highlight: number | 'all' = 'all'): void {
+  draw(
+    states: PendulumState[],
+    L1: number,
+    L2: number,
+    highlight: number | 'all' = 'all',
+    hint?: AngleHint,
+  ): void {
     const { ctx, cx, cy } = this;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     this.drawRodMode(states, L1, L2, highlight);
+
+    if (hint) this.drawAngleOverlay(hint);
 
     // Pivot
     ctx.fillStyle = '#888';
     ctx.beginPath();
     ctx.arc(cx, cy, PIVOT_RADIUS, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  private drawAngleOverlay(hint: AngleHint): void {
+    const { ctx, cx, cy } = this;
+    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height);
+
+    // Pivot of the rod being dragged
+    const px = hint.target === 'rod1' ? cx : cx + Math.sin(hint.theta1) * S;
+    const py = hint.target === 'rod1' ? cy : cy + Math.cos(hint.theta1) * S;
+
+    ctx.save();
+
+    // Dashed vertical reference line (downward from pivot)
+    ctx.setLineDash([3, 4]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px, py - 8);
+    ctx.lineTo(px, py + 72);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arc between vertical-down (canvas angle π/2) and current rod direction
+    const arcR = 28;
+    const rodA  = Math.PI / 2 - hint.angle;
+    const vertA = Math.PI / 2;
+    const arcStart = Math.min(rodA, vertA);
+    const arcEnd   = Math.max(rodA, vertA);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.42)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(px, py, arcR, arcStart, arcEnd, false);
+    ctx.stroke();
+
+    // Angle label at midpoint of arc
+    const midA   = (arcStart + arcEnd) / 2;
+    const labelR = arcR + 16;
+    const lx = px + Math.cos(midA) * labelR;
+    const ly = py + Math.sin(midA) * labelR;
+    const deg = (hint.angle * 180 / Math.PI).toFixed(1) + '°';
+
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(deg, lx, ly);
+
+    ctx.restore();
   }
 
   private drawRodMode(
@@ -36,6 +102,7 @@ export class PendulumCanvas {
     highlight: number | 'all',
   ): void {
     const { ctx, cx, cy } = this;
+    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height);
     const n = states.length;
     const bobR = Math.max(3, BOB_RADIUS - Math.floor(n / 10));
     const lineW = n <= 5 ? 2 : 1.5;
@@ -65,10 +132,10 @@ export class PendulumCanvas {
 
       const color = pendulumColor(i, n, alpha);
 
-      const sx1 = cx + x1 * SCALE;
-      const sy1 = cy - y1 * SCALE;
-      const sx2 = cx + x2 * SCALE;
-      const sy2 = cy - y2 * SCALE;
+      const sx1 = cx + x1 * S;
+      const sy1 = cy - y1 * S;
+      const sx2 = cx + x2 * S;
+      const sy2 = cy - y2 * S;
 
       ctx.strokeStyle = color;
       ctx.lineWidth = lineW;
