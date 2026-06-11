@@ -32,6 +32,8 @@ export class PhaseMapView {
   private zoomScale = 1;
   private zoomOriginX = 0;
   private zoomOriginY = 0;
+  private gridBg!: HTMLElement;
+  private canvasWrap!: HTMLElement;
 
   // Probe state
   private readonly probePendulumCanvas: PendulumCanvas;
@@ -54,6 +56,8 @@ export class PhaseMapView {
     this.probePhaseEl        = probePhaseEl;
     this.probePendulumCanvas = new PendulumCanvas(probePendulumEl);
     this.probePhaseCanvas    = new PhaseCanvas(probePhaseEl);
+    this.gridBg    = document.getElementById('phase-grid-bg')   as HTMLElement;
+    this.canvasWrap = document.getElementById('phase-canvas-wrap') as HTMLElement;
 
     this.resizeObserver = observeCanvasSize(probePendulumEl, probePhaseEl);
   }
@@ -204,9 +208,16 @@ export class PhaseMapView {
 
   // ── Pan / zoom ────────────────────────────────────────────────────────────
 
+  private applyTransform(transform: string, origin = ''): void {
+    this.canvasWrap.style.transform = transform;
+    this.canvasWrap.style.transformOrigin = origin;
+    this.gridBg.style.opacity = '1';
+  }
+
   private clearVisualTransform(): void {
-    this.canvas.style.transform = '';
-    this.canvas.style.transformOrigin = '';
+    this.canvasWrap.style.transform = '';
+    this.canvasWrap.style.transformOrigin = '';
+    this.gridBg.style.opacity = '0';
     this.zoomScale = 1;
   }
 
@@ -249,8 +260,7 @@ export class PhaseMapView {
       theta2Max: this.region.theta2Max + dy * scaleY,
     };
 
-    this.canvas.style.transform =
-      `translate(${e.clientX - this.dragStartX}px, ${e.clientY - this.dragStartY}px)`;
+    this.applyTransform(`translate(${e.clientX - this.dragStartX}px, ${e.clientY - this.dragStartY}px)`);
   };
 
   private onPointerUp = (e: PointerEvent): void => {
@@ -273,7 +283,7 @@ export class PhaseMapView {
     const pT1 = this.region.theta1Min + px * scaleX;
     const pT2 = this.region.theta2Max - py * scaleY;
 
-    const factor = e.deltaY > 0 ? 1.25 : 1 / 1.25;
+    const factor = e.deltaY > 0 ? 1 / 1.25 : 1.25;
     const newW = (this.region.theta1Max - this.region.theta1Min) * factor;
     const newH = (this.region.theta2Max - this.region.theta2Min) * factor;
     const fracX = px / rect.width;
@@ -290,9 +300,8 @@ export class PhaseMapView {
       this.zoomOriginX = px;
       this.zoomOriginY = py;
     }
-    this.zoomScale *= factor;
-    this.canvas.style.transformOrigin = `${this.zoomOriginX}px ${this.zoomOriginY}px`;
-    this.canvas.style.transform = `scale(${this.zoomScale})`;
+    this.zoomScale /= factor;
+    this.applyTransform(`scale(${this.zoomScale})`, `${this.zoomOriginX}px ${this.zoomOriginY}px`);
 
     this.scheduleReinit();
   };
