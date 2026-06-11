@@ -35,6 +35,7 @@ async function init(): Promise<void> {
   const mapModeSelect     = document.getElementById('mapMode')              as HTMLSelectElement;
   const mapSpeedRange     = document.getElementById('mapSpeed')             as HTMLInputElement;
   const mapSpeedLabel     = document.getElementById('mapSpeedLabel')        as HTMLSpanElement;
+  const mapPlayPauseBtn   = document.getElementById('mapPlayPauseBtn')       as HTMLButtonElement;
   const mapResetBtn       = document.getElementById('mapResetView')         as HTMLButtonElement;
   const mapCanvasEl       = document.getElementById('canvas-phasemap')      as HTMLCanvasElement;
   const probePendulumEl   = document.getElementById('canvas-probe-pendulum') as HTMLCanvasElement;
@@ -49,7 +50,8 @@ async function init(): Promise<void> {
 
   playPauseBtn.addEventListener('click', () => {
     pendulumView.paused = !pendulumView.paused;
-    playPauseBtn.textContent = pendulumView.paused ? '▶  Play' : '⏸  Pause';
+    playPauseBtn.textContent = pendulumView.paused ? '▶ Play' : '⏸ Pause';
+    playPauseBtn.className = pendulumView.paused ? 'btn-play' : 'btn-pause';
   });
 
   resetBtn.addEventListener('click', () => pendulumView.reset());
@@ -104,10 +106,17 @@ async function init(): Promise<void> {
       mapSpeedLabel.textContent = mapSpeedRange.value;
     });
 
+    mapPlayPauseBtn.addEventListener('click', () => {
+      phaseMapView!.paused = !phaseMapView!.paused;
+      mapPlayPauseBtn.textContent = phaseMapView!.paused ? '▶ Play' : '⏸ Pause';
+      mapPlayPauseBtn.className = phaseMapView!.paused ? 'btn-play' : 'btn-pause';
+    });
+
     mapResetBtn.addEventListener('click', () => phaseMapView!.resetView());
   } else {
     tabPhasemap.disabled = true;
     tabPhasemap.title = 'WebGPU not available in this browser';
+    mapPlayPauseBtn.disabled = true;
     noGpuMsg.style.display = 'block';
     mapCanvasEl.style.display = 'none';
   }

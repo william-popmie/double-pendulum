@@ -20,8 +20,8 @@ export class PendulumView {
   private baseAngle2: number;        // radians — θ₂ starting angle
   private direction: OffsetDirection;
 
-  paused = false;
-  stepsPerFrame = 10;
+  paused = true;
+  stepsPerFrame = 5;
 
   private rafId = 0;
   private readonly resizeObserver: ResizeObserver;
@@ -38,10 +38,10 @@ export class PendulumView {
     t2CanvasEl: HTMLCanvasElement,
     private readonly energyEl: HTMLElement,
     private readonly showSelect: HTMLSelectElement,
-    initialN = 5,
+    initialN = 10,
     initialDeltaDeg = 1,
-    initialBaseAngleDeg = 120,
-    initialBaseAngle2Deg = -10,
+    initialBaseAngleDeg = 75,
+    initialBaseAngle2Deg = 45,
     initialDirection: OffsetDirection = 'symmetric',
   ) {
     this.numPendulums = initialN;

@@ -175,14 +175,23 @@
     }
     button:hover { color: var(--text); border-color: var(--border-hover); background: rgba(255,255,255,0.04); }
 
-    #playPauseBtn {
-      color: var(--text);
-      border-color: rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.06);
+    .btn-play {
+      color: #4ade80;
+      border-color: rgba(74,222,128,0.35);
+      background: rgba(74,222,128,0.08);
       min-width: 78px;
       font-weight: 500;
     }
-    #playPauseBtn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); }
+    .btn-play:hover { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.55); }
+
+    .btn-pause {
+      color: #f87171;
+      border-color: rgba(248,113,113,0.35);
+      background: rgba(248,113,113,0.08);
+      min-width: 78px;
+      font-weight: 500;
+    }
+    .btn-pause:hover { background: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.55); }
 
     #energy {
       font-family: 'SF Mono', 'Fira Code', monospace;
@@ -302,13 +311,13 @@
 
     <div class="ctrl-bar">
       <span class="ctrl-label">N</span>
-      <input type="number" id="numPendulums" value="5" min="1" max="50" step="1" />
+      <input type="number" id="numPendulums" value="10" min="1" max="50" step="1" />
 
       <span class="ctrl-label">θ₁°</span>
-      <input type="number" id="baseAngle" value="120" min="-180" max="180" step="1" />
+      <input type="number" id="baseAngle" value="75" min="-180" max="180" step="1" />
 
       <span class="ctrl-label">θ₂°</span>
-      <input type="number" id="baseAngle2" value="-10" min="-180" max="180" step="1" />
+      <input type="number" id="baseAngle2" value="45" min="-180" max="180" step="1" />
 
       <span class="ctrl-label">Δ°</span>
       <input type="number" id="deltaAngle" value="1" min="0.01" max="45" step="0.1" />
@@ -321,7 +330,7 @@
 
       <div class="ctrl-sep"></div>
 
-      <button id="playPauseBtn">⏸&thinsp;Pause</button>
+      <button id="playPauseBtn" class="btn-play">▶&thinsp;Play</button>
       <button id="resetBtn">↺&thinsp;Reset</button>
 
       <div class="ctrl-sep"></div>
@@ -332,8 +341,8 @@
       <div class="ctrl-sep"></div>
 
       <span class="ctrl-label">Speed</span>
-      <input type="range" id="speed" min="0" max="10" value="10" />
-      <span class="ctrl-value" id="speedLabel">10</span>
+      <input type="range" id="speed" min="0" max="10" value="5" />
+      <span class="ctrl-value" id="speedLabel">5</span>
 
       <div class="ctrl-spacer"></div>
       <span id="energy">—</span>
@@ -362,6 +371,10 @@
   <div id="page-phasemap">
 
     <div class="ctrl-bar">
+      <button id="mapPlayPauseBtn" class="btn-play">▶&thinsp;Play</button>
+
+      <div class="ctrl-sep"></div>
+
       <span class="ctrl-label">Resolution</span>
       <select id="mapRes">
         <option value="10">10 × 10</option>
@@ -378,7 +391,7 @@
       <span class="ctrl-label">Mode</span>
       <select id="mapMode">
         <option value="flipTime">Flip time</option>
-        <option value="theta2">Live θ₂</option>
+        <option value="theta2" selected>Live θ₂</option>
       </select>
 
       <div class="ctrl-sep"></div>

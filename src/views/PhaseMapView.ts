@@ -15,10 +15,12 @@ export class PhaseMapView {
     theta1Min: -Math.PI, theta1Max: Math.PI,
     theta2Min: -Math.PI, theta2Max: Math.PI,
   };
-  private colorMode: ColorMode = 'flipTime';
+  private colorMode: ColorMode = 'theta2';
   private stepsPerDispatch = 10;
   private maxFlipTime = 50;
   private gridRes = 100;
+
+  paused = true;
 
   // Pan/zoom interaction state
   private wasDragging = false;
@@ -127,8 +129,10 @@ export class PhaseMapView {
 
   private loop(): void {
     if (this.ready) {
-      const freeze = this.colorMode === 'flipTime';
-      this.backend.step(9.81, 0.005, this.stepsPerDispatch, freeze);
+      if (!this.paused) {
+        const freeze = this.colorMode === 'flipTime';
+        this.backend.step(9.81, 0.005, this.stepsPerDispatch, freeze);
+      }
       this.renderer.render({ colorMode: this.colorMode, maxFlipTime: this.maxFlipTime });
       this.fetchProbeState();
     }
