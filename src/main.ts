@@ -1,7 +1,9 @@
 import { inject } from '@vercel/analytics';
 import { PendulumView } from './views/PendulumView';
 import { PhaseMapView } from './views/PhaseMapView';
+import { PhaseMapExporter } from './rendering/phaseMap/PhaseMapExporter';
 import { getGPUDevice } from './rendering/device';
+import { DEFAULT_SIM } from './core/config';
 import type { ColorMode } from './core/types';
 
 async function init(): Promise<void> {
@@ -39,6 +41,23 @@ async function init(): Promise<void> {
   const probePhaseEl    = document.getElementById('canvas-probe-phase')   as HTMLCanvasElement;
   const noGpuMsg        = document.getElementById('no-gpu-msg')           as HTMLElement;
   const probeMapHint    = document.getElementById('probe-map-hint')       as HTMLElement;
+
+  // Export modal refs
+  const mapExportBtn      = document.getElementById('mapExportBtn')          as HTMLButtonElement;
+  const exportOverlay     = document.getElementById('export-overlay')        as HTMLElement;
+  const exportSettings    = document.getElementById('export-settings')       as HTMLElement;
+  const exportProgress    = document.getElementById('export-progress')       as HTMLElement;
+  const exportResSelect   = document.getElementById('export-res')            as HTMLSelectElement;
+  const exportDurInput    = document.getElementById('export-dur')            as HTMLInputElement;
+  const exportStepsHint   = document.getElementById('export-steps-hint')     as HTMLElement;
+  const exportModeSelect  = document.getElementById('export-mode')           as HTMLSelectElement;
+  const exportRegionSel   = document.getElementById('export-region')         as HTMLSelectElement;
+  const exportGenerateBtn = document.getElementById('export-generate')       as HTMLButtonElement;
+  const exportComposite   = document.getElementById('export-composite')      as HTMLCanvasElement;
+  const exportProgBar     = document.getElementById('export-progress-bar')   as HTMLElement;
+  const exportProgLabel   = document.getElementById('export-progress-label') as HTMLElement;
+  const exportCloseBtn    = document.getElementById('export-close')          as HTMLButtonElement;
+  const exportCancelBtn   = document.getElementById('export-cancel')         as HTMLButtonElement;
 
   // ── Pendulum view ─────────────────────────────────────────────────────────
   const pendulumView = new PendulumView(
@@ -101,6 +120,101 @@ async function init(): Promise<void> {
     }, { once: true });
 
     mapResetBtn.addEventListener('click', () => phaseMapView!.resetView());
+
+    // ── Export modal ──────────────────────────────────────────────────────────
+    let activeExporter: PhaseMapExporter | null = null;
+
+    const updateStepsHint = (): void => {
+      const dur = parseFloat(exportDurInput.value) || 30;
+      const steps = Math.round(dur / DEFAULT_SIM.dt);
+      exportStepsHint.textContent = `≈ ${steps.toLocaleString()} steps / tile`;
+    };
+
+    const openExportModal = (): void => {
+      exportModeSelect.value = mapModeSelect.value;
+      updateStepsHint();
+      exportSettings.style.display = '';
+      exportProgress.style.display = 'none';
+      exportCloseBtn.style.display = '';
+      exportOverlay.classList.add('active');
+    };
+
+    const closeExportModal = (): void => {
+      exportOverlay.classList.remove('active');
+      activeExporter = null;
+    };
+
+    const confirmCancel = (): void => {
+      if (confirm('Stop rendering? Partially computed data will be discarded.')) {
+        activeExporter?.cancel();
+      }
+    };
+
+    mapExportBtn.addEventListener('click', openExportModal);
+    exportCloseBtn.addEventListener('click', closeExportModal);
+    exportDurInput.addEventListener('input', updateStepsHint);
+
+    exportOverlay.addEventListener('click', (e) => {
+      if (e.target !== exportOverlay) return;
+      if (activeExporter) confirmCancel();
+      else closeExportModal();
+    });
+
+    exportCancelBtn.addEventListener('click', () => {
+      if (activeExporter) confirmCancel();
+    });
+
+    exportGenerateBtn.addEventListener('click', async () => {
+      const resolution      = parseInt(exportResSelect.value, 10);
+      const durationSeconds = parseFloat(exportDurInput.value) || 30;
+      const colorMode       = exportModeSelect.value as ColorMode;
+      const region          = exportRegionSel.value === 'current'
+        ? phaseMapView!.getRegion()
+        : { theta1Min: -Math.PI, theta1Max: Math.PI, theta2Min: -Math.PI, theta2Max: Math.PI };
+
+      exportComposite.width  = resolution;
+      exportComposite.height = resolution;
+      const ctx = exportComposite.getContext('2d')!;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, resolution, resolution);
+
+      exportSettings.style.display = 'none';
+      exportProgress.style.display = '';
+      exportCloseBtn.style.display = 'none';
+      exportProgBar.style.width = '0%';
+      exportProgLabel.textContent = 'Starting…';
+
+      const wasPaused = phaseMapView!.paused;
+      phaseMapView!.paused = true;
+
+      const exporter = new PhaseMapExporter();
+      activeExporter = exporter;
+
+      const result = await exporter.run(device, {
+        resolution,
+        durationSeconds,
+        colorMode,
+        region,
+        maxFlipTime: 50,
+        compositeCanvas: exportComposite,
+        onProgress: (fraction, label) => {
+          exportProgBar.style.width = `${Math.round(fraction * 100)}%`;
+          exportProgLabel.textContent = label;
+        },
+      });
+
+      activeExporter = null;
+      phaseMapView!.paused = wasPaused;
+
+      if (result === 'done') {
+        closeExportModal();
+      } else {
+        exportSettings.style.display = '';
+        exportProgress.style.display = 'none';
+        exportCloseBtn.style.display = '';
+      }
+    });
+
   } else {
     tabPhasemap.disabled = true;
     tabPhasemap.title = 'WebGPU not available in this browser';

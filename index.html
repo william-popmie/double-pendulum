@@ -403,6 +403,82 @@
       max-width: 360px;
     }
     #no-gpu-msg strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 14px; }
+
+    /* ── Export modal ──────────────────────────────────────────────────────── */
+    #export-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.72);
+      align-items: center; justify-content: center;
+    }
+    #export-overlay.active { display: flex; }
+
+    #export-modal {
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      width: 340px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+
+    #export-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    #export-modal-header span {
+      font-size: 13px; font-weight: 600; color: var(--text);
+    }
+    #export-close {
+      border: none; background: none; padding: 2px 6px;
+      color: var(--text-muted); font-size: 14px; cursor: pointer;
+      border-radius: 4px;
+    }
+    #export-close:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    .export-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .export-row label { width: 76px; flex-shrink: 0; }
+    .export-row select, .export-row input[type="number"] { flex: 1; }
+    .export-unit { color: var(--text-dim); font-size: 11px; }
+
+    .export-hint {
+      font-size: 11px; color: var(--text-dim);
+      margin-top: -6px; padding-left: 84px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    #export-generate {
+      width: 100%; margin-top: 2px;
+      color: var(--text); border-color: var(--border-hover); font-weight: 500;
+    }
+    #export-generate:hover { background: rgba(255,255,255,0.06); }
+
+    #export-progress-bar-wrap {
+      height: 3px; background: rgba(255,255,255,0.08);
+      border-radius: 2px; overflow: hidden;
+    }
+    #export-progress-bar {
+      height: 100%; width: 0%; background: #4ade80;
+      transition: width 0.08s linear; border-radius: 2px;
+    }
+
+    #export-composite {
+      width: 100%; aspect-ratio: 1;
+      image-rendering: pixelated;
+      border: 1px solid var(--border); border-radius: 4px; background: #000;
+    }
+
+    #export-progress-label {
+      font-size: 11px; color: var(--text-muted);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      text-align: center;
+    }
+
+    #export-cancel {
+      width: 100%; color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
@@ -502,6 +578,8 @@
 
       <div class="ctrl-spacer"></div>
       <button id="mapResetView">Reset view</button>
+      <div class="ctrl-sep"></div>
+      <button id="mapExportBtn">↓ Export PNG</button>
     </div>
 
     <div id="phasemap-grid">
@@ -526,6 +604,59 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ── Export modal ── -->
+  <div id="export-overlay">
+    <div id="export-modal">
+      <div id="export-modal-header">
+        <span>Export Phase Map</span>
+        <button id="export-close">✕</button>
+      </div>
+
+      <div id="export-settings">
+        <div class="export-row">
+          <label>Resolution</label>
+          <select id="export-res">
+            <option value="1000">1000 × 1000 &nbsp;(1 tile)</option>
+            <option value="2000">2000 × 2000 &nbsp;(4 tiles)</option>
+            <option value="4000" selected>4000 × 4000 &nbsp;(16 tiles)</option>
+            <option value="8000">8000 × 8000 &nbsp;(64 tiles)</option>
+            <option value="16000">16000 × 16000 &nbsp;(256 tiles)</option>
+          </select>
+        </div>
+        <div class="export-row">
+          <label>Duration</label>
+          <input type="number" id="export-dur" value="30" min="1" max="600" step="1" />
+          <span class="export-unit">seconds</span>
+        </div>
+        <div id="export-steps-hint" class="export-hint">≈ 6,000 steps / tile</div>
+        <div class="export-row">
+          <label>Colour</label>
+          <select id="export-mode">
+            <option value="flipTime">Flip time</option>
+            <option value="theta2">Live θ₂</option>
+          </select>
+        </div>
+        <div class="export-row">
+          <label>Region</label>
+          <select id="export-region">
+            <option value="current">Current view</option>
+            <option value="full">Full range [−π, π]</option>
+          </select>
+        </div>
+        <button id="export-generate">Generate &amp; Download</button>
+      </div>
+
+      <div id="export-progress" style="display:none">
+        <div id="export-progress-bar-wrap">
+          <div id="export-progress-bar"></div>
+        </div>
+        <canvas id="export-composite"></canvas>
+        <div id="export-progress-label">Initializing…</div>
+        <button id="export-cancel">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

@@ -113,6 +113,7 @@ export class PhaseMapView implements View {
 
   setColorMode(mode: ColorMode): void { this.colorMode = mode; }
   setStepsPerDispatch(n: number): void { this.stepsPerDispatch = n; }
+  getRegion(): PhaseRegion { return { ...this.region }; }
 
   async changeResolution(n: number): Promise<void> {
     this.ready = false;
