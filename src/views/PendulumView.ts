@@ -123,8 +123,8 @@ export class PendulumView implements View {
   private buildInitialStates(): PendulumState[] {
     const N = this.numPendulums;
     return Array.from({ length: N }, (_, i) => {
-      const offset = (i - Math.floor(N / 2)) * this.deltaAngle;
-      return { theta1: this.baseAngle + offset, omega1: 0, theta2: this.baseAngle2, omega2: 0 };
+      const offset = i * this.deltaAngle;
+      return { theta1: this.baseAngle + offset, omega1: 0, theta2: this.baseAngle2 + offset, omega2: 0 };
     });
   }
 

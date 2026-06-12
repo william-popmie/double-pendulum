@@ -12,8 +12,8 @@ export function pendulumScale(w: number, h: number): number {
 
 export interface AngleHint {
   target: 'rod1' | 'rod2';
-  theta1: number;   // rod1 angle — used to compute rod2 pivot position
-  angle: number;    // angle to display (radians, from downward vertical)
+  theta1: number;
+  angle: number;
 }
 
 export class PendulumCanvas {
@@ -47,8 +47,11 @@ export class PendulumCanvas {
 
     if (hint) this.drawAngleOverlay(hint);
 
-    // Pivot
-    ctx.fillStyle = '#888';
+    // Pivot — matches focused pendulum, grey in multi-pendulum 'all' mode
+    const pivotColor = typeof highlight === 'number'
+      ? pendulumColor(highlight, states.length)
+      : states.length === 1 ? pendulumColor(0, 1) : '#888';
+    ctx.fillStyle = pivotColor;
     ctx.beginPath();
     ctx.arc(cx, cy, PIVOT_RADIUS, 0, Math.PI * 2);
     ctx.fill();
@@ -96,7 +99,6 @@ export class PendulumCanvas {
       ctx.restore();
     };
 
-    // Wrap angles to [-π, π] so the arc never shows > 180°
     drawArc(cx, cy, wrap(state.theta1), 'α');
     const bob1x = cx + Math.sin(state.theta1) * S;
     const bob1y = cy + Math.cos(state.theta1) * S;
@@ -113,7 +115,6 @@ export class PendulumCanvas {
 
     ctx.save();
 
-    // Dashed vertical reference line (downward from pivot)
     ctx.setLineDash([3, 4]);
     ctx.strokeStyle = 'rgba(255,255,255,0.22)';
     ctx.lineWidth = 1;
@@ -123,7 +124,6 @@ export class PendulumCanvas {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Arc between vertical-down (canvas angle π/2) and current rod direction
     const arcR = 28;
     const rodA  = Math.PI / 2 - hint.angle;
     const vertA = Math.PI / 2;
@@ -136,7 +136,6 @@ export class PendulumCanvas {
     ctx.arc(px, py, arcR, arcStart, arcEnd, false);
     ctx.stroke();
 
-    // Angle label at midpoint of arc
     const midA   = (arcStart + arcEnd) / 2;
     const labelR = arcR + 16;
     const lx = px + Math.cos(midA) * labelR;

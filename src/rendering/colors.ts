@@ -1,7 +1,11 @@
 export function pendulumColor(index: number, total: number, alpha = 1): string {
-  if (total <= 1) return `rgba(200,210,215,${alpha})`;
-  const hue = Math.round((index / total) * 300);
-  return `hsla(${hue},90%,65%,${alpha})`;
+  const t   = total <= 1 ? 0 : index / (total - 1);
+  const hue = Math.round(t * 300);  // red (0) → purple (300)
+  // Perceptual compensation: yellow/lime zone needs higher lightness on dark bg
+  const L = hue > 40 && hue < 80  ? 68
+          : hue >= 80 && hue < 160 ? 59
+          : 63;
+  return `hsla(${hue}, 95%, ${L}%, ${alpha})`;
 }
 
 export function drawOrder(n: number, highlight: number | 'all'): number[] {
