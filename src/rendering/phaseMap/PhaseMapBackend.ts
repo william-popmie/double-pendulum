@@ -1,4 +1,5 @@
 import type { PhaseRegion } from '../../core/types';
+import { clampToOnePeriod } from '../../core/math';
 import computeShaderCode from './shaders/compute.wgsl';
 import reinitShaderCode from './shaders/reinit.wgsl';
 
@@ -14,6 +15,9 @@ export class PhaseMapBackend {
   private reinitPipeline!: GPUComputePipeline;
   private reinitBindGroup!: GPUBindGroup;
   private reinitUniform!: GPUBuffer;
+  private simRegion!: PhaseRegion;
+  simW = 0;
+  simH = 0;
   width = 0;
   height = 0;
 
@@ -79,23 +83,32 @@ export class PhaseMapBackend {
   }
 
   // Reset all pendulum initial conditions to the new region via GPU compute.
-  // 32-byte uniform write + one dispatch replaces the old 640k JS loop + 20MB transfer.
+  // Clamps to one fundamental period and only populates simW×simH entries (packed at
+  // buffer start with stride simW), reducing dispatch count when zoomed out.
   reinitialize(region: PhaseRegion): void {
+    this.simRegion = clampToOnePeriod(region);
+    const span1 = region.theta1Max - region.theta1Min;
+    const span2 = region.theta2Max - region.theta2Min;
+    this.simW = Math.min(this.width,  Math.round(this.width  * (2 * Math.PI) / span1));
+    this.simH = Math.min(this.height, Math.round(this.height * (2 * Math.PI) / span2));
+
     const u = new ArrayBuffer(32);
     const f = new Float32Array(u);
     const i = new Uint32Array(u);
-    f[0] = region.theta1Min;
-    f[1] = region.theta1Max;
-    f[2] = region.theta2Min;
-    f[3] = region.theta2Max;
-    i[4] = this.width;
-    i[5] = this.height;
+    f[0] = this.simRegion.theta1Min;
+    f[1] = this.simRegion.theta1Max;
+    f[2] = this.simRegion.theta2Min;
+    f[3] = this.simRegion.theta2Max;
+    i[4] = this.simW;
+    i[5] = this.simH;
     this.device.queue.writeBuffer(this.reinitUniform, 0, u);
-    this.dispatchCompute(this.reinitPipeline, this.reinitBindGroup);
+    this.dispatchCompute(this.reinitPipeline, this.reinitBindGroup, this.simW * this.simH);
   }
 
+  getSimRegion(): PhaseRegion { return { ...this.simRegion }; }
+  getSimDimensions(): { simW: number; simH: number } { return { simW: this.simW, simH: this.simH }; }
+
   // Advance all pendulums by stepsPerDispatch RK4 steps.
-  // freeze=true locks a pendulum after its first flip (used in flip-time mode).
   step(g: number, dt: number, stepsPerDispatch: number, freeze: boolean): void {
     const buf = new ArrayBuffer(16);
     const f = new Float32Array(buf);
@@ -105,15 +118,15 @@ export class PhaseMapBackend {
     u[2] = stepsPerDispatch;
     u[3] = freeze ? 1 : 0;
     this.device.queue.writeBuffer(this.uniformBuffer, 0, buf);
-    this.dispatchCompute(this.computePipeline, this.bindGroup);
+    this.dispatchCompute(this.computePipeline, this.bindGroup, this.simW * this.simH);
   }
 
-  private dispatchCompute(pipeline: GPUComputePipeline, bindGroup: GPUBindGroup): void {
+  private dispatchCompute(pipeline: GPUComputePipeline, bindGroup: GPUBindGroup, n: number): void {
     const enc = this.device.createCommandEncoder();
     const pass = enc.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(Math.ceil(this.width * this.height / 256));
+    pass.dispatchWorkgroups(Math.ceil(n / 256));
     pass.end();
     this.device.queue.submit([enc.finish()]);
   }

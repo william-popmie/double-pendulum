@@ -73,6 +73,8 @@ export class PhaseMapView implements View {
     await this.backend.init(this.device, this.gridRes, this.gridRes, this.region);
     await this.renderer.init(this.device, this.canvas);
     this.renderer.setStateBuffer(this.backend.getStateBuffer());
+    const { simW: iW, simH: iH } = this.backend.getSimDimensions();
+    this.renderer.setView(this.region, this.backend.getSimRegion(), iW, iH);
 
     this.stagingBuffer = this.device.createBuffer({
       size: 8 * 4,  // 8 floats × 4 bytes — full pendulum state slot
@@ -125,6 +127,8 @@ export class PhaseMapView implements View {
     this.backend = new PhaseMapBackend();
     await this.backend.init(this.device, n, n, this.region);
     this.renderer.setStateBuffer(this.backend.getStateBuffer());
+    const { simW: rW, simH: rH } = this.backend.getSimDimensions();
+    this.renderer.setView(this.region, this.backend.getSimRegion(), rW, rH);
     this.probeIndex = null;
     this.probeState = null;
     this.ready = true;
@@ -232,6 +236,8 @@ export class PhaseMapView implements View {
       this.clearVisualTransform();
       this.backend.reinitialize(this.region);
       this.renderer.setStateBuffer(this.backend.getStateBuffer());
+      const { simW, simH } = this.backend.getSimDimensions();
+      this.renderer.setView(this.region, this.backend.getSimRegion(), simW, simH);
       if (this.probeIndex !== null) this.probePhaseCanvas.reset(1);
     }, 200);
   }
