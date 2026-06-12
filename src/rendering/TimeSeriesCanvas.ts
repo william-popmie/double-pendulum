@@ -48,7 +48,7 @@ export class TimeSeriesCanvas {
 
     const refIdx   = highlight === 'all' ? Math.floor(trails.length / 2) : (highlight as number);
     const refTrail = trails[refIdx];
-    if (refTrail && refTrail.length > 0) {
+    if ((highlight !== 'all' || trails.length === 1) && refTrail && refTrail.length > 0) {
       const angle = wrap(this.getAngle(refTrail[refTrail.length - 1]));
       this.drawArrowV(angle, plotW, plotH);
     }
@@ -173,7 +173,7 @@ export class TimeSeriesCanvas {
 
     const refIdx   = highlight === 'all' ? Math.floor(trails.length / 2) : (highlight as number);
     const refTrail = trails[refIdx];
-    if (refTrail && refTrail.length > 0) {
+    if ((highlight !== 'all' || trails.length === 1) && refTrail && refTrail.length > 0) {
       const angle = wrap(this.getAngle(refTrail[refTrail.length - 1]));
       this.drawArrowH(angle, plotW, plotH);
     }

@@ -168,6 +168,10 @@ export class PendulumView implements View {
 
   // ── Drag interaction ──────────────────────────────────────────────────────
 
+  private dragRefIndex(): number {
+    return typeof this.highlight === 'number' ? this.highlight : Math.floor(this.numPendulums / 2);
+  }
+
   private canvasCoords(e: PointerEvent): { mx: number; my: number } {
     const rect = this.canvas.getBoundingClientRect();
     return {
@@ -180,7 +184,7 @@ export class PendulumView implements View {
     const S  = pendulumScale(this.canvas.width, this.canvas.height);
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
-    const ref = this.sim.states[Math.floor(this.numPendulums / 2)];
+    const ref = this.sim.states[this.dragRefIndex()];
     const sx1 = cx + Math.sin(ref.theta1) * S;
     const sy1 = cy + Math.cos(ref.theta1) * S;
     const sx2 = sx1 + Math.sin(ref.theta2) * S;
@@ -203,7 +207,7 @@ export class PendulumView implements View {
     const S  = pendulumScale(this.canvas.width, this.canvas.height);
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
-    const ref = this.sim.states[Math.floor(this.numPendulums / 2)];
+    const ref = this.sim.states[this.dragRefIndex()];
     const sx1 = cx + Math.sin(ref.theta1) * S;
     const sy1 = cy + Math.cos(ref.theta1) * S;
 
