@@ -3,7 +3,7 @@ import { DEFAULT_SIM } from '../core/config';
 import { pendulumColor } from './colors';
 import { wrap } from '../core/math';
 
-const PAD = { top: 20, right: 16, bottom: 36, left: 48 };
+const PAD = { top: 20, right: 20, bottom: 36, left: 48 };
 const DISPLAY_WINDOW = 800;
 
 export class TimeSeriesCanvas {
@@ -33,10 +33,19 @@ export class TimeSeriesCanvas {
 
     this.drawAxes(displayLen, W, H);
 
-    if (displayLen < 2) return;
-
     const plotW = W - PAD.left - PAD.right;
     const plotH = H - PAD.top - PAD.bottom;
+
+    // Vertical arrow from zero line to current angle value
+    const refIdx   = highlight === 'all' ? Math.floor(trails.length / 2) : (highlight as number);
+    const refTrail = trails[refIdx];
+    if (refTrail && refTrail.length > 0) {
+      const angle = wrap(this.getAngle(refTrail[refTrail.length - 1]));
+      this.drawCurrentArrow(angle, plotW, plotH);
+    }
+
+    if (displayLen < 2) return;
+
     const n = trails.length;
 
     const toX = (idx: number): number =>
@@ -72,6 +81,43 @@ export class TimeSeriesCanvas {
       }
       ctx.stroke();
     }
+  }
+
+  private drawCurrentArrow(angle: number, plotW: number, plotH: number): void {
+    const { ctx } = this;
+    const x     = PAD.left + plotW;           // right edge of the plot box
+    const zeroY = PAD.top + plotH / 2;        // y position of angle = 0
+    const tipY  = zeroY - (angle / Math.PI) * (plotH / 2);
+
+    if (Math.abs(tipY - zeroY) < 3) return;   // angle too close to zero, nothing to show
+
+    const goingUp = tipY < zeroY;
+    const headSize = 5;
+
+    // Stem from zero line to tip
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x, zeroY);
+    ctx.lineTo(x, tipY + (goingUp ? headSize : -headSize));
+    ctx.stroke();
+
+    // Arrowhead triangle at tip
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.moveTo(x, tipY);
+    ctx.lineTo(x - headSize / 2, tipY + (goingUp ? headSize : -headSize));
+    ctx.lineTo(x + headSize / 2, tipY + (goingUp ? headSize : -headSize));
+    ctx.closePath();
+    ctx.fill();
+
+    // Label (α or β) just to the right of the arrowhead
+    const indicatorLabel = this.label.includes('₁') ? 'α' : 'β';
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.font = 'italic bold 16px serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(indicatorLabel, x + 6, tipY);
   }
 
   private drawAxes(trailLen: number, W: number, H: number): void {

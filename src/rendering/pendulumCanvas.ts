@@ -1,6 +1,7 @@
 import { pendulumPositions } from '../physics/equations';
 import type { PendulumState } from '../core/types';
 import { pendulumColor, drawOrder } from './colors';
+import { wrap } from '../core/math';
 
 const BOB_RADIUS = 8;
 const PIVOT_RADIUS = 5;
@@ -37,6 +38,13 @@ export class PendulumCanvas {
 
     this.drawRodMode(states, L1, L2, highlight);
 
+    // Only show passive angle labels when not dragging (hint hides them)
+    const showDual = (typeof highlight === 'number' || states.length === 1) && !hint;
+    if (showDual) {
+      const ref = typeof highlight === 'number' ? states[highlight] : states[0];
+      if (ref) this.drawDualAngleLabels(ref);
+    }
+
     if (hint) this.drawAngleOverlay(hint);
 
     // Pivot
@@ -44,6 +52,55 @@ export class PendulumCanvas {
     ctx.beginPath();
     ctx.arc(cx, cy, PIVOT_RADIUS, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  private drawDualAngleLabels(state: PendulumState): void {
+    const { ctx, cx, cy } = this;
+    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height);
+
+    const drawArc = (px: number, py: number, angle: number, label: string): void => {
+      ctx.save();
+
+      ctx.setLineDash([3, 4]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(px, py - 8);
+      ctx.lineTo(px, py + 72);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const arcR     = 24;
+      const rodA     = Math.PI / 2 - angle;
+      const vertA    = Math.PI / 2;
+      const arcStart = Math.min(rodA, vertA);
+      const arcEnd   = Math.max(rodA, vertA);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(px, py, arcR, arcStart, arcEnd, false);
+      ctx.stroke();
+
+      const midA   = (arcStart + arcEnd) / 2;
+      const labelR = arcR + 16;
+      const lx = px + Math.cos(midA) * labelR;
+      const ly = py + Math.sin(midA) * labelR;
+
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = 'italic bold 16px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, lx, ly);
+
+      ctx.restore();
+    };
+
+    // Wrap angles to [-π, π] so the arc never shows > 180°
+    drawArc(cx, cy, wrap(state.theta1), 'α');
+    const bob1x = cx + Math.sin(state.theta1) * S;
+    const bob1y = cy + Math.cos(state.theta1) * S;
+    drawArc(bob1x, bob1y, wrap(state.theta2), 'β');
   }
 
   private drawAngleOverlay(hint: AngleHint): void {

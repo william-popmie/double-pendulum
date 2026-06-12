@@ -180,10 +180,11 @@ export class PendulumView implements View {
     const S  = pendulumScale(this.canvas.width, this.canvas.height);
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
-    const sx1 = cx + Math.sin(this.baseAngle)  * S;
-    const sy1 = cy + Math.cos(this.baseAngle)  * S;
-    const sx2 = sx1 + Math.sin(this.baseAngle2) * S;
-    const sy2 = sy1 + Math.cos(this.baseAngle2) * S;
+    const ref = this.sim.states[Math.floor(this.numPendulums / 2)];
+    const sx1 = cx + Math.sin(ref.theta1) * S;
+    const sy1 = cy + Math.cos(ref.theta1) * S;
+    const sx2 = sx1 + Math.sin(ref.theta2) * S;
+    const sy2 = sy1 + Math.cos(ref.theta2) * S;
 
     const ptd = (ax: number, ay: number, bx: number, by: number) =>
       Math.hypot(ax - bx, ay - by);
@@ -202,16 +203,17 @@ export class PendulumView implements View {
     const S  = pendulumScale(this.canvas.width, this.canvas.height);
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
-    const sx1 = cx + Math.sin(this.baseAngle) * S;
-    const sy1 = cy + Math.cos(this.baseAngle) * S;
+    const ref = this.sim.states[Math.floor(this.numPendulums / 2)];
+    const sx1 = cx + Math.sin(ref.theta1) * S;
+    const sy1 = cy + Math.cos(ref.theta1) * S;
 
     this.dragState = {
       target:      hit,
       pointerId:   e.pointerId,
       pivotX:      hit === 'rod1' ? cx  : sx1,
       pivotY:      hit === 'rod1' ? cy  : sy1,
-      startTheta1: this.baseAngle,
-      startTheta2: this.baseAngle2,
+      startTheta1: ref.theta1,
+      startTheta2: ref.theta2,
       wasPaused:   this.paused,
     };
     this.canvas.setPointerCapture(e.pointerId);
