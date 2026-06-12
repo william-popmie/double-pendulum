@@ -65,17 +65,52 @@ async function init(): Promise<void> {
     energyEl, showSelectContainer,
   );
 
+  // ── Onboarding ────────────────────────────────────────────────────────────
+  const tileHints  = document.querySelectorAll<HTMLElement>('.tile-hint');
+  const grpActions   = document.getElementById('ctrl-group-actions')   as HTMLElement;
+  const grpPendulums = document.getElementById('ctrl-group-pendulums') as HTMLElement;
+  const grpSelect    = document.getElementById('ctrl-group-select')    as HTMLElement;
+  const grpSpeed     = document.getElementById('ctrl-group-speed')     as HTMLElement;
+
+  let obState = 0;
+  const reveal = (el: HTMLElement, delay = 0) => {
+    setTimeout(() => {
+      el.classList.remove('hidden');
+      el.classList.add('fade-in');
+    }, delay);
+  };
+
+  pendulumView.onFirstDrag = () => {
+    if (obState !== 0) return;
+    obState = 1;
+    tileHints.forEach(el => el.classList.add('hidden'));
+    reveal(grpActions, 1200);
+  };
+
   playPauseBtn.addEventListener('click', () => {
     pendulumView.paused = !pendulumView.paused;
     playPauseBtn.textContent = pendulumView.paused ? '▶ Play' : '⏸ Pause';
-    playPauseBtn.className = pendulumView.paused ? 'btn-play' : 'btn-pause';
+    playPauseBtn.className   = pendulumView.paused ? 'btn-play' : 'btn-pause';
+    if (obState === 1 && !pendulumView.paused) { obState = 2; reveal(grpPendulums, 1200); }
+    else if (obState === 3 && !pendulumView.paused) { obState = 4; reveal(grpSpeed, 1200); }
   });
 
   resetBtn.addEventListener('click', () => pendulumView.reset());
 
   numPendulumsInput.addEventListener('change', () => {
     const n = parseInt(numPendulumsInput.value, 10);
-    if (n >= 1 && n <= 50) pendulumView.setNumPendulums(n);
+    if (n >= 1 && n <= 50) {
+      pendulumView.setNumPendulums(n);
+      if (obState === 2 && n > 1) { obState = 3; reveal(grpSelect, 1200); }
+    }
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.num-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target!) as HTMLInputElement;
+      if (parseInt(btn.dataset.dir!) > 0) input.stepUp(); else input.stepDown();
+      input.dispatchEvent(new Event('change'));
+    });
   });
 
   deltaAngleInput.addEventListener('change', () => {

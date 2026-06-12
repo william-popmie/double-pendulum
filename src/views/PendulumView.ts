@@ -21,6 +21,7 @@ export class PendulumView implements View {
 
   paused = true;
   stepsPerFrame = 5;
+  onFirstDrag?: () => void;
 
   private rafId = 0;
   private readonly resizeObserver: ResizeObserver;
@@ -49,8 +50,8 @@ export class PendulumView implements View {
     t2CanvasEl: HTMLCanvasElement,
     private readonly energyEl: HTMLElement,
     private readonly showContainer: HTMLElement,
-    initialN = 10,
-    initialDeltaDeg = 1,
+    initialN = 1,
+    initialDeltaDeg = 5,
     initialBaseAngleDeg = 75,
     initialBaseAngle2Deg = 45,
   ) {
@@ -220,6 +221,7 @@ export class PendulumView implements View {
       startTheta2: ref.theta2,
       wasPaused:   this.paused,
     };
+    if (this.onFirstDrag) { this.onFirstDrag(); this.onFirstDrag = undefined; }
     this.canvas.setPointerCapture(e.pointerId);
     this.paused = true;
     this.canvas.style.cursor = 'grabbing';

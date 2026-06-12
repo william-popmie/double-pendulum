@@ -122,36 +122,32 @@ export class TimeSeriesCanvas {
     const zeroY   = PAD.top + plotH / 2;
     const elapsed = trailLen * DEFAULT_SIM.dt;
 
-    ctx.strokeStyle = '#3a3a5a';
+    ctx.strokeStyle = '#353535';
     ctx.lineWidth   = 1;
     ctx.strokeRect(PAD.left, PAD.top, plotW, plotH);
 
     ctx.setLineDash([3, 4]);
-    ctx.strokeStyle = '#2a2a4a';
+    ctx.strokeStyle = '#222';
     for (const frac of [-1, 0, 1]) {
       const y = PAD.top + plotH / 2 - frac * plotH / 2;
       ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + plotW, y); ctx.stroke();
     }
     ctx.setLineDash([]);
 
-    ctx.strokeStyle = '#3a3a5a';
+    ctx.strokeStyle = '#353535';
     ctx.beginPath(); ctx.moveTo(PAD.left, zeroY); ctx.lineTo(PAD.left + plotW, zeroY); ctx.stroke();
 
     ctx.fillStyle = '#666';
     ctx.font      = '10px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText('+π', PAD.left - 4, PAD.top + 4);
-    ctx.fillText('0',  PAD.left - 4, zeroY + 3);
-    ctx.fillText('−π', PAD.left - 4, PAD.top + plotH + 4);
+    ctx.fillText('+180°', PAD.left - 4, PAD.top + 4);
+    ctx.fillText('0',     PAD.left - 4, zeroY + 3);
+    ctx.fillText('−180°', PAD.left - 4, PAD.top + plotH + 4);
 
     ctx.textAlign = 'left';
     ctx.fillText('0', PAD.left, PAD.top + plotH + 22);
     ctx.textAlign = 'right';
     ctx.fillText(`t=${elapsed.toFixed(1)}s`, PAD.left + plotW, PAD.top + plotH + 22);
-
-    ctx.fillStyle = '#555';
-    ctx.textAlign = 'center';
-    ctx.fillText(this.label, PAD.left + plotW / 2, PAD.top - 6);
   }
 
   // ── Rotated mode (β: angle→x, time→y, newest at bottom) ──────────────────
@@ -243,31 +239,27 @@ export class TimeSeriesCanvas {
   private drawRotatedAxes(plotW: number, plotH: number): void {
     const { ctx } = this;
 
-    ctx.strokeStyle = '#3a3a5a';
+    ctx.strokeStyle = '#353535';
     ctx.lineWidth   = 1;
     ctx.strokeRect(RPAD.left, RPAD.top, plotW, plotH);
 
     ctx.setLineDash([3, 4]);
-    ctx.strokeStyle = '#2a2a4a';
+    ctx.strokeStyle = '#222';
     for (const frac of [-1, 0, 1]) {
       const x = RPAD.left + plotW / 2 + frac * plotW / 2;
       ctx.beginPath(); ctx.moveTo(x, RPAD.top); ctx.lineTo(x, RPAD.top + plotH); ctx.stroke();
     }
     ctx.setLineDash([]);
 
-    ctx.strokeStyle = '#3a3a5a';
+    ctx.strokeStyle = '#353535';
     const cx = RPAD.left + plotW / 2;
     ctx.beginPath(); ctx.moveTo(cx, RPAD.top); ctx.lineTo(cx, RPAD.top + plotH); ctx.stroke();
 
     const labelY = RPAD.top + plotH + 14;
     ctx.fillStyle = '#666';
     ctx.font      = '10px monospace';
-    ctx.textAlign = 'left';  ctx.fillText('−π', RPAD.left, labelY);
-    ctx.textAlign = 'center'; ctx.fillText('0', RPAD.left + plotW / 2, labelY);
-    ctx.textAlign = 'right';  ctx.fillText('+π', RPAD.left + plotW, labelY);
-
-    ctx.fillStyle = '#555';
-    ctx.textAlign = 'center';
-    ctx.fillText(this.label, RPAD.left + plotW / 2, RPAD.top - 6);
+    ctx.textAlign = 'left';   ctx.fillText('−180°', RPAD.left, labelY);
+    ctx.textAlign = 'center'; ctx.fillText('0°', RPAD.left + plotW / 2, labelY);
+    ctx.textAlign = 'right';  ctx.fillText('+180°', RPAD.left + plotW, labelY);
   }
 }

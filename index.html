@@ -96,6 +96,8 @@
       border-bottom: 1px solid var(--border);
       flex-wrap: nowrap;
       overflow: visible;
+      position: relative;
+      z-index: 10;
     }
 
     .help-icon {
@@ -208,7 +210,47 @@
       transition: border-color 0.15s;
     }
     input[type="number"]:focus { border-color: var(--border-hover); }
-    input[type="number"]::-webkit-inner-spin-button { opacity: 0.3; }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { display: none; }
+
+    .num-ctrl {
+      display: inline-flex;
+      align-items: stretch;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .num-ctrl:hover, .num-ctrl:focus-within { border-color: var(--border-hover); }
+    .num-ctrl input[type="number"] {
+      border: none;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-radius: 0;
+      text-align: center;
+      width: 40px;
+      padding: 4px 2px;
+    }
+    .num-ctrl input[type="number"]:focus { border-color: var(--border); outline: none; }
+    .num-btn {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      color: var(--text-muted);
+      padding: 0 8px;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+      font-family: inherit;
+      min-width: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.12s, background 0.12s;
+      white-space: nowrap;
+    }
+    .num-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
 
     input[type="range"] {
       width: 80px;
@@ -479,6 +521,32 @@
     #export-cancel {
       width: 100%; color: var(--text-muted);
     }
+
+    /* ── Onboarding ───────────────────────────────────────────────────────── */
+    .tile-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: var(--bg);
+      pointer-events: none;
+      transition: opacity 0.4s;
+      z-index: 1;
+    }
+    .tile-hint.hidden { opacity: 0; }
+    .tile-hint-arrow { font-size: 16px; color: rgba(255,255,255,0.3); }
+    .tile-hint-text  { font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 0.04em; }
+
+    .ctrl-group { display: flex; align-items: center; gap: 6px; }
+    .ctrl-group.hidden { display: none; }
+    .ctrl-group.fade-in { animation: ctrlFadeIn 0.5s ease forwards; }
+    @keyframes ctrlFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -494,35 +562,46 @@
   <div id="page-pendulum">
 
     <div class="ctrl-bar">
-      <span class="ctrl-label">Pendulums</span>
-      <input type="number" id="numPendulums" value="10" min="1" max="50" step="1" />
-      <span class="help-icon tip-left" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle — tiny differences grow into completely different trajectories, revealing chaos."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
 
-      <div class="ctrl-sep"></div>
+      <div id="ctrl-group-actions" class="ctrl-group hidden">
+        <button id="playPauseBtn" class="btn-play">▶&thinsp;Play</button>
+        <button id="resetBtn">↺&thinsp;Reset</button>
+        <div class="ctrl-sep"></div>
+      </div>
 
-      <span class="ctrl-label">Spread</span>
-      <input type="number" id="deltaAngle" value="1" min="0.01" max="45" step="0.1" />
-      <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions; larger values spread them across a wider range."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
+      <div id="ctrl-group-pendulums" class="ctrl-group hidden">
+        <span class="ctrl-label" id="numPendulumsLabel">Pendulums</span>
+        <div class="num-ctrl">
+          <button class="num-btn" data-target="numPendulums" data-dir="-1">−</button>
+          <input type="number" id="numPendulums" value="1" min="1" max="50" step="1" />
+          <button class="num-btn" data-target="numPendulums" data-dir="1">+</button>
+        </div>
+        <span class="help-icon tip-left" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle — tiny differences grow into completely different trajectories, revealing chaos."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
+        <div class="ctrl-sep"></div>
+        <span class="ctrl-label">Spread</span>
+        <div class="num-ctrl">
+          <button class="num-btn" data-target="deltaAngle" data-dir="-1">−</button>
+          <input type="number" id="deltaAngle" value="5" min="0.01" max="45" step="0.1" />
+          <button class="num-btn" data-target="deltaAngle" data-dir="1">+</button>
+        </div>
+        <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions; larger values spread them across a wider range."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
+        <div class="ctrl-sep"></div>
+      </div>
 
+      <div id="ctrl-group-select" class="ctrl-group hidden">
+        <span class="ctrl-label">Show Pendulum</span>
+        <div id="showSelectContainer" class="custom-select"></div>
+        <div class="ctrl-sep"></div>
+      </div>
 
-      <div class="ctrl-sep"></div>
+      <div id="ctrl-group-speed" class="ctrl-group hidden">
+        <span class="ctrl-label">Speed</span>
+        <input type="range" id="speed" min="0" max="10" value="5" />
+        <span class="ctrl-value" id="speedLabel">5</span>
+        <div class="ctrl-spacer"></div>
+        <span id="energy">—</span>
+      </div>
 
-      <button id="playPauseBtn" class="btn-play">▶&thinsp;Play</button>
-      <button id="resetBtn">↺&thinsp;Reset</button>
-
-      <div class="ctrl-sep"></div>
-
-      <span class="ctrl-label">Show Pendulum</span>
-      <div id="showSelectContainer" class="custom-select"></div>
-
-      <div class="ctrl-sep"></div>
-
-      <span class="ctrl-label">Speed</span>
-      <input type="range" id="speed" min="0" max="10" value="5" />
-      <span class="ctrl-value" id="speedLabel">5</span>
-
-      <div class="ctrl-spacer"></div>
-      <span id="energy">—</span>
     </div>
 
     <div id="pendulum-grid">
@@ -532,13 +611,21 @@
       </div>
       <div class="quad-cell">
         <canvas id="canvas-t1"></canvas>
+        <div class="tile-hint" id="tile-hint-t1">
+          <span class="tile-hint-arrow">←</span>
+          <span class="tile-hint-text">set your starting position</span>
+        </div>
       </div>
       <div class="quad-cell">
         <canvas id="canvas-t2"></canvas>
+        <div class="tile-hint" id="tile-hint-t2">
+          <span class="tile-hint-arrow">↑</span>
+          <span class="tile-hint-text">set your starting position</span>
+        </div>
       </div>
       <div class="quad-cell">
-        <span class="quad-label">Phase portrait  θ₁ vs θ₂</span>
         <canvas id="canvas-phase"></canvas>
+        <div class="tile-hint" id="tile-hint-phase"></div>
       </div>
     </div>
 
