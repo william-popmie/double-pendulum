@@ -62,8 +62,8 @@ export class PendulumView implements View {
     this.canvas = pendCanvasEl;
     this.pendulumCanvas = new PendulumCanvas(pendCanvasEl);
     this.phaseCanvas    = new PhaseCanvas(phaseCanvasEl);
-    this.t1Canvas = new TimeSeriesCanvas(t1CanvasEl, 'θ₁', s => s.theta1);
-    this.t2Canvas = new TimeSeriesCanvas(t2CanvasEl, 'θ₂', s => s.theta2);
+    this.t1Canvas = new TimeSeriesCanvas(t1CanvasEl, 'α', s => s.theta1, true);
+    this.t2Canvas = new TimeSeriesCanvas(t2CanvasEl, 'β', s => s.theta2);
 
     this.sim = new Simulation(this.buildInitialStates(), DEFAULT_PHYSICS, DEFAULT_SIM);
 

@@ -73,12 +73,39 @@ export class PhaseCanvas {
       }
       this.ctx.stroke();
 
-      // Current position dot
-      const [cx, cy] = this.toScreen(wrap(states[i].theta1), wrap(states[i].theta2));
-      this.ctx.fillStyle = pendulumColor(i, n, isHighlighted ? 1 : 0.15);
-      this.ctx.beginPath();
-      this.ctx.arc(cx, cy, dotRadius, 0, Math.PI * 2);
-      this.ctx.fill();
+      // Current position dot (skip highlighted pendulum when single-select — drawn white below)
+      if (highlight === 'all' || !isHighlighted) {
+        const [cx, cy] = this.toScreen(wrap(states[i].theta1), wrap(states[i].theta2));
+        this.ctx.fillStyle = pendulumColor(i, n, isHighlighted ? 1 : 0.15);
+        this.ctx.beginPath();
+        this.ctx.arc(cx, cy, dotRadius, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+    }
+
+    // When a single pendulum is selected: draw crosshair + white dot on top
+    if (highlight !== 'all') {
+      const ref = states[highlight as number];
+      if (ref) {
+        const pad = 30;
+        const [cx, cy] = this.toScreen(wrap(ref.theta1), wrap(ref.theta2));
+
+        this.ctx.save();
+        this.ctx.setLineDash([3, 5]);
+        this.ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(cx, pad);         this.ctx.lineTo(cx, this.h - pad);
+        this.ctx.moveTo(pad, cy);         this.ctx.lineTo(this.w - pad, cy);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+
+        this.ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        this.ctx.beginPath();
+        this.ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+      }
     }
   }
 
