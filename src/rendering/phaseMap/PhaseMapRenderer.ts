@@ -3,7 +3,7 @@ import vertShaderCode from './shaders/vert.wgsl';
 import fragShaderCode from './shaders/frag.wgsl';
 
 const PALETTE_INDEX: Record<Palette, number> = {
-  rainbow: 0, dmt: 1, mdma: 2, lsd: 3, acid: 4, snow: 5, shrooms: 6,
+  rainbow: 0, lsd: 3, shrooms: 6, snow: 5, acid: 4, mdma: 2,
 };
 
 export interface RenderOpts {

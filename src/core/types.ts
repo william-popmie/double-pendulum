@@ -26,7 +26,7 @@ export interface PhaseRegion {
 }
 
 export type ColorMode = 'theta2' | 'flipTime';
-export type Palette   = 'rainbow' | 'dmt' | 'acid' | 'snow' | 'shrooms' | 'mdma' | 'lsd';
+export type Palette   = 'rainbow' | 'lsd' | 'shrooms' | 'snow' | 'acid' | 'mdma';
 
 export interface View {
   paused: boolean;

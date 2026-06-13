@@ -261,6 +261,8 @@ export class PhaseMapView implements View {
     this.lastX = e.clientX;
     this.lastY = e.clientY;
 
+    if (!this.wasDragging) return;
+
     const rect = this.canvas.getBoundingClientRect();
     const scaleX = (this.region.theta1Max - this.region.theta1Min) / rect.width;
     const scaleY = (this.region.theta2Max - this.region.theta2Min) / rect.height;
