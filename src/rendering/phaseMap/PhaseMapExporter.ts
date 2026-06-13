@@ -2,7 +2,7 @@ import { PhaseMapBackend } from './PhaseMapBackend';
 import { PhaseMapRenderer } from './PhaseMapRenderer';
 import { DEFAULT_PHYSICS, DEFAULT_SIM } from '../../core/config';
 import { clampToOnePeriod, TWO_PI } from '../../core/math';
-import type { ColorMode, PhaseRegion } from '../../core/types';
+import type { ColorMode, Palette, PhaseRegion } from '../../core/types';
 
 const TILE_SIZE        = 1000;
 const STEPS_PER_BATCH  = 20;
@@ -12,6 +12,7 @@ export interface ExportOptions {
   resolution: number;
   durationSeconds: number;
   colorMode: ColorMode;
+  palette: Palette;
   region: PhaseRegion;
   maxFlipTime: number;
   compositeCanvas: HTMLCanvasElement;
@@ -24,7 +25,7 @@ export class PhaseMapExporter {
   cancel(): void { this.cancelled = true; }
 
   async run(device: GPUDevice, opts: ExportOptions): Promise<'done' | 'cancelled'> {
-    const { resolution, durationSeconds, colorMode, region, maxFlipTime, compositeCanvas } = opts;
+    const { resolution, durationSeconds, colorMode, palette, region, maxFlipTime, compositeCanvas } = opts;
     const compositeCtx    = compositeCanvas.getContext('2d')!;
     const freeze          = colorMode === 'flipTime';
     const totalDispatches = Math.ceil(durationSeconds / DEFAULT_SIM.dt / STEPS_PER_BATCH);
@@ -70,7 +71,7 @@ export class PhaseMapExporter {
             backend.step(DEFAULT_PHYSICS.g, DEFAULT_SIM.dt, STEPS_PER_BATCH, freeze);
 
             if (d % PREVIEW_INTERVAL === 0) {
-              renderer.render({ colorMode, maxFlipTime });
+              renderer.render({ colorMode, palette, maxFlipTime });
               compositeCtx.drawImage(tileCanvas, x0, y0, tW, tH);
               const overall = (tileIdx * totalDispatches + d) / (totalTiles * totalDispatches);
               opts.onProgress(
@@ -82,7 +83,7 @@ export class PhaseMapExporter {
           }
 
           if (!this.cancelled) {
-            renderer.render({ colorMode, maxFlipTime });
+            renderer.render({ colorMode, palette, maxFlipTime });
             compositeCtx.drawImage(tileCanvas, x0, y0, tW, tH);
           }
         } finally {

@@ -8,7 +8,7 @@ struct RenderParams {
   maxFlipTime: f32,
   simWidth:    u32,   // active sim columns packed at buffer start (≤ width)
   simHeight:   u32,   // active sim rows    packed at buffer start (≤ height)
-  _pad0:       u32,
+  palette:     u32,   // 0=rainbow,1=fire,2=jet,3=neon,4=acid,5=gray,6=twilight
   _pad1:       u32,
 }
 
@@ -44,6 +44,69 @@ fn hsv2rgb(h: f32, s: f32, v: f32) -> vec3f {
   return rgb + m;
 }
 
+// IQ cosine palette: a + b * cos(2π*(c*t + d))
+fn iq_pal(t: f32, a: vec3f, b: vec3f, c_: vec3f, d: vec3f) -> vec3f {
+  return clamp(a + b * cos(TWO_PI * (c_ * t + d)), vec3f(0.0), vec3f(1.0));
+}
+
+// Fire: bright yellow (chaotic) → orange → dark red (slow)
+fn cm_fire(t: f32) -> vec3f {
+  let warm = mix(vec3f(1.0, 0.9, 0.0), vec3f(1.0, 0.12, 0.0), clamp(t * 2.0, 0.0, 1.0));
+  let cool = mix(vec3f(1.0, 0.12, 0.0), vec3f(0.12, 0.0, 0.0), clamp(t * 2.0 - 1.0, 0.0, 1.0));
+  return select(warm, cool, t >= 0.5);
+}
+
+// Jet: chaotic=red/orange, mid=green/cyan, slow=blue (classic scientific colormap)
+fn cm_jet(t: f32) -> vec3f {
+  let r = clamp(1.5 - abs(4.0 * t - 1.0), 0.0, 1.0);
+  let g = clamp(1.5 - abs(4.0 * t - 2.0), 0.0, 1.0);
+  let b = clamp(1.5 - abs(4.0 * t - 3.0), 0.0, 1.0);
+  return vec3f(r, g, b);
+}
+
+// Neon: 3 full rainbow cycles at max saturation — densely psychedelic
+fn cm_neon(t: f32) -> vec3f {
+  return hsv2rgb(fract(t * 3.0), 1.0, 1.0);
+}
+
+// Acid: cyan → purple → yellow → purple → cyan — vivid oscillation
+fn cm_acid(t: f32) -> vec3f {
+  return iq_pal(t, vec3f(0.5, 0.5, 0.5), vec3f(0.5, 0.5, 0.5),
+                   vec3f(1.0, 2.0, 1.0), vec3f(0.5, 0.0, 0.0));
+}
+
+// Twilight: cyclic dark-blue → light → dark-red → dark-blue (good for angle data)
+fn cm_twilight(t: f32) -> vec3f {
+  return iq_pal(t, vec3f(0.5, 0.5, 0.5), vec3f(0.45, 0.35, 0.45),
+                   vec3f(1.0, 1.0, 1.0), vec3f(0.0, 0.1, 0.5));
+}
+
+// Sequential palette (flip-time): rainbow caps at blue-violet so white=stable stays distinct
+fn palette_seq(t: f32) -> vec3f {
+  switch params.palette {
+    case 1u: { return cm_fire(t); }
+    case 2u: { return cm_jet(t); }
+    case 3u: { return cm_neon(t); }
+    case 4u: { return cm_acid(t); }
+    case 5u: { return vec3f(t * 0.88 + 0.04); }        // grayscale
+    case 6u: { return cm_twilight(t); }
+    default: { return hsv2rgb(t * 0.85, 0.95, 0.9); }  // rainbow (case 0)
+  }
+}
+
+// Cyclic palette (theta2 live mode): rainbow uses full hue circle
+fn palette_cyc(t: f32) -> vec3f {
+  switch params.palette {
+    case 1u: { return cm_fire(t); }
+    case 2u: { return cm_jet(t); }
+    case 3u: { return cm_neon(t); }
+    case 4u: { return cm_acid(t); }
+    case 5u: { return vec3f(t * 0.88 + 0.04); }     // grayscale
+    case 6u: { return cm_twilight(t); }
+    default: { return hsv2rgb(t, 0.9, 0.9); }        // rainbow full cycle (case 0)
+  }
+}
+
 @fragment
 fn fs_main(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
   let px = u32(fragCoord.x);
@@ -66,19 +129,17 @@ fn fs_main(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
   let base = idx * 8u;
 
   if params.colorMode == 0u {
-    // Live theta2 mode: map current angle to hue
+    // Live theta2 mode: map current angle to palette (cyclic)
     let theta2 = states[base + 2u];
-    let hue = fract(theta2 / TWO_PI + 2.0);  // +2 ensures positive before fract
-    return vec4f(hsv2rgb(hue, 0.9, 0.9), 1.0);
+    let t = fract(theta2 / TWO_PI + 2.0);  // +2 ensures positive before fract
+    return vec4f(palette_cyc(t), 1.0);
   } else {
-    // Flip-time mode: colour = time until first flip, white = never flipped (stable)
+    // Flip-time mode: white = never flipped (stable), palette = time until first flip
     let ft = states[base + 5u];
     if ft < 0.0 {
       return vec4f(1.0, 1.0, 1.0, 1.0);  // stable region = white
     }
     let t = clamp(ft / params.maxFlipTime, 0.0, 1.0);
-    // Hue 0 (red) = flipped immediately (chaotic), 0.85 (blue-violet) = barely flipped
-    let hue = t * 0.85;
-    return vec4f(hsv2rgb(hue, 0.95, 0.9), 1.0);
+    return vec4f(palette_seq(t), 1.0);
   }
 }

@@ -4,7 +4,7 @@ import { PendulumCanvas } from '../rendering/pendulumCanvas';
 import { PhaseCanvas } from '../rendering/phaseCanvas';
 import { observeCanvasSize } from '../rendering/canvasResize';
 import { DEFAULT_PHYSICS, DEFAULT_SIM } from '../core/config';
-import type { ColorMode, PhaseRegion, PendulumState, View } from '../core/types';
+import type { ColorMode, Palette, PhaseRegion, PendulumState, View } from '../core/types';
 
 export class PhaseMapView implements View {
   private backend!: PhaseMapBackend;
@@ -17,6 +17,7 @@ export class PhaseMapView implements View {
     theta2Min: -Math.PI, theta2Max: Math.PI,
   };
   private colorMode: ColorMode = 'theta2';
+  private palette: Palette = 'rainbow';
   private stepsPerDispatch = 10;
   private maxFlipTime = 50;
   private gridRes = 800;
@@ -114,6 +115,7 @@ export class PhaseMapView implements View {
   // ── Controls ──────────────────────────────────────────────────────────────
 
   setColorMode(mode: ColorMode): void { this.colorMode = mode; }
+  setPalette(p: Palette): void { this.palette = p; }
   setStepsPerDispatch(n: number): void { this.stepsPerDispatch = n; }
   getRegion(): PhaseRegion { return { ...this.region }; }
 
@@ -150,7 +152,7 @@ export class PhaseMapView implements View {
         const freeze = this.colorMode === 'flipTime';
         this.backend.step(DEFAULT_PHYSICS.g, DEFAULT_SIM.dt, this.stepsPerDispatch, freeze);
       }
-      this.renderer.render({ colorMode: this.colorMode, maxFlipTime: this.maxFlipTime });
+      this.renderer.render({ colorMode: this.colorMode, maxFlipTime: this.maxFlipTime, palette: this.palette });
       this.fetchProbeState();
     }
 

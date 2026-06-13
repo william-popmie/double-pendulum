@@ -26,6 +26,7 @@ export interface PhaseRegion {
 }
 
 export type ColorMode = 'theta2' | 'flipTime';
+export type Palette   = 'rainbow' | 'solar' | 'jet' | 'neon' | 'acid' | 'gray' | 'twilight';
 
 export interface View {
   paused: boolean;

@@ -1,26 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Double Pendulum</title>
+  <link rel="icon" href="/favicon.png" type="image/png" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:           #000000;
-      --surface:      #0a0a0a;
-      --border:       rgba(255,255,255,0.08);
-      --border-hover: rgba(255,255,255,0.15);
-      --text:         #ededed;
-      --text-muted:   #666666;
-      --text-dim:     #333333;
-      --accent:       #ffffff;
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    html { height: 100%; }
+    :root {
+      --bg: #000000;
+      --surface: #0a0a0a;
+      --border: rgba(255, 255, 255, 0.14);
+      --border-hover: rgba(255, 255, 255, 0.24);
+      --text: #ededed;
+      --text-muted: rgba(255, 255, 255, 0.5);
+      --text-dim: #333333;
+      --accent: #ffffff;
+    }
+
+    html {
+      height: 100%;
+    }
 
     body {
       height: 100%;
@@ -70,8 +80,16 @@
       transition: color 0.15s, background 0.15s;
       position: relative;
     }
-    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-    .tab-btn.active { color: var(--text); }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: var(--text);
+    }
+
     .tab-btn.active::after {
       content: '';
       position: absolute;
@@ -82,7 +100,11 @@
       background: var(--text);
       border-radius: 1px;
     }
-    .tab-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .tab-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
 
     /* ── Control bar ───────────────────────────────────────────────────────── */
     .ctrl-bar {
@@ -112,6 +134,7 @@
       flex-shrink: 0;
       user-select: none;
     }
+
     .help-icon::after {
       content: attr(data-tip);
       position: absolute;
@@ -119,7 +142,7 @@
       left: 50%;
       transform: translateX(-50%);
       background: #151515;
-      border: 1px solid rgba(255,255,255,0.14);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 6px;
       padding: 7px 11px;
       font-size: 11px;
@@ -135,41 +158,92 @@
       font-weight: 400;
       font-family: inherit;
     }
-    .help-icon:hover::after { opacity: 1; }
-    .help-icon.tip-left::after { left: 0; right: auto; transform: none; }
+
+    .help-icon:hover::after {
+      opacity: 1;
+    }
+
+    .help-icon.tip-left::after {
+      left: 0;
+      right: auto;
+      transform: none;
+    }
 
     /* ── Custom colored select ─────────────────────────────────────────────── */
-    .custom-select { position: relative; display: inline-flex; flex-shrink: 0; }
+    .custom-select {
+      position: relative;
+      display: inline-flex;
+      flex-shrink: 0;
+    }
 
     .cs-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: transparent; border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); padding: 4px 8px; font-size: 12px;
-      font-family: inherit; cursor: pointer; min-width: 120px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 4px 8px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      min-width: 120px;
       transition: border-color 0.15s;
     }
-    .cs-btn:hover { border-color: var(--border-hover); }
-    .cs-text { flex: 1; text-align: left; }
+
+    .cs-btn:hover {
+      border-color: var(--border-hover);
+    }
+
+    .cs-text {
+      flex: 1;
+      text-align: left;
+    }
 
     .cs-dot {
-      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
 
     .cs-dropdown {
-      display: none; position: absolute; top: calc(100% + 4px); left: 0;
-      background: #111; border: 1px solid var(--border); border-radius: 6px;
-      z-index: 150; min-width: 100%; overflow: hidden;
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      z-index: 150;
+      min-width: 100%;
+      overflow: hidden;
     }
-    .cs-dropdown.open { display: block; }
+
+    .cs-dropdown.open {
+      display: block;
+    }
 
     .cs-option {
-      display: flex; align-items: center; gap: 7px;
-      padding: 6px 10px; font-size: 12px; color: var(--text);
-      cursor: pointer; white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
       transition: background 0.1s;
     }
-    .cs-option:hover    { background: rgba(255,255,255,0.06); }
-    .cs-option.selected { background: rgba(255,255,255,0.04); }
+
+    .cs-option:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .cs-option.selected {
+      background: rgba(255, 255, 255, 0.04);
+    }
 
     .ctrl-sep {
       width: 1px;
@@ -195,7 +269,10 @@
       min-width: 20px;
     }
 
-    .ctrl-spacer { flex: 1; min-width: 8px; }
+    .ctrl-spacer {
+      flex: 1;
+      min-width: 8px;
+    }
 
     input[type="number"] {
       width: 56px;
@@ -209,9 +286,15 @@
       outline: none;
       transition: border-color 0.15s;
     }
-    input[type="number"]:focus { border-color: var(--border-hover); }
+
+    input[type="number"]:focus {
+      border-color: var(--border-hover);
+    }
+
     input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button { display: none; }
+    input[type="number"]::-webkit-outer-spin-button {
+      display: none;
+    }
 
     .num-ctrl {
       display: inline-flex;
@@ -221,7 +304,12 @@
       overflow: hidden;
       transition: border-color 0.15s;
     }
-    .num-ctrl:hover, .num-ctrl:focus-within { border-color: var(--border-hover); }
+
+    .num-ctrl:hover,
+    .num-ctrl:focus-within {
+      border-color: var(--border-hover);
+    }
+
     .num-ctrl input[type="number"] {
       border: none;
       border-left: 1px solid var(--border);
@@ -231,7 +319,12 @@
       width: 40px;
       padding: 4px 2px;
     }
-    .num-ctrl input[type="number"]:focus { border-color: var(--border); outline: none; }
+
+    .num-ctrl input[type="number"]:focus {
+      border-color: var(--border);
+      outline: none;
+    }
+
     .num-btn {
       background: transparent;
       border: none;
@@ -250,7 +343,11 @@
       transition: color 0.12s, background 0.12s;
       white-space: nowrap;
     }
-    .num-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    .num-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+    }
 
     input[type="range"] {
       width: 80px;
@@ -270,8 +367,15 @@
       cursor: pointer;
       transition: border-color 0.15s;
     }
-    select:focus { border-color: var(--border-hover); }
-    select option { background: #111; color: var(--text); }
+
+    select:focus {
+      border-color: var(--border-hover);
+    }
+
+    select option {
+      background: #111;
+      color: var(--text);
+    }
 
     button {
       background: transparent;
@@ -286,25 +390,38 @@
       white-space: nowrap;
       transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
-    button:hover { color: var(--text); border-color: var(--border-hover); background: rgba(255,255,255,0.04); }
+
+    button:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+      background: rgba(255, 255, 255, 0.04);
+    }
 
     .btn-play {
       color: #4ade80;
-      border-color: rgba(74,222,128,0.35);
-      background: rgba(74,222,128,0.08);
+      border-color: rgba(74, 222, 128, 0.35);
+      background: rgba(74, 222, 128, 0.08);
       min-width: 78px;
       font-weight: 500;
     }
-    .btn-play:hover { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.55); }
+
+    .btn-play:hover {
+      background: rgba(74, 222, 128, 0.15);
+      border-color: rgba(74, 222, 128, 0.55);
+    }
 
     .btn-pause {
       color: #f87171;
-      border-color: rgba(248,113,113,0.35);
-      background: rgba(248,113,113,0.08);
+      border-color: rgba(248, 113, 113, 0.35);
+      background: rgba(248, 113, 113, 0.08);
       min-width: 78px;
       font-weight: 500;
     }
-    .btn-pause:hover { background: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.55); }
+
+    .btn-pause:hover {
+      background: rgba(248, 113, 113, 0.15);
+      border-color: rgba(248, 113, 113, 0.55);
+    }
 
     #energy {
       font-family: 'SF Mono', 'Fira Code', monospace;
@@ -393,9 +510,9 @@
       left: 50%;
       transform: translateX(-50%);
       font-size: 11px;
-      color: rgba(255,255,255,0.55);
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255, 255, 255, 0.55);
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 6px;
       padding: 5px 12px;
       pointer-events: none;
@@ -403,7 +520,10 @@
       letter-spacing: 0.02em;
       transition: opacity 0.4s;
     }
-    #probe-map-hint.hidden { opacity: 0; }
+
+    #probe-map-hint.hidden {
+      opacity: 0;
+    }
 
     #phase-canvas-wrap {
       position: relative;
@@ -424,10 +544,11 @@
 
     #phase-grid-bg {
       position: absolute;
-      inset: -300px; /* extends 300px beyond the canvas wrap into the void */
+      inset: -300px;
+      /* extends 300px beyond the canvas wrap into the void */
       background-image:
-        linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
       background-size: 50px 50px;
       opacity: 0;
       pointer-events: none;
@@ -444,16 +565,28 @@
       display: none;
       max-width: 360px;
     }
-    #no-gpu-msg strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 14px; }
+
+    #no-gpu-msg strong {
+      color: var(--text);
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
 
     /* ── Export modal ──────────────────────────────────────────────────────── */
     #export-overlay {
       display: none;
-      position: fixed; inset: 0; z-index: 500;
-      background: rgba(0,0,0,0.72);
-      align-items: center; justify-content: center;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(0, 0, 0, 0.72);
+      align-items: center;
+      justify-content: center;
     }
-    #export-overlay.active { display: flex; }
+
+    #export-overlay.active {
+      display: flex;
+    }
 
     #export-modal {
       background: #0d0d0d;
@@ -461,65 +594,115 @@
       border-radius: 10px;
       padding: 20px 24px;
       width: 340px;
-      display: flex; flex-direction: column; gap: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
     #export-modal-header {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+
     #export-modal-header span {
-      font-size: 13px; font-weight: 600; color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
     }
+
     #export-close {
-      border: none; background: none; padding: 2px 6px;
-      color: var(--text-muted); font-size: 14px; cursor: pointer;
+      border: none;
+      background: none;
+      padding: 2px 6px;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
       border-radius: 4px;
     }
-    #export-close:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    #export-close:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+    }
 
     .export-row {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 12px; color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
     }
-    .export-row label { width: 76px; flex-shrink: 0; }
-    .export-row select, .export-row input[type="number"] { flex: 1; }
-    .export-unit { color: var(--text-dim); font-size: 11px; }
+
+    .export-row label {
+      width: 76px;
+      flex-shrink: 0;
+    }
+
+    .export-row select,
+    .export-row input[type="number"] {
+      flex: 1;
+    }
+
+    .export-unit {
+      color: var(--text-dim);
+      font-size: 11px;
+    }
 
     .export-hint {
-      font-size: 11px; color: var(--text-dim);
-      margin-top: -6px; padding-left: 84px;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: -6px;
+      padding-left: 84px;
       font-family: 'SF Mono', 'Fira Code', monospace;
     }
 
     #export-generate {
-      width: 100%; margin-top: 2px;
-      color: var(--text); border-color: var(--border-hover); font-weight: 500;
+      width: 100%;
+      margin-top: 2px;
+      color: var(--text);
+      border-color: var(--border-hover);
+      font-weight: 500;
     }
-    #export-generate:hover { background: rgba(255,255,255,0.06); }
+
+    #export-generate:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
 
     #export-progress-bar-wrap {
-      height: 3px; background: rgba(255,255,255,0.08);
-      border-radius: 2px; overflow: hidden;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
     }
+
     #export-progress-bar {
-      height: 100%; width: 0%; background: #4ade80;
-      transition: width 0.08s linear; border-radius: 2px;
+      height: 100%;
+      width: 0%;
+      background: #4ade80;
+      transition: width 0.08s linear;
+      border-radius: 2px;
     }
 
     #export-composite {
-      width: 100%; aspect-ratio: 1;
+      width: 100%;
+      aspect-ratio: 1;
       image-rendering: pixelated;
-      border: 1px solid var(--border); border-radius: 4px; background: #000;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #000;
     }
 
     #export-progress-label {
-      font-size: 11px; color: var(--text-muted);
+      font-size: 11px;
+      color: var(--text-muted);
       font-family: 'SF Mono', 'Fira Code', monospace;
       text-align: center;
     }
 
     #export-cancel {
-      width: 100%; color: var(--text-muted);
+      width: 100%;
+      color: var(--text-muted);
     }
 
     /* ── Onboarding ───────────────────────────────────────────────────────── */
@@ -536,19 +719,48 @@
       transition: opacity 0.4s;
       z-index: 1;
     }
-    .tile-hint.hidden { opacity: 0; }
-    .tile-hint-arrow { font-size: 24px; color: rgba(255,255,255,0.3); }
-    .tile-hint-text  { font-size: 13px; color: rgba(255,255,255,0.3); letter-spacing: 0.04em; }
 
-    .ctrl-group { display: flex; align-items: center; gap: 6px; }
-    .ctrl-group.hidden { display: none; }
-    .ctrl-group.fade-in { animation: ctrlFadeIn 0.5s ease forwards; }
+    .tile-hint.hidden {
+      opacity: 0;
+    }
+
+    .tile-hint-arrow {
+      font-size: 24px;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .tile-hint-text {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.3);
+      letter-spacing: 0.04em;
+    }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ctrl-group.hidden {
+      display: none;
+    }
+
+    .ctrl-group.fade-in {
+      animation: ctrlFadeIn 0.5s ease forwards;
+    }
+
     @keyframes ctrlFadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <!-- ── Nav ── -->
@@ -576,15 +788,27 @@
           <input type="number" id="numPendulums" value="1" min="1" max="50" step="1" />
           <button class="num-btn" data-target="numPendulums" data-dir="1">+</button>
         </div>
-        <span class="help-icon tip-left" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle — tiny differences grow into completely different trajectories, revealing chaos."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
+        <span class="help-icon tip-left"
+          data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle: tiny differences grow into completely different trajectories, revealing chaos."><svg
+            width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
+              text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
+              fill-opacity="0.75">?</text>
+          </svg></span>
         <div class="ctrl-sep"></div>
         <span class="ctrl-label">Spread</span>
         <div class="num-ctrl">
           <button class="num-btn" data-target="deltaAngle" data-dir="-1">−</button>
-          <input type="number" id="deltaAngle" value="5" min="0.01" max="45" step="0.1" />
+          <input type="number" id="deltaAngle" value="5" min="0.2" max="45" step="0.2" />
           <button class="num-btn" data-target="deltaAngle" data-dir="1">+</button>
         </div>
-        <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions; larger values spread them across a wider range."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
+        <span class="help-icon"
+          data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions: larger values spread them across a wider range."><svg
+            width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
+              text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
+              fill-opacity="0.75">?</text>
+          </svg></span>
         <div class="ctrl-sep"></div>
       </div>
 
@@ -659,6 +883,19 @@
 
       <div class="ctrl-sep"></div>
 
+      <span class="ctrl-label">Palette</span>
+      <select id="mapPalette">
+        <option value="rainbow" selected>Rainbow</option>
+        <option value="solar">Solar</option>
+        <option value="jet">Jet</option>
+        <option value="neon">Neon</option>
+        <option value="acid">Acid</option>
+        <option value="gray">Grayscale</option>
+        <option value="twilight">Twilight</option>
+      </select>
+
+      <div class="ctrl-sep"></div>
+
       <span class="ctrl-label">Speed</span>
       <input type="range" id="mapSpeed" min="1" max="50" value="10" />
       <span class="ctrl-value" id="mapSpeedLabel">10</span>
@@ -675,7 +912,7 @@
         <canvas id="canvas-probe-pendulum"></canvas>
       </div>
       <div class="quad-cell">
-        <span class="quad-label">Phase portrait  θ₁ vs θ₂</span>
+        <span class="quad-label">Phase portrait θ₁ vs θ₂</span>
         <canvas id="canvas-probe-phase"></canvas>
       </div>
       <div id="phasemap-map-cell">
@@ -726,6 +963,18 @@
           </select>
         </div>
         <div class="export-row">
+          <label>Palette</label>
+          <select id="export-palette">
+            <option value="rainbow" selected>Rainbow</option>
+            <option value="solar">Solar</option>
+            <option value="jet">Jet</option>
+            <option value="neon">Neon</option>
+            <option value="acid">Acid</option>
+            <option value="gray">Grayscale</option>
+            <option value="twilight">Twilight</option>
+          </select>
+        </div>
+        <div class="export-row">
           <label>Region</label>
           <select id="export-region">
             <option value="current">Current view</option>
@@ -748,4 +997,5 @@
 
   <script type="module" src="/src/main.ts"></script>
 </body>
+
 </html>

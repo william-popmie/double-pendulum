@@ -4,7 +4,7 @@ import { PhaseMapView } from './views/PhaseMapView';
 import { PhaseMapExporter } from './rendering/phaseMap/PhaseMapExporter';
 import { getGPUDevice } from './rendering/device';
 import { DEFAULT_SIM } from './core/config';
-import type { ColorMode } from './core/types';
+import type { ColorMode, Palette } from './core/types';
 
 async function init(): Promise<void> {
   // ── DOM refs ──────────────────────────────────────────────────────────────
@@ -31,7 +31,8 @@ async function init(): Promise<void> {
 
   // Phase map page controls
   const mapResSelect    = document.getElementById('mapRes')               as HTMLSelectElement;
-  const mapModeSelect   = document.getElementById('mapMode')              as HTMLSelectElement;
+  const mapModeSelect    = document.getElementById('mapMode')              as HTMLSelectElement;
+  const mapPaletteSelect = document.getElementById('mapPalette')           as HTMLSelectElement;
   const mapSpeedRange   = document.getElementById('mapSpeed')             as HTMLInputElement;
   const mapSpeedLabel   = document.getElementById('mapSpeedLabel')        as HTMLSpanElement;
   const mapPlayPauseBtn = document.getElementById('mapPlayPauseBtn')       as HTMLButtonElement;
@@ -50,7 +51,8 @@ async function init(): Promise<void> {
   const exportResSelect   = document.getElementById('export-res')            as HTMLSelectElement;
   const exportDurInput    = document.getElementById('export-dur')            as HTMLInputElement;
   const exportStepsHint   = document.getElementById('export-steps-hint')     as HTMLElement;
-  const exportModeSelect  = document.getElementById('export-mode')           as HTMLSelectElement;
+  const exportModeSelect    = document.getElementById('export-mode')          as HTMLSelectElement;
+  const exportPaletteSelect = document.getElementById('export-palette')       as HTMLSelectElement;
   const exportRegionSel   = document.getElementById('export-region')         as HTMLSelectElement;
   const exportGenerateBtn = document.getElementById('export-generate')       as HTMLButtonElement;
   const exportComposite   = document.getElementById('export-composite')      as HTMLCanvasElement;
@@ -120,6 +122,10 @@ async function init(): Promise<void> {
     btn.addEventListener('click', () => {
       const input = document.getElementById(btn.dataset.target!) as HTMLInputElement;
       if (parseInt(btn.dataset.dir!) > 0) input.stepUp(); else input.stepDown();
+      // Round spread value to 1 decimal to avoid floating-point display noise
+      if (input.id === 'deltaAngle') {
+        input.value = String(Math.round(parseFloat(input.value) * 10) / 10);
+      }
       input.dispatchEvent(new Event('change'));
     });
   });
@@ -150,6 +156,10 @@ async function init(): Promise<void> {
       phaseMapView!.setColorMode(mapModeSelect.value as ColorMode);
     });
 
+    mapPaletteSelect.addEventListener('change', () => {
+      phaseMapView!.setPalette(mapPaletteSelect.value as Palette);
+    });
+
     mapSpeedRange.addEventListener('input', () => {
       phaseMapView!.setStepsPerDispatch(parseInt(mapSpeedRange.value, 10));
       mapSpeedLabel.textContent = mapSpeedRange.value;
@@ -177,7 +187,8 @@ async function init(): Promise<void> {
     };
 
     const openExportModal = (): void => {
-      exportModeSelect.value = mapModeSelect.value;
+      exportModeSelect.value    = mapModeSelect.value;
+      exportPaletteSelect.value = mapPaletteSelect.value;
       updateStepsHint();
       exportSettings.style.display = '';
       exportProgress.style.display = 'none';
@@ -214,6 +225,7 @@ async function init(): Promise<void> {
       const resolution      = parseInt(exportResSelect.value, 10);
       const durationSeconds = parseFloat(exportDurInput.value) || 30;
       const colorMode       = exportModeSelect.value as ColorMode;
+      const palette         = exportPaletteSelect.value as Palette;
       const region          = exportRegionSel.value === 'current'
         ? phaseMapView!.getRegion()
         : { theta1Min: -Math.PI, theta1Max: Math.PI, theta2Min: -Math.PI, theta2Max: Math.PI };
@@ -240,6 +252,7 @@ async function init(): Promise<void> {
         resolution,
         durationSeconds,
         colorMode,
+        palette,
         region,
         maxFlipTime: 50,
         compositeCanvas: exportComposite,

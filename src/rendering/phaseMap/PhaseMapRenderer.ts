@@ -1,10 +1,15 @@
-import type { ColorMode, PhaseRegion } from '../../core/types';
+import type { ColorMode, Palette, PhaseRegion } from '../../core/types';
 import vertShaderCode from './shaders/vert.wgsl';
 import fragShaderCode from './shaders/frag.wgsl';
+
+const PALETTE_INDEX: Record<Palette, number> = {
+  rainbow: 0, solar: 1, jet: 2, neon: 3, acid: 4, gray: 5, twilight: 6,
+};
 
 export interface RenderOpts {
   colorMode: ColorMode;
   maxFlipTime: number;
+  palette: Palette;
 }
 
 // GPU render pipeline for the phase map.
@@ -116,6 +121,7 @@ export class PhaseMapRenderer {
     f[3] = opts.maxFlipTime;
     u[4] = this.simW;
     u[5] = this.simH;
+    u[6] = PALETTE_INDEX[opts.palette];
     this.device.queue.writeBuffer(this.renderUniformBuffer, 0, buf);
 
     const encoder = this.device.createCommandEncoder();
