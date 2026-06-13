@@ -9,7 +9,8 @@ export function pendulumColor(index: number, total: number, alpha = 1): string {
 }
 
 export function drawOrder(n: number, highlight: number | 'all'): number[] {
-  if (highlight === 'all') return Array.from({ length: n }, (_, i) => i);
+  // "all" mode: draw highest index first so index 0 (red) is always on top
+  if (highlight === 'all') return Array.from({ length: n }, (_, i) => n - 1 - i);
   const indices = Array.from({ length: n }, (_, i) => i);
   return [...indices.filter(i => i !== highlight), highlight as number];
 }

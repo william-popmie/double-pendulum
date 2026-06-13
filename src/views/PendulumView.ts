@@ -38,8 +38,9 @@ export class PendulumView implements View {
     pointerId: number;
     pivotX: number;
     pivotY: number;
-    startTheta1: number;
-    startTheta2: number;
+    startAngle: number;      // angle from pivot at grab time
+    startBaseAngle: number;  // this.baseAngle at grab time
+    startBaseAngle2: number; // this.baseAngle2 at grab time
     wasPaused: boolean;
   } | null = null;
 
@@ -123,7 +124,7 @@ export class PendulumView implements View {
   private buildInitialStates(): PendulumState[] {
     const N = this.numPendulums;
     return Array.from({ length: N }, (_, i) => {
-      const offset = i * this.deltaAngle;
+      const offset = -i * this.deltaAngle;
       return { theta1: this.baseAngle + offset, omega1: 0, theta2: this.baseAngle2 + offset, omega2: 0 };
     });
   }
@@ -169,10 +170,6 @@ export class PendulumView implements View {
 
   // ── Drag interaction ──────────────────────────────────────────────────────
 
-  private dragRefIndex(): number {
-    return typeof this.highlight === 'number' ? this.highlight : Math.floor(this.numPendulums / 2);
-  }
-
   private canvasCoords(e: PointerEvent): { mx: number; my: number } {
     const rect = this.canvas.getBoundingClientRect();
     return {
@@ -181,21 +178,32 @@ export class PendulumView implements View {
     };
   }
 
-  private hitTest(mx: number, my: number): 'rod1' | 'rod2' | null {
-    const S  = pendulumScale(this.canvas.width, this.canvas.height);
-    const cx = this.canvas.width / 2;
-    const cy = this.canvas.height / 2;
-    const ref = this.sim.states[this.dragRefIndex()];
-    const sx1 = cx + Math.sin(ref.theta1) * S;
-    const sy1 = cy + Math.cos(ref.theta1) * S;
-    const sx2 = sx1 + Math.sin(ref.theta2) * S;
-    const sy2 = sy1 + Math.cos(ref.theta2) * S;
+  private hitTest(mx: number, my: number): { target: 'rod1' | 'rod2'; idx: number } | null {
+    const S      = pendulumScale(this.canvas.width, this.canvas.height);
+    const cx     = this.canvas.width / 2;
+    const cy     = this.canvas.height / 2;
+    const states = this.sim.states;
+    const HIT    = 24;
 
-    const ptd = (ax: number, ay: number, bx: number, by: number) =>
-      Math.hypot(ax - bx, ay - by);
+    let best2Dist = HIT; let best2Idx = -1;
+    let best1Dist = HIT; let best1Idx = -1;
 
-    if (ptd(mx, my, sx2, sy2) < 16) return 'rod2';
-    if (ptd(mx, my, sx1, sy1) < 16) return 'rod1';
+    for (let i = 0; i < states.length; i++) {
+      const s   = states[i];
+      const b1x = cx + Math.sin(s.theta1) * S;
+      const b1y = cy + Math.cos(s.theta1) * S;
+      const b2x = b1x + Math.sin(s.theta2) * S;
+      const b2y = b1y + Math.cos(s.theta2) * S;
+
+      const d1 = Math.hypot(mx - b1x, my - b1y);
+      const d2 = Math.hypot(mx - b2x, my - b2y);
+      if (d2 < best2Dist) { best2Dist = d2; best2Idx = i; }
+      if (d1 < best1Dist) { best1Dist = d1; best1Idx = i; }
+    }
+
+    // rod2 checked first so inner bob wins when both are nearby
+    if (best2Idx >= 0) return { target: 'rod2', idx: best2Idx };
+    if (best1Idx >= 0) return { target: 'rod1', idx: best1Idx };
     return null;
   }
 
@@ -208,18 +216,21 @@ export class PendulumView implements View {
     const S  = pendulumScale(this.canvas.width, this.canvas.height);
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
-    const ref = this.sim.states[this.dragRefIndex()];
-    const sx1 = cx + Math.sin(ref.theta1) * S;
-    const sy1 = cy + Math.cos(ref.theta1) * S;
+    const ref = this.sim.states[hit.idx];
+
+    // Pivot: center of canvas for rod1, bob1 of grabbed pendulum for rod2
+    const pivotX = hit.target === 'rod1' ? cx : cx + Math.sin(ref.theta1) * S;
+    const pivotY = hit.target === 'rod1' ? cy : cy + Math.cos(ref.theta1) * S;
 
     this.dragState = {
-      target:      hit,
-      pointerId:   e.pointerId,
-      pivotX:      hit === 'rod1' ? cx  : sx1,
-      pivotY:      hit === 'rod1' ? cy  : sy1,
-      startTheta1: ref.theta1,
-      startTheta2: ref.theta2,
-      wasPaused:   this.paused,
+      target:          hit.target,
+      pointerId:       e.pointerId,
+      pivotX,
+      pivotY,
+      startAngle:      hit.target === 'rod1' ? ref.theta1 : ref.theta2,
+      startBaseAngle:  this.baseAngle,
+      startBaseAngle2: this.baseAngle2,
+      wasPaused:       this.paused,
     };
     if (this.onFirstDrag) { this.onFirstDrag(); this.onFirstDrag = undefined; }
     this.canvas.setPointerCapture(e.pointerId);
@@ -230,15 +241,19 @@ export class PendulumView implements View {
   private onPointerMove = (e: PointerEvent): void => {
     if (this.dragState && e.pointerId === this.dragState.pointerId) {
       const { mx, my } = this.canvasCoords(e);
-      const { target, pivotX, pivotY, startTheta1, startTheta2 } = this.dragState;
-      const newAngle = Math.atan2(mx - pivotX, my - pivotY);
+      const { target, pivotX, pivotY, startAngle, startBaseAngle, startBaseAngle2 } = this.dragState;
+
+      const rawAngle = Math.atan2(mx - pivotX, my - pivotY);
+      // Normalise delta to [-π, π] to avoid jumps when crossing ±180°
+      let delta = rawAngle - startAngle;
+      while (delta >  Math.PI) delta -= 2 * Math.PI;
+      while (delta < -Math.PI) delta += 2 * Math.PI;
 
       if (target === 'rod1') {
-        const delta = newAngle - startTheta1;
-        this.baseAngle  = startTheta1 + delta;
-        this.baseAngle2 = startTheta2 + delta;
+        this.baseAngle  = startBaseAngle  + delta;
+        this.baseAngle2 = startBaseAngle2 + delta;
       } else {
-        this.baseAngle2 = newAngle;
+        this.baseAngle2 = startBaseAngle2 + delta;
       }
 
       const displayAngle = target === 'rod1' ? this.baseAngle : this.baseAngle2;

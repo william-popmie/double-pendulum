@@ -96,11 +96,11 @@ export class PhaseCanvas {
 
         this.ctx.save();
         this.ctx.setLineDash([3, 5]);
-        this.ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        this.ctx.strokeStyle = 'rgba(255,255,255,0.85)';
         this.ctx.lineWidth = 1;
         this.ctx.beginPath();
-        this.ctx.moveTo(pad, sy);  this.ctx.lineTo(sx, sy);              // horizontal → β (Y) axis
-        this.ctx.moveTo(sx, sy);   this.ctx.lineTo(sx, this.h - pad);    // vertical   → α (X) axis
+        this.ctx.moveTo(pad, sy);  this.ctx.lineTo(sx, sy);   // horizontal → β (Y) axis
+        this.ctx.moveTo(sx, sy);   this.ctx.lineTo(sx, pad);  // vertical   → top edge
         this.ctx.stroke();
         this.ctx.setLineDash([]);
 
@@ -142,14 +142,6 @@ export class PhaseCanvas {
     ctx.moveTo(pad, cy); ctx.lineTo(w - pad, cy);
     ctx.stroke();
     ctx.setLineDash([]);
-
-    ctx.fillStyle = '#888';
-    ctx.fillText('θ₁', w / 2, h - 8);
-    ctx.save();
-    ctx.translate(10, h / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('θ₂', 0, 0);
-    ctx.restore();
 
     const ticks: [number, string][] = [[-Math.PI, '−180°'], [0, '0°'], [Math.PI, '180°']];
     for (const [angle, label] of ticks) {

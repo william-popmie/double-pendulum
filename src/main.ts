@@ -80,12 +80,23 @@ async function init(): Promise<void> {
     }, delay);
   };
 
-  pendulumView.onFirstDrag = () => {
-    if (obState !== 0) return;
-    obState = 1;
+  const hasVisited = localStorage.getItem('dp_visited') === '1';
+  if (hasVisited) {
+    obState = 4;
     tileHints.forEach(el => el.classList.add('hidden'));
-    reveal(grpActions, 1200);
-  };
+    grpActions.classList.remove('hidden');
+    grpPendulums.classList.remove('hidden');
+    grpSelect.classList.remove('hidden');
+    grpSpeed.classList.remove('hidden');
+  } else {
+    pendulumView.onFirstDrag = () => {
+      if (obState !== 0) return;
+      obState = 1;
+      localStorage.setItem('dp_visited', '1');
+      tileHints.forEach(el => el.classList.add('hidden'));
+      reveal(grpActions, 1200);
+    };
+  }
 
   playPauseBtn.addEventListener('click', () => {
     pendulumView.paused = !pendulumView.paused;

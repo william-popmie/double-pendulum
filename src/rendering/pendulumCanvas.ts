@@ -38,28 +38,26 @@ export class PendulumCanvas {
 
     this.drawRodMode(states, L1, L2, highlight);
 
-    // Only show passive angle labels when not dragging (hint hides them)
-    const showDual = (typeof highlight === 'number' || states.length === 1) && !hint;
+    const showDual = typeof highlight === 'number' || states.length === 1;
     if (showDual) {
       const ref = typeof highlight === 'number' ? states[highlight] : states[0];
-      if (ref) this.drawDualAngleLabels(ref);
+      if (ref) this.drawDualAngleLabels(ref, hint);
     }
-
-    if (hint) this.drawAngleOverlay(hint);
 
     // Pivot — matches focused pendulum, grey in multi-pendulum 'all' mode
     const pivotColor = typeof highlight === 'number'
       ? pendulumColor(highlight, states.length)
-      : states.length === 1 ? pendulumColor(0, 1) : '#888';
+      : 'rgba(255,255,255,0.85)';
     ctx.fillStyle = pivotColor;
     ctx.beginPath();
     ctx.arc(cx, cy, PIVOT_RADIUS, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  private drawDualAngleLabels(state: PendulumState): void {
+  private drawDualAngleLabels(state: PendulumState, hint?: AngleHint): void {
     const { ctx, cx, cy } = this;
     const S = pendulumScale(ctx.canvas.width, ctx.canvas.height);
+    const toDeg = (rad: number): string => (rad * 180 / Math.PI).toFixed(1) + '°';
 
     const drawArc = (px: number, py: number, angle: number, label: string): void => {
       ctx.save();
@@ -90,8 +88,9 @@ export class PendulumCanvas {
       const lx = px + Math.cos(midA) * labelR;
       const ly = py + Math.sin(midA) * labelR;
 
+      const isDeg = label.endsWith('°');
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      ctx.font = 'italic bold 16px serif';
+      ctx.font = isDeg ? 'bold 11px monospace' : 'italic bold 16px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(label, lx, ly);
@@ -99,56 +98,13 @@ export class PendulumCanvas {
       ctx.restore();
     };
 
-    drawArc(cx, cy, wrap(state.theta1), 'α');
+    const label1 = hint?.target === 'rod1' ? toDeg(wrap(state.theta1)) : 'α';
+    const label2 = hint?.target === 'rod2' ? toDeg(wrap(state.theta2)) : 'β';
+
+    drawArc(cx, cy, wrap(state.theta1), label1);
     const bob1x = cx + Math.sin(state.theta1) * S;
     const bob1y = cy + Math.cos(state.theta1) * S;
-    drawArc(bob1x, bob1y, wrap(state.theta2), 'β');
-  }
-
-  private drawAngleOverlay(hint: AngleHint): void {
-    const { ctx, cx, cy } = this;
-    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height);
-
-    // Pivot of the rod being dragged
-    const px = hint.target === 'rod1' ? cx : cx + Math.sin(hint.theta1) * S;
-    const py = hint.target === 'rod1' ? cy : cy + Math.cos(hint.theta1) * S;
-
-    ctx.save();
-
-    ctx.setLineDash([3, 4]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(px, py - 8);
-    ctx.lineTo(px, py + 72);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    const arcR = 28;
-    const rodA  = Math.PI / 2 - hint.angle;
-    const vertA = Math.PI / 2;
-    const arcStart = Math.min(rodA, vertA);
-    const arcEnd   = Math.max(rodA, vertA);
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.42)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(px, py, arcR, arcStart, arcEnd, false);
-    ctx.stroke();
-
-    const midA   = (arcStart + arcEnd) / 2;
-    const labelR = arcR + 16;
-    const lx = px + Math.cos(midA) * labelR;
-    const ly = py + Math.sin(midA) * labelR;
-    const deg = (hint.angle * 180 / Math.PI).toFixed(1) + '°';
-
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.font = 'bold 11px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(deg, lx, ly);
-
-    ctx.restore();
+    drawArc(bob1x, bob1y, wrap(state.theta2), label2);
   }
 
   private drawRodMode(
@@ -179,7 +135,8 @@ export class PendulumCanvas {
 
       let alpha: number;
       if (highlight === 'all') {
-        alpha = n <= 1 ? 1 : 0.25 + 0.75 * (i / (n - 1));
+        // index 0 (red) on top = full alpha; higher indices drawn behind = dimmer
+        alpha = n <= 1 ? 1 : 1 - 0.75 * (i / (n - 1));
       } else {
         alpha = i === highlight ? 1 : 0.07;
       }
