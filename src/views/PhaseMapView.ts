@@ -4,7 +4,7 @@ import { PendulumCanvas } from '../rendering/pendulumCanvas';
 import { PhaseCanvas } from '../rendering/phaseCanvas';
 import { observeCanvasSize } from '../rendering/canvasResize';
 import { DEFAULT_PHYSICS, DEFAULT_SIM } from '../core/config';
-import type { ColorMode, Palette, PhaseRegion, PendulumState, View } from '../core/types';
+import type { ColorMode, Palette, PhaseRegion, PendulumState, PhysicsParams, View } from '../core/types';
 
 export class PhaseMapView implements View {
   private backend!: PhaseMapBackend;
@@ -21,6 +21,7 @@ export class PhaseMapView implements View {
   private stepsPerDispatch = 10;
   private maxFlipTime = 50;
   private gridRes = 800;
+  private physics: PhysicsParams = { ...DEFAULT_PHYSICS };
 
   paused = true;
 
@@ -93,6 +94,12 @@ export class PhaseMapView implements View {
   setStepsPerDispatch(n: number): void { this.stepsPerDispatch = n; }
   getRegion(): PhaseRegion { return { ...this.region }; }
 
+  setPhysics(p: PhysicsParams): void {
+    this.physics = { ...p };
+    this.backend?.reinitialize(this.region);
+    this.resetProbe();
+  }
+
   async changeResolution(n: number): Promise<void> {
     this.ready = false;
     this.gridRes = n;
@@ -109,6 +116,11 @@ export class PhaseMapView implements View {
     this.ready = true;
   }
 
+  reset(): void {
+    if (this.backend) this.backend.reinitialize(this.region);
+    this.resetProbe();
+  }
+
   resetProbe(): void {
     this.probeIndex = null;
     this.probeState = null;
@@ -121,14 +133,14 @@ export class PhaseMapView implements View {
     if (this.ready) {
       if (!this.paused) {
         const freeze = this.colorMode === 'flipTime';
-        this.backend.step(DEFAULT_PHYSICS.g, DEFAULT_SIM.dt, this.stepsPerDispatch, freeze);
+        this.backend.step(this.physics, DEFAULT_SIM.dt, this.stepsPerDispatch, freeze);
       }
       this.renderer.render({ colorMode: this.colorMode, maxFlipTime: this.maxFlipTime, palette: this.palette });
       this.fetchProbeState();
     }
 
     if (this.probeState) {
-      this.probePendulumCanvas.draw([this.probeState], 1, 1, 'all');
+      this.probePendulumCanvas.draw([this.probeState], this.physics.L1, this.physics.L2, 'all');
       this.probePhaseCanvas.addPoints([this.probeState]);
       this.probePhaseCanvas.draw([this.probeState], 'all');
     } else {

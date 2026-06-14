@@ -6,8 +6,8 @@ import { wrap } from '../core/math';
 const BOB_RADIUS = 8;
 const PIVOT_RADIUS = 5;
 
-export function pendulumScale(w: number, h: number): number {
-  return Math.min(w, h) / 4.5;
+export function pendulumScale(w: number, h: number, L1 = 1, L2 = 1): number {
+  return Math.min(w, h) / ((L1 + L2) * 2.25);
 }
 
 export interface AngleHint {
@@ -32,6 +32,7 @@ export class PendulumCanvas {
     L2: number,
     highlight: number | 'all' = 'all',
     hint?: AngleHint,
+    physicsLabels?: { m1: number; m2: number } | null,
   ): void {
     const { ctx, cx, cy } = this;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -41,7 +42,8 @@ export class PendulumCanvas {
     const showDual = typeof highlight === 'number' || states.length === 1;
     if (showDual) {
       const ref = typeof highlight === 'number' ? states[highlight] : states[0];
-      if (ref) this.drawDualAngleLabels(ref, hint);
+      if (ref) this.drawDualAngleLabels(ref, L1, L2, hint);
+      if (ref && physicsLabels) this.drawPhysicsLabels(ref, L1, L2, physicsLabels.m1, physicsLabels.m2);
     }
 
     // Pivot — matches focused pendulum, grey in multi-pendulum 'all' mode
@@ -54,9 +56,62 @@ export class PendulumCanvas {
     ctx.fill();
   }
 
-  private drawDualAngleLabels(state: PendulumState, hint?: AngleHint): void {
+  private drawPhysicsLabels(
+    state: PendulumState,
+    L1: number,
+    L2: number,
+    m1: number,
+    m2: number,
+  ): void {
     const { ctx, cx, cy } = this;
-    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height);
+    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height, L1, L2);
+
+    const b1x = cx + Math.sin(state.theta1) * S * L1;
+    const b1y = cy + Math.cos(state.theta1) * S * L1;
+    const b2x = b1x + Math.sin(state.theta2) * S * L2;
+    const b2y = b1y + Math.cos(state.theta2) * S * L2;
+
+    const fmt = (v: number) => v.toFixed(1);
+
+    ctx.save();
+    ctx.textBaseline = 'middle';
+
+    // Label along rod midpoint, offset left-perpendicular to the rod
+    const rodLabel = (ax: number, ay: number, bx: number, by: number, text: string): void => {
+      const mx = (ax + bx) / 2, my = (ay + by) / 2;
+      const dx = bx - ax, dy = by - ay;
+      const len = Math.hypot(dx, dy) || 1;
+      const px = -dy / len, py = dx / len; // left perpendicular
+      const lx = mx + px * 20, ly = my + py * 20;
+      ctx.textAlign = lx <= cx ? 'right' : 'left';
+      ctx.fillText(text, lx, ly);
+    };
+
+    // Label just past a bob, along the outgoing rod direction
+    const bobLabel = (bx: number, by: number, ax: number, ay: number, text: string): void => {
+      const dx = bx - ax, dy = by - ay;
+      const len = Math.hypot(dx, dy) || 1;
+      const lx = bx + (dx / len) * 20, ly = by + (dy / len) * 20;
+      ctx.textAlign = lx <= cx ? 'right' : 'left';
+      ctx.fillText(text, lx, ly);
+    };
+
+    ctx.font = 'italic 12px "Georgia", serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    rodLabel(cx, cy, b1x, b1y, `L₁ = ${fmt(L1)} m`);
+    rodLabel(b1x, b1y, b2x, b2y, `L₂ = ${fmt(L2)} m`);
+
+    ctx.font = '11px "SF Mono", "Fira Code", monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    bobLabel(b1x, b1y, cx, cy, `m₁ = ${fmt(m1)} kg`);
+    bobLabel(b2x, b2y, b1x, b1y, `m₂ = ${fmt(m2)} kg`);
+
+    ctx.restore();
+  }
+
+  private drawDualAngleLabels(state: PendulumState, L1: number, L2: number, hint?: AngleHint): void {
+    const { ctx, cx, cy } = this;
+    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height, L1, L2);
     const toDeg = (rad: number): string => (rad * 180 / Math.PI).toFixed(1) + '°';
 
     const drawArc = (px: number, py: number, angle: number, label: string): void => {
@@ -102,8 +157,8 @@ export class PendulumCanvas {
     const label2 = hint?.target === 'rod2' ? toDeg(wrap(state.theta2)) : 'β';
 
     drawArc(cx, cy, wrap(state.theta1), label1);
-    const bob1x = cx + Math.sin(state.theta1) * S;
-    const bob1y = cy + Math.cos(state.theta1) * S;
+    const bob1x = cx + Math.sin(state.theta1) * S * L1;
+    const bob1y = cy + Math.cos(state.theta1) * S * L1;
     drawArc(bob1x, bob1y, wrap(state.theta2), label2);
   }
 
@@ -114,7 +169,7 @@ export class PendulumCanvas {
     highlight: number | 'all',
   ): void {
     const { ctx, cx, cy } = this;
-    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height);
+    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height, L1, L2);
     const n = states.length;
     const bobR = Math.max(3, BOB_RADIUS - Math.floor(n / 10));
     const lineW = n <= 5 ? 2 : 1.5;

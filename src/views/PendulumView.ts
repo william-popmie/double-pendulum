@@ -7,7 +7,7 @@ import { TimeSeriesCanvas } from '../rendering/TimeSeriesCanvas';
 import { observeCanvasSize } from '../rendering/canvasResize';
 import { DEFAULT_PHYSICS, DEFAULT_SIM, TRAIL_MAX, TRAIL_TRIM } from '../core/config';
 import { DEG } from '../core/math';
-import type { PendulumState, View } from '../core/types';
+import type { PendulumState, PhysicsParams, View } from '../core/types';
 
 export class PendulumView implements View {
   private sim: Simulation;
@@ -17,9 +17,11 @@ export class PendulumView implements View {
   private deltaAngle: number;
   private baseAngle: number;   // radians — θ₁ starting angle
   private baseAngle2: number;  // radians — θ₂ starting angle
+  private physics: PhysicsParams = { ...DEFAULT_PHYSICS };
 
   paused = true;
   stepsPerFrame = 5;
+  showPhysicsLabels = false;
   onFirstDrag?: () => void;
 
   private rafId = 0;
@@ -65,7 +67,7 @@ export class PendulumView implements View {
     this.t1Canvas = new TimeSeriesCanvas(t1CanvasEl, 'α', s => s.theta1, true);
     this.t2Canvas = new TimeSeriesCanvas(t2CanvasEl, 'β', s => s.theta2);
 
-    this.sim = new Simulation(this.buildInitialStates(), DEFAULT_PHYSICS, DEFAULT_SIM);
+    this.sim = new Simulation(this.buildInitialStates(), this.physics, DEFAULT_SIM);
 
     this.resizeObserver = observeCanvasSize(pendCanvasEl, phaseCanvasEl, t1CanvasEl, t2CanvasEl);
 
@@ -106,6 +108,12 @@ export class PendulumView implements View {
 
   setDeltaAngleDeg(deg: number): void {
     this.deltaAngle = deg * DEG;
+    this.reset();
+  }
+
+  setPhysics(p: PhysicsParams): void {
+    this.physics = { ...p };
+    this.sim.setPhysics(this.physics);
     this.reset();
   }
 
@@ -158,7 +166,8 @@ export class PendulumView implements View {
   }
 
   private render(): void {
-    this.pendulumCanvas.draw(this.sim.states, 1, 1, this.highlight, this.hintState ?? undefined);
+    const labels = this.showPhysicsLabels ? { m1: this.physics.m1, m2: this.physics.m2 } : null;
+    this.pendulumCanvas.draw(this.sim.states, this.physics.L1, this.physics.L2, this.highlight, this.hintState ?? undefined, labels);
     this.phaseCanvas.draw(this.sim.states, this.highlight);
     this.t1Canvas.draw(this.trails, this.highlight);
     this.t2Canvas.draw(this.trails, this.highlight);
@@ -175,7 +184,8 @@ export class PendulumView implements View {
   }
 
   private hitTest(mx: number, my: number): { target: 'rod1' | 'rod2'; idx: number } | null {
-    const S      = pendulumScale(this.canvas.width, this.canvas.height);
+    const { L1, L2 } = this.physics;
+    const S      = pendulumScale(this.canvas.width, this.canvas.height, L1, L2);
     const cx     = this.canvas.width / 2;
     const cy     = this.canvas.height / 2;
     const states = this.sim.states;
@@ -186,10 +196,10 @@ export class PendulumView implements View {
 
     for (let i = 0; i < states.length; i++) {
       const s   = states[i];
-      const b1x = cx + Math.sin(s.theta1) * S;
-      const b1y = cy + Math.cos(s.theta1) * S;
-      const b2x = b1x + Math.sin(s.theta2) * S;
-      const b2y = b1y + Math.cos(s.theta2) * S;
+      const b1x = cx + Math.sin(s.theta1) * S * L1;
+      const b1y = cy + Math.cos(s.theta1) * S * L1;
+      const b2x = b1x + Math.sin(s.theta2) * S * L2;
+      const b2y = b1y + Math.cos(s.theta2) * S * L2;
 
       const d1 = Math.hypot(mx - b1x, my - b1y);
       const d2 = Math.hypot(mx - b2x, my - b2y);
@@ -209,14 +219,15 @@ export class PendulumView implements View {
     const hit = this.hitTest(mx, my);
     if (!hit) return;
 
-    const S  = pendulumScale(this.canvas.width, this.canvas.height);
+    const { L1, L2 } = this.physics;
+    const S  = pendulumScale(this.canvas.width, this.canvas.height, L1, L2);
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
     const ref = this.sim.states[hit.idx];
 
     // Pivot: center of canvas for rod1, bob1 of grabbed pendulum for rod2
-    const pivotX = hit.target === 'rod1' ? cx : cx + Math.sin(ref.theta1) * S;
-    const pivotY = hit.target === 'rod1' ? cy : cy + Math.cos(ref.theta1) * S;
+    const pivotX = hit.target === 'rod1' ? cx : cx + Math.sin(ref.theta1) * S * L1;
+    const pivotY = hit.target === 'rod1' ? cy : cy + Math.cos(ref.theta1) * S * L1;
 
     this.dragState = {
       target:          hit.target,
