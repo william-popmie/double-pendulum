@@ -4,6 +4,7 @@ import { PhaseMapView } from './views/PhaseMapView';
 import { PhaseMapExporter } from './rendering/phaseMap/PhaseMapExporter';
 import { getGPUDevice } from './rendering/device';
 import { DEFAULT_SIM } from './core/config';
+import { Tutorial } from './tutorial/Tutorial';
 import type { ColorMode, Palette } from './core/types';
 
 async function init(): Promise<void> {
@@ -21,7 +22,6 @@ async function init(): Promise<void> {
   const showSelectContainer = document.getElementById('showSelectContainer') as HTMLElement;
   const speedRange          = document.getElementById('speed')              as HTMLInputElement;
   const speedLabel          = document.getElementById('speedLabel')         as HTMLSpanElement;
-  const energyEl            = document.getElementById('energy')             as HTMLSpanElement;
 
   // Pendulum canvases
   const pendCanvasEl  = document.getElementById('canvas-pendulum') as HTMLCanvasElement;
@@ -64,48 +64,25 @@ async function init(): Promise<void> {
   // ── Pendulum view ─────────────────────────────────────────────────────────
   const pendulumView = new PendulumView(
     pendCanvasEl, phaseCanvasEl, t1CanvasEl, t2CanvasEl,
-    energyEl, showSelectContainer,
+    showSelectContainer,
   );
 
-  // ── Onboarding ────────────────────────────────────────────────────────────
-  const tileHints  = document.querySelectorAll<HTMLElement>('.tile-hint');
-  const grpActions   = document.getElementById('ctrl-group-actions')   as HTMLElement;
-  const grpPendulums = document.getElementById('ctrl-group-pendulums') as HTMLElement;
-  const grpSelect    = document.getElementById('ctrl-group-select')    as HTMLElement;
-  const grpSpeed     = document.getElementById('ctrl-group-speed')     as HTMLElement;
-
-  let obState = 0;
-  const reveal = (el: HTMLElement, delay = 0) => {
-    setTimeout(() => {
-      el.classList.remove('hidden');
-      el.classList.add('fade-in');
-    }, delay);
-  };
-
-  const hasVisited = localStorage.getItem('dp_visited') === '1';
-  if (hasVisited) {
-    obState = 4;
-    tileHints.forEach(el => el.classList.add('hidden'));
-    grpActions.classList.remove('hidden');
-    grpPendulums.classList.remove('hidden');
-    grpSelect.classList.remove('hidden');
-    grpSpeed.classList.remove('hidden');
-  } else {
-    pendulumView.onFirstDrag = () => {
-      if (obState !== 0) return;
-      obState = 1;
-      localStorage.setItem('dp_visited', '1');
-      tileHints.forEach(el => el.classList.add('hidden'));
-      reveal(grpActions, 1200);
-    };
-  }
+  // ── Tutorial ──────────────────────────────────────────────────────────────
+  const tutorial = new Tutorial({
+    tileHints:   document.querySelectorAll<HTMLElement>('.tile-hint'),
+    grpActions:  document.getElementById('ctrl-group-actions')   as HTMLElement,
+    grpPendulums: document.getElementById('ctrl-group-pendulums') as HTMLElement,
+    grpSelect:   document.getElementById('ctrl-group-select')    as HTMLElement,
+    grpSpeed:    document.getElementById('ctrl-group-speed')     as HTMLElement,
+  });
+  tutorial.onCompleted = () => tabPhasemap.classList.add('tab-flash');
+  pendulumView.onFirstDrag = () => tutorial.onFirstDrag();
 
   playPauseBtn.addEventListener('click', () => {
     pendulumView.paused = !pendulumView.paused;
     playPauseBtn.textContent = pendulumView.paused ? '▶ Play' : '⏸ Pause';
     playPauseBtn.className   = pendulumView.paused ? 'btn-play' : 'btn-pause';
-    if (obState === 1 && !pendulumView.paused) { obState = 2; reveal(grpPendulums, 1200); }
-    else if (obState === 3 && !pendulumView.paused) { obState = 4; reveal(grpSpeed, 1200); }
+    tutorial.onPlay(pendulumView.paused);
   });
 
   resetBtn.addEventListener('click', () => pendulumView.reset());
@@ -114,7 +91,7 @@ async function init(): Promise<void> {
     const n = parseInt(numPendulumsInput.value, 10);
     if (n >= 1 && n <= 50) {
       pendulumView.setNumPendulums(n);
-      if (obState === 2 && n > 1) { obState = 3; reveal(grpSelect, 1200); }
+      tutorial.onPendulumCount(n);
     }
   });
 
@@ -302,6 +279,7 @@ async function init(): Promise<void> {
       pagePhasemap.style.display  = 'flex';
       tabPendulum.classList.remove('active');
       tabPhasemap.classList.add('active');
+      tabPhasemap.classList.remove('tab-flash');
       pendulumView.deactivate();
       phaseMapView?.activate();
     }

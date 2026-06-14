@@ -56,21 +56,3 @@ export function pendulumPositions(s: PendulumState, L1: number, L2: number) {
   const y2 = y1 - L2 * Math.cos(s.theta2);
   return { x1, y1, x2, y2 };
 }
-
-// Total mechanical energy (should be conserved)
-export function totalEnergy(s: PendulumState, p: PhysicsParams): number {
-  const { theta1, omega1, theta2, omega2 } = s;
-  const { g, m1, m2, L1, L2 } = p;
-
-  const { y1, y2 } = pendulumPositions(s, L1, L2);
-
-  // Velocities
-  const vx1 = omega1 * L1 * Math.cos(theta1);
-  const vy1 = omega1 * L1 * Math.sin(theta1);
-  const vx2 = vx1 + omega2 * L2 * Math.cos(theta2);
-  const vy2 = vy1 + omega2 * L2 * Math.sin(theta2);
-
-  const ke = 0.5 * m1 * (vx1 * vx1 + vy1 * vy1) + 0.5 * m2 * (vx2 * vx2 + vy2 * vy2);
-  const pe = m1 * g * y1 + m2 * g * y2;
-  return ke + pe;
-}

@@ -5,7 +5,6 @@ import { pendulumColor } from '../rendering/colors';
 import { PhaseCanvas } from '../rendering/phaseCanvas';
 import { TimeSeriesCanvas } from '../rendering/TimeSeriesCanvas';
 import { observeCanvasSize } from '../rendering/canvasResize';
-import { totalEnergy } from '../physics/equations';
 import { DEFAULT_PHYSICS, DEFAULT_SIM, TRAIL_MAX, TRAIL_TRIM } from '../core/config';
 import { DEG } from '../core/math';
 import type { PendulumState, View } from '../core/types';
@@ -49,7 +48,6 @@ export class PendulumView implements View {
     phaseCanvasEl: HTMLCanvasElement,
     t1CanvasEl: HTMLCanvasElement,
     t2CanvasEl: HTMLCanvasElement,
-    private readonly energyEl: HTMLElement,
     private readonly showContainer: HTMLElement,
     initialN = 1,
     initialDeltaDeg = 5,
@@ -148,8 +146,6 @@ export class PendulumView implements View {
         this.phaseCanvas.addPoints(this.sim.states);
       }
       this.trimTrails();
-      this.energyEl.textContent =
-        totalEnergy(this.sim.states[0], DEFAULT_PHYSICS).toFixed(4) + ' J';
     }
     this.render();
     this.rafId = requestAnimationFrame(() => this.loop());
