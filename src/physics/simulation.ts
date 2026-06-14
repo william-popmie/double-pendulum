@@ -3,7 +3,7 @@ import type { PendulumState, PhysicsParams, SimConfig } from '../core/types';
 
 export class Simulation {
   states: PendulumState[];
-  private readonly params: PhysicsParams;
+  private params: PhysicsParams;
   private readonly cfg: SimConfig;
 
   constructor(initialStates: PendulumState[], params: PhysicsParams, cfg: SimConfig) {
@@ -18,6 +18,10 @@ export class Simulation {
     for (let j = 0; j < this.states.length; j++) {
       this.states[j] = rk4Step(this.states[j], this.params, this.cfg.dt);
     }
+  }
+
+  setPhysics(p: PhysicsParams): void {
+    this.params = { ...p };
   }
 
   reset(initialStates: PendulumState[]): void {

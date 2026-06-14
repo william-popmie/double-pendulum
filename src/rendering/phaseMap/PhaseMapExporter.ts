@@ -56,7 +56,7 @@ export class PhaseMapExporter {
           renderer.setView(tileRegion);
 
           for (let d = 0; d < totalDispatches && !this.cancelled; d++) {
-            backend.step(DEFAULT_PHYSICS.g, DEFAULT_SIM.dt, STEPS_PER_BATCH, freeze);
+            backend.step(DEFAULT_PHYSICS, DEFAULT_SIM.dt, STEPS_PER_BATCH, freeze);
 
             if (d % PREVIEW_INTERVAL === 0) {
               renderer.render({ colorMode, palette, maxFlipTime });

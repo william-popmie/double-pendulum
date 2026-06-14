@@ -1,4 +1,4 @@
-import type { PhaseRegion } from '../../core/types';
+import type { PhaseRegion, PhysicsParams } from '../../core/types';
 import computeShaderCode from './shaders/compute.wgsl';
 import reinitShaderCode from './shaders/reinit.wgsl';
 
@@ -29,9 +29,9 @@ export class PhaseMapBackend {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
 
-    // Uniforms: g(f32), dt(f32), steps(u32), freeze(u32) = 16 bytes
+    // Uniforms: g, dt, steps, freeze, m1, m2, L1, L2 = 32 bytes
     this.uniformBuffer = device.createBuffer({
-      size: 16,
+      size: 32,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
@@ -93,14 +93,18 @@ export class PhaseMapBackend {
   }
 
   // Advance all pendulums by stepsPerDispatch RK4 steps.
-  step(g: number, dt: number, stepsPerDispatch: number, freeze: boolean): void {
-    const buf = new ArrayBuffer(16);
+  step(p: PhysicsParams, dt: number, stepsPerDispatch: number, freeze: boolean): void {
+    const buf = new ArrayBuffer(32);
     const f = new Float32Array(buf);
     const u = new Uint32Array(buf);
-    f[0] = g;
+    f[0] = p.g;
     f[1] = dt;
     u[2] = stepsPerDispatch;
     u[3] = freeze ? 1 : 0;
+    f[4] = p.m1;
+    f[5] = p.m2;
+    f[6] = p.L1;
+    f[7] = p.L2;
     this.device.queue.writeBuffer(this.uniformBuffer, 0, buf);
     this.dispatchCompute(this.computePipeline, this.bindGroup, this.width * this.height);
   }

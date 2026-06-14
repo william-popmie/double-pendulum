@@ -3,7 +3,7 @@ import { PendulumView } from './views/PendulumView';
 import { PhaseMapView } from './views/PhaseMapView';
 import { PhaseMapExporter } from './rendering/phaseMap/PhaseMapExporter';
 import { getGPUDevice } from './rendering/device';
-import { DEFAULT_SIM } from './core/config';
+import { DEFAULT_PHYSICS, DEFAULT_SIM } from './core/config';
 import { Tutorial } from './tutorial/Tutorial';
 import type { ColorMode, Palette } from './core/types';
 
@@ -45,6 +45,16 @@ async function init(): Promise<void> {
   const noGpuMsg        = document.getElementById('no-gpu-msg')           as HTMLElement;
   const probeMapHint    = document.getElementById('probe-map-hint')       as HTMLElement;
 
+  // Physics panel refs
+  const physicsToggleBtn    = document.getElementById('physicsToggleBtn')    as HTMLButtonElement;
+  const mapPhysicsToggleBtn = document.getElementById('mapPhysicsToggleBtn') as HTMLButtonElement;
+  const physicsPanel        = document.getElementById('physics-panel')       as HTMLElement;
+  const physL1Input      = document.getElementById('phys-L1')          as HTMLInputElement;
+  const physL2Input      = document.getElementById('phys-L2')          as HTMLInputElement;
+  const physM1Input      = document.getElementById('phys-m1')          as HTMLInputElement;
+  const physM2Input      = document.getElementById('phys-m2')          as HTMLInputElement;
+  const physResetBtn     = document.getElementById('phys-reset-btn')   as HTMLButtonElement;
+
   // Export modal refs
   const mapExportBtn      = document.getElementById('mapExportBtn')          as HTMLButtonElement;
   const exportOverlay     = document.getElementById('export-overlay')        as HTMLElement;
@@ -68,6 +78,63 @@ async function init(): Promise<void> {
     pendCanvasEl, phaseCanvasEl, t1CanvasEl, t2CanvasEl,
     showSelectContainer,
   );
+
+  // ── Physics panel ────────────────────────────────────────────────────────
+
+  function readPhysics() {
+    return {
+      g:  DEFAULT_PHYSICS.g,
+      L1: Math.max(0.1, parseFloat(physL1Input.value) || 1),
+      L2: Math.max(0.1, parseFloat(physL2Input.value) || 1),
+      m1: Math.max(0.1, parseFloat(physM1Input.value) || 1),
+      m2: Math.max(0.1, parseFloat(physM2Input.value) || 1),
+    };
+  }
+
+  function applyPhysics(): void {
+    const p = readPhysics();
+    pendulumView.setPhysics(p);
+    phaseMapView?.setPhysics(p);
+  }
+
+  function setPhysicsPanelOpen(open: boolean): void {
+    physicsPanel.hidden = !open;
+    physicsToggleBtn.classList.toggle('active', open);
+    mapPhysicsToggleBtn.classList.toggle('active', open);
+    pendulumView.showPhysicsLabels = open;
+  }
+
+  const physBtnClickHandler = (e: MouseEvent): void => {
+    e.stopPropagation();
+    const opening = physicsPanel.hasAttribute('hidden');
+    setPhysicsPanelOpen(opening);
+    if (opening) {
+      const closeOnOutside = (ev: PointerEvent): void => {
+        if (!physicsPanel.contains(ev.target as Node) &&
+            ev.target !== physicsToggleBtn &&
+            ev.target !== mapPhysicsToggleBtn) {
+          setPhysicsPanelOpen(false);
+          document.removeEventListener('pointerdown', closeOnOutside, true);
+        }
+      };
+      document.addEventListener('pointerdown', closeOnOutside, true);
+    }
+  };
+
+  physicsToggleBtn.addEventListener('click', physBtnClickHandler);
+  mapPhysicsToggleBtn.addEventListener('click', physBtnClickHandler);
+
+  for (const input of [physL1Input, physL2Input, physM1Input, physM2Input]) {
+    input.addEventListener('change', applyPhysics);
+  }
+
+  physResetBtn.addEventListener('click', () => {
+    physL1Input.value = String(DEFAULT_PHYSICS.L1);
+    physL2Input.value = String(DEFAULT_PHYSICS.L2);
+    physM1Input.value = String(DEFAULT_PHYSICS.m1);
+    physM2Input.value = String(DEFAULT_PHYSICS.m2);
+    applyPhysics();
+  });
 
   // ── Tutorial ──────────────────────────────────────────────────────────────
   const tutorial = new Tutorial({
@@ -154,7 +221,7 @@ async function init(): Promise<void> {
       probeMapHint.classList.add('hidden');
     }, { once: true });
 
-    mapResetBtn.addEventListener('click', () => phaseMapView!.resetProbe());
+    mapResetBtn.addEventListener('click', () => phaseMapView!.reset());
 
     // ── Export modal ──────────────────────────────────────────────────────────
     let activeExporter: PhaseMapExporter | null = null;
