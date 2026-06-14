@@ -11,8 +11,10 @@ async function init(): Promise<void> {
   // ── DOM refs ──────────────────────────────────────────────────────────────
   const tabPendulum  = document.getElementById('tab-pendulum')    as HTMLButtonElement;
   const tabPhasemap  = document.getElementById('tab-phasemap')    as HTMLButtonElement;
+  const tabTech      = document.getElementById('tab-tech')        as HTMLButtonElement;
   const pagePendulum = document.getElementById('page-pendulum')   as HTMLElement;
   const pagePhasemap = document.getElementById('page-phasemap')   as HTMLElement;
+  const pageTech     = document.getElementById('page-tech')       as HTMLElement;
 
   // Pendulum page controls
   const numPendulumsInput   = document.getElementById('numPendulums')       as HTMLInputElement;
@@ -260,33 +262,42 @@ async function init(): Promise<void> {
   }
 
   // ── Tab navigation ────────────────────────────────────────────────────────
-  let currentPage: 'pendulum' | 'phasemap' = 'pendulum';
+  let currentPage: 'pendulum' | 'phasemap' | 'tech' = 'pendulum';
   pendulumView.activate();
 
-  function switchTo(page: 'pendulum' | 'phasemap'): void {
+  function switchTo(page: 'pendulum' | 'phasemap' | 'tech'): void {
     if (page === currentPage) return;
     currentPage = page;
 
+    pagePendulum.style.display = 'none';
+    pagePhasemap.style.display = 'none';
+    pageTech.style.display     = 'none';
+    tabPendulum.classList.remove('active');
+    tabPhasemap.classList.remove('active');
+    tabTech.classList.remove('active');
+
     if (page === 'pendulum') {
-      pagePhasemap.style.display  = 'none';
-      pagePendulum.style.display  = 'flex';
-      tabPhasemap.classList.remove('active');
+      pagePendulum.style.display = 'flex';
       tabPendulum.classList.add('active');
       phaseMapView?.deactivate();
       pendulumView.activate();
-    } else {
-      pagePendulum.style.display  = 'none';
-      pagePhasemap.style.display  = 'flex';
-      tabPendulum.classList.remove('active');
+    } else if (page === 'phasemap') {
+      pagePhasemap.style.display = 'flex';
       tabPhasemap.classList.add('active');
       tabPhasemap.classList.remove('tab-flash');
       pendulumView.deactivate();
       phaseMapView?.activate();
+    } else {
+      pageTech.style.display = 'flex';
+      tabTech.classList.add('active');
+      pendulumView.deactivate();
+      phaseMapView?.deactivate();
     }
   }
 
   tabPendulum.addEventListener('click', () => switchTo('pendulum'));
   tabPhasemap.addEventListener('click', () => switchTo('phasemap'));
+  tabTech.addEventListener('click', () => switchTo('tech'));
 }
 
 // Initialize Vercel Web Analytics

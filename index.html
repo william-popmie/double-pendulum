@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Double Pendulum</title>
   <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
@@ -748,6 +749,153 @@
     .tab-flash {
       animation: tabFlash 0.9s ease-in-out infinite;
     }
+
+    /* ── Tech page ─────────────────────────────────────────────────────────── */
+    #page-tech {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    .tech-content {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 40px 80px;
+    }
+
+    .tech-content h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .tech-intro {
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      max-width: 600px;
+    }
+
+    details.tech-section {
+      border-top: 1px solid var(--border);
+    }
+
+    details.tech-section:last-of-type {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tech-summary {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 16px 0;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    .tech-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .tech-summary-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .tech-summary-sub {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-dim);
+      letter-spacing: 0;
+      text-transform: none;
+      transition: color 0.15s;
+    }
+
+    .tech-summary::after {
+      content: '›';
+      font-size: 18px;
+      font-weight: 300;
+      margin-left: auto;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    details[open] > .tech-summary::after {
+      transform: rotate(90deg);
+    }
+
+    .tech-summary:hover .tech-summary-label,
+    .tech-summary:hover .tech-summary-sub {
+      color: var(--text);
+    }
+
+    .tech-body {
+      padding-bottom: 32px;
+      max-width: 680px;
+    }
+
+    .tech-body p {
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    .tech-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .tech-diagram {
+      width: 100%;
+      max-width: 480px;
+      margin: 20px 0 24px;
+      display: block;
+    }
+
+    .tech-table {
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 11.5px;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 14px 0;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .tech-inline {
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 11.5px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      padding: 1px 5px;
+    }
+
+    /* KaTeX display math */
+    .tech-body .katex-display {
+      margin: 1.4em 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .tech-body .katex {
+      font-size: 1.05em;
+    }
   </style>
 </head>
 
@@ -758,6 +906,7 @@
     <span id="nav-title">Double Pendulum</span>
     <button class="tab-btn active" id="tab-pendulum">Pendulum</button>
     <button class="tab-btn" id="tab-phasemap">Phase Map</button>
+    <button class="tab-btn" id="tab-tech">How it works</button>
   </nav>
 
   <!-- ── Page 1: Pendulum ── -->
@@ -931,6 +1080,250 @@
 
   </div>
 
+  <!-- ── Page 3: How it works ── -->
+  <div id="page-tech" style="display:none">
+    <div class="tech-content">
+      <h1>How it works</h1>
+      <p class="tech-intro">A technical walkthrough of the physics, the numerics, and the GPU backend behind this simulator. Each section can be expanded independently. Dip in as shallow or as deep as you like.</p>
+
+      <!-- ── Section 1: Why interesting ────────────────────────────────────── -->
+      <details class="tech-section" open>
+        <summary class="tech-summary">
+          <span class="tech-summary-label">Why the double pendulum is interesting</span>
+          <span class="tech-summary-sub">Chaos, sensitivity, and what makes this system special</span>
+        </summary>
+        <div class="tech-body">
+          <p>A single pendulum is completely predictable: given initial angle and velocity, you can write down the exact position at any future time (for small angles, it's a sine wave; for large angles, an elliptic integral). Two coupled pendulums destroy this property.</p>
+          <p>For <strong>small angles</strong> the coupling is weak. The system is approximately linear, motion decomposes into two independent normal modes, and phase portraits trace tidy Lissajous curves. For <strong>large angles</strong> the nonlinear coupling dominates, and the system becomes chaotic.</p>
+          <p>Chaos here means <em>sensitive dependence on initial conditions</em>: two starting states separated by $\varepsilon$ diverge at an exponential rate $e^{\lambda t}$, where $\lambda$ is the Lyapunov exponent. After a few seconds, a shift of $10^{-10}$ radians in the starting angle produces a completely different trajectory.</p>
+
+          <svg class="tech-diagram" viewBox="0 0 480 180" xmlns="http://www.w3.org/2000/svg" aria-label="Two pendulum trajectories starting nearly identically then diverging wildly">
+            <defs>
+              <marker id="arr1" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted)" />
+              </marker>
+            </defs>
+            <!-- Background -->
+            <rect width="480" height="180" fill="var(--bg)" rx="8"/>
+            <!-- Two paths: nearly identical start, wild divergence -->
+            <path d="M 40,90 C 80,88 110,85 140,80 C 170,75 185,60 210,50 C 235,40 255,35 280,20 C 305,5 330,15 360,30 C 385,42 410,55 440,70"
+                  fill="none" stroke="var(--text)" stroke-width="2" opacity="0.85"/>
+            <path d="M 40,92 C 80,90 110,88 140,86 C 170,84 185,90 210,105 C 235,120 255,140 280,155 C 305,168 330,162 360,148 C 385,136 410,120 440,108"
+                  fill="none" stroke="var(--accent)" stroke-width="2" opacity="0.75"/>
+            <!-- Start label -->
+            <line x1="40" y1="70" x2="40" y2="95" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
+            <text x="42" y="68" fill="var(--text-muted)" font-size="10" font-family="inherit">ε apart at t = 0</text>
+            <!-- End labels -->
+            <text x="443" y="68" fill="var(--text)" font-size="10" font-family="inherit" opacity="0.85">path A</text>
+            <text x="443" y="112" fill="var(--accent)" font-size="10" font-family="inherit" opacity="0.85">path B</text>
+            <text x="200" y="170" fill="var(--text-muted)" font-size="10" font-family="inherit" text-anchor="middle">trajectories diverge exponentially after a few seconds</text>
+          </svg>
+
+          <p>This is why the Phase Map is so striking: the fractal boundary between "flips quickly" and "flips slowly" reveals the geometry of chaos: a tiny change in initial angle can completely alter the long-term outcome.</p>
+        </div>
+      </details>
+
+      <!-- ── Section 2: Geometry / Kinematics ──────────────────────────────── -->
+      <details class="tech-section">
+        <summary class="tech-summary">
+          <span class="tech-summary-label">Geometry: positions, velocities, accelerations</span>
+          <span class="tech-summary-sub">Kinematics derivation from first principles</span>
+        </summary>
+        <div class="tech-body">
+          <p>Origin at the upper pivot. $y$ increases upward. Subscript 1 = upper, 2 = lower. $\theta$ is measured from the downward vertical, counter-clockwise positive. Dots denote $d/dt$.</p>
+
+          <svg class="tech-diagram" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg" aria-label="Double pendulum geometry diagram with labeled angles, lengths, and masses">
+            <rect width="320" height="260" fill="var(--bg)" rx="8"/>
+            <!-- Coordinate axes -->
+            <line x1="100" y1="30" x2="100" y2="230" stroke="var(--border)" stroke-width="1"/>
+            <line x1="60" y1="50" x2="220" y2="50" stroke="var(--border)" stroke-width="1"/>
+            <text x="224" y="54" fill="var(--text-muted)" font-size="10" font-family="inherit">x</text>
+            <text x="96" y="26" fill="var(--text-muted)" font-size="10" font-family="inherit" text-anchor="end">y</text>
+            <!-- Pivot -->
+            <circle cx="100" cy="50" r="4" fill="var(--text)" />
+            <!-- Rod 1: to approx 45° = (70,120) -->
+            <line x1="100" y1="50" x2="170" y2="140" stroke="var(--text)" stroke-width="2.5"/>
+            <!-- Theta1 arc -->
+            <path d="M 100,80 A 30,30 0 0,1 121,63" fill="none" stroke="var(--text-muted)" stroke-width="1.2"/>
+            <text x="114" y="88" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">θ₁</text>
+            <!-- L1 label -->
+            <text x="126" y="96" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">L₁</text>
+            <!-- Mass 1 -->
+            <circle cx="170" cy="140" r="9" fill="var(--accent)" opacity="0.9"/>
+            <text x="182" y="137" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">m₁</text>
+            <!-- Rod 2: from m1 roughly 20° -->
+            <line x1="170" y1="140" x2="200" y2="220" stroke="var(--text)" stroke-width="2.5"/>
+            <!-- Theta2 arc -->
+            <path d="M 170,168 A 28,28 0 0,1 183,156" fill="none" stroke="var(--text-muted)" stroke-width="1.2"/>
+            <text x="176" y="178" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">θ₂</text>
+            <!-- L2 label -->
+            <text x="195" y="182" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">L₂</text>
+            <!-- Mass 2 -->
+            <circle cx="200" cy="220" r="9" fill="var(--accent)" opacity="0.9"/>
+            <text x="212" y="217" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">m₂</text>
+            <!-- Position labels -->
+            <text x="148" y="152" fill="var(--text-dim)" font-size="9" font-family="inherit">(x₁,y₁)</text>
+            <text x="177" y="238" fill="var(--text-dim)" font-size="9" font-family="inherit">(x₂,y₂)</text>
+            <!-- Vertical dashed guide from pivot -->
+            <line x1="100" y1="50" x2="100" y2="140" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+          </svg>
+
+          <p><strong>Positions</strong> (direct trigonometry from pivot):</p>
+          $$x_1 = L_1 \sin\theta_1 \qquad y_1 = -L_1 \cos\theta_1$$
+          $$x_2 = x_1 + L_2 \sin\theta_2 \qquad y_2 = y_1 - L_2 \cos\theta_2$$
+
+          <p><strong>Velocities</strong>, differentiating with respect to time:</p>
+          $$\dot{x}_1 = \dot\theta_1 L_1 \cos\theta_1 \qquad \dot{y}_1 = \dot\theta_1 L_1 \sin\theta_1$$
+          $$\dot{x}_2 = \dot{x}_1 + \dot\theta_2 L_2 \cos\theta_2 \qquad \dot{y}_2 = \dot{y}_1 + \dot\theta_2 L_2 \sin\theta_2$$
+
+          <p><strong>Accelerations</strong>, differentiating again (product rule):</p>
+          $$\ddot{x}_1 = -\dot\theta_1^2 L_1 \sin\theta_1 + \ddot\theta_1 L_1 \cos\theta_1$$
+          $$\ddot{y}_1 = \phantom{-}\dot\theta_1^2 L_1 \cos\theta_1 + \ddot\theta_1 L_1 \sin\theta_1$$
+          $$\ddot{x}_2 = \ddot{x}_1 - \dot\theta_2^2 L_2 \sin\theta_2 + \ddot\theta_2 L_2 \cos\theta_2$$
+          $$\ddot{y}_2 = \ddot{y}_1 + \dot\theta_2^2 L_2 \cos\theta_2 + \ddot\theta_2 L_2 \sin\theta_2$$
+        </div>
+      </details>
+
+      <!-- ── Section 3: Equations of motion ─────────────────────────────────── -->
+      <details class="tech-section">
+        <summary class="tech-summary">
+          <span class="tech-summary-label">Deriving the equations of motion</span>
+          <span class="tech-summary-sub">Newtonian F = ma with tension elimination</span>
+        </summary>
+        <div class="tech-body">
+          <p>$T_1$ and $T_2$ are the rod tensions (directed along each rod toward its pivot). Apply $F = ma$ to each point mass independently.</p>
+
+          <p><strong>Upper mass $m_1$</strong>: tension $T_1$ pulls up along rod 1, tension $T_2$ pulls toward $m_2$ along rod 2, gravity pulls down:</p>
+          $$m_1 \ddot{x}_1 = -T_1 \sin\theta_1 + T_2 \sin\theta_2$$
+          $$m_1 \ddot{y}_1 = \phantom{-}T_1 \cos\theta_1 - T_2 \cos\theta_2 - m_1 g$$
+
+          <p><strong>Lower mass $m_2$</strong>: only $T_2$ (toward $m_1$) and gravity:</p>
+          $$m_2 \ddot{x}_2 = -T_2 \sin\theta_2$$
+          $$m_2 \ddot{y}_2 = \phantom{-}T_2 \cos\theta_2 - m_2 g$$
+
+          <p>Substitute the lower equations into the upper to eliminate $T_2$. Then cross-multiply by $\sin\theta$ and $\cos\theta$ to eliminate $T_1$. Solve the two remaining equations for $\ddot\theta_1$ and $\ddot\theta_2$:</p>
+
+          $$\Delta = \theta_1 - \theta_2 \qquad D = 2m_1 + m_2 - m_2\cos(2\Delta)$$
+
+          $$\ddot\theta_1 = \frac{-g(2m_1+m_2)\sin\theta_1 - m_2 g\sin(\theta_1-2\theta_2) - 2\sin\Delta\,m_2(\dot\theta_2^2 L_2 + \dot\theta_1^2 L_1\cos\Delta)}{L_1 D}$$
+
+          $$\ddot\theta_2 = \frac{2\sin\Delta\,\bigl[\dot\theta_1^2 L_1(m_1+m_2) + g(m_1+m_2)\cos\theta_1 + \dot\theta_2^2 L_2 m_2\cos\Delta\bigr]}{L_2 D}$$
+
+          <p>No small-angle approximations are made. These are implemented verbatim in <span class="tech-inline">src/physics/equations.ts:derivatives()</span>. For the GPU Phase Map where $m_1 = m_2 = L_1 = L_2 = 1$, $D$ collapses to $3 - \cos(2\Delta)$.</p>
+        </div>
+      </details>
+
+      <!-- ── Section 4: RK4 ─────────────────────────────────────────────────── -->
+      <details class="tech-section">
+        <summary class="tech-summary">
+          <span class="tech-summary-label">Solving it numerically: Runge-Kutta 4</span>
+          <span class="tech-summary-sub">Why RK4, how it works, and actual error numbers at dt = 0.005 s</span>
+        </summary>
+        <div class="tech-body">
+          <p>The equations of motion give $\ddot\theta_1$ and $\ddot\theta_2$, which are second-order ODEs. Numerical integrators need first-order systems. Introduce $\omega_1 = \dot\theta_1$ and $\omega_2 = \dot\theta_2$ as explicit state variables:</p>
+          $$\mathbf{s} = (\theta_1,\, \omega_1,\, \theta_2,\, \omega_2) \qquad \dot{\mathbf{s}} = f(\mathbf{s}) = (\omega_1,\; \ddot\theta_1,\; \omega_2,\; \ddot\theta_2)$$
+
+          <p>The simplest integrator is Euler's method: $\mathbf{s}_{n+1} = \mathbf{s}_n + h\,f(\mathbf{s}_n)$. Its local error per step is $O(h^2)$ and global error is $O(h)$: halving $h$ halves the error and doubles cost. For a chaotic system this is far too slow to converge.</p>
+
+          <p>RK4 evaluates $f$ four times per step at strategically chosen points, then takes a weighted combination that cancels all error terms through $h^4$:</p>
+
+          $$k_1 = f(\mathbf{s}_n)$$
+          $$k_2 = f\!\left(\mathbf{s}_n + \tfrac{h}{2}k_1\right)$$
+          $$k_3 = f\!\left(\mathbf{s}_n + \tfrac{h}{2}k_2\right)$$
+          $$k_4 = f(\mathbf{s}_n + h\,k_3)$$
+          $$\mathbf{s}_{n+1} = \mathbf{s}_n + \frac{h}{6}(k_1 + 2k_2 + 2k_3 + k_4)$$
+
+          <svg class="tech-diagram" viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg" aria-label="RK4 slope evaluations diagram">
+            <rect width="480" height="160" fill="var(--bg)" rx="8"/>
+            <!-- True solution curve -->
+            <path d="M 40,110 C 140,105 240,80 440,45" fill="none" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="5,4"/>
+            <!-- Step interval markers -->
+            <line x1="40" y1="120" x2="40" y2="45" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
+            <line x1="240" y1="120" x2="240" y2="45" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
+            <line x1="440" y1="120" x2="440" y2="45" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
+            <text x="40" y="130" fill="var(--text-muted)" font-size="9" font-family="inherit" text-anchor="middle">sₙ</text>
+            <text x="240" y="130" fill="var(--text-muted)" font-size="9" font-family="inherit" text-anchor="middle">sₙ + h/2</text>
+            <text x="440" y="130" fill="var(--text-muted)" font-size="9" font-family="inherit" text-anchor="middle">sₙ + h</text>
+            <!-- k1 slope at start -->
+            <line x1="20" y1="120" x2="90" y2="94" stroke="var(--text)" stroke-width="2" opacity="0.9"/>
+            <text x="22" y="92" fill="var(--text)" font-size="10" font-family="inherit" font-style="italic">k₁</text>
+            <!-- k2 slope at midpoint (via k1) -->
+            <line x1="195" y1="98" x2="285" y2="74" stroke="var(--text-muted)" stroke-width="2" opacity="0.8"/>
+            <text x="195" y="70" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">k₂</text>
+            <!-- k3 slope at midpoint (corrected) -->
+            <line x1="195" y1="90" x2="285" y2="70" stroke="var(--accent)" stroke-width="2" opacity="0.7"/>
+            <text x="286" y="68" fill="var(--accent)" font-size="10" font-family="inherit" font-style="italic">k₃</text>
+            <!-- k4 slope at endpoint -->
+            <line x1="400" y1="62" x2="478" y2="44" stroke="var(--text-muted)" stroke-width="2" opacity="0.6"/>
+            <text x="408" y="40" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">k₄</text>
+            <!-- Final step arrow -->
+            <line x1="40" y1="110" x2="438" y2="46" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arr1)" opacity="0.7"/>
+            <text x="220" y="92" fill="var(--text-dim)" font-size="9" font-family="inherit" text-anchor="middle">weighted step  (1:2:2:1)</text>
+          </svg>
+
+          <p>The 1:2:2:1 weights arise from matching the Taylor expansion of the true solution through the $h^4$ term. Local truncation error is $O(h^5)$; global error is $O(h^4)$. Halving $h$ reduces error by $16\times$, versus Euler's $2\times$.</p>
+          <p>With $h = \Delta t = 0.005\,\text{s}$:</p>
+          <div class="tech-table">Local error / step  ~  h⁵  =  (0.005)⁵  ≈  3.1 × 10⁻¹²
+Global error / s    ~  h⁴  =  (0.005)⁴  ≈  6.3 × 10⁻¹⁰</div>
+          <p>In practice, total energy drifts by less than $10^{-8}$ J over hundreds of simulated seconds.</p>
+        </div>
+      </details>
+
+      <!-- ── Section 5: Floating-point ─────────────────────────────────────── -->
+      <details class="tech-section">
+        <summary class="tech-summary">
+          <span class="tech-summary-label">Floating-point precision and error accumulation</span>
+          <span class="tech-summary-sub">f64 on the CPU vs f32 on the GPU, and what that means for accuracy</span>
+        </summary>
+        <div class="tech-body">
+          <p>This simulator runs physics in two separate places. The Pendulum page runs on the <strong>CPU</strong> in JavaScript, which uses IEEE 754 64-bit floats (f64) by default. The Phase Map runs on the <strong>GPU</strong> in a WGSL compute shader, which uses 32-bit floats (f32) — the native type for GPU arithmetic. f64 on GPU hardware is rare and typically 16–32× slower, so f32 is the practical choice.</p>
+
+          <div class="tech-table">                f64 (double)    f32 (single)
+total bits           64              32
+significand          52 bits         23 bits
+machine ε         2.22 × 10⁻¹⁶   1.19 × 10⁻⁷
+decimal digits       ~15–16          ~7</div>
+
+          <p><strong>CPU (f64):</strong> Machine $\varepsilon \approx 10^{-16}$ is four orders of magnitude below the RK4 per-step truncation error $\approx 10^{-12}$. Rounding is negligible; integration error dominates.</p>
+
+          <p><strong>GPU (f32):</strong> Machine $\varepsilon \approx 10^{-7}$ is five orders of magnitude <em>above</em> the f64 truncation error. Each arithmetic operation rounds at the 7th decimal digit. The Phase Map shader runs roughly 50 floating-point operations per RK4 step, giving round-off noise per step of $\approx 50 \times 10^{-7} = 5 \times 10^{-6}$. Accumulation over time:</p>
+
+          <div class="tech-table">Steps      Simulated time    Accumulated f32 error (estimate)
+  6,000        30 s                  ~0.03 rad
+ 60,000       300 s                  ~0.3 rad
+600,000     3,000 s                  ~3 rad</div>
+
+          <p>At 60,000 steps individual pixel trajectories can be off by $\sim 0.3\,\text{rad}$, no longer physically exact. This is acceptable because the Phase Map visualises <em>relative</em> behaviour: which starting conditions flip quickly versus slowly. The fractal boundary survives f32 precision; absolute flip-time values should not be read as precise beyond ~2 significant figures for long runs.</p>
+        </div>
+      </details>
+
+      <!-- ── Section 6: GPU backend ─────────────────────────────────────────── -->
+      <details class="tech-section">
+        <summary class="tech-summary">
+          <span class="tech-summary-label">Running 640,000 simulations at once</span>
+          <span class="tech-summary-sub">WebGPU compute pipeline, buffer layout, flip detection, and coloring modes</span>
+        </summary>
+        <div class="tech-body">
+          <p>The Phase Map simulates an $N \times N$ grid of pendulums in parallel. Each pixel is one independent starting condition $(\theta_1, \theta_2)$ with $\omega_1 = \omega_2 = 0$.</p>
+
+          <p>All state lives in a single GPU storage buffer. Each pendulum occupies 8 × f32 (32 bytes):</p>
+          <div class="tech-table">slot:   [0]   [1]   [2]   [3]   [4]         [5]           [6]      [7]
+field:   θ₁    ω₁    θ₂    ω₂  flipCount  firstFlipTime  elapsed  frozen</div>
+
+          <p>One WGSL compute thread per pendulum, workgroup size 256. At $800 \times 800$ (640,000 pendulums) that is 2,500 workgroups per dispatch, all running in parallel on the GPU. Each thread runs its own RK4 loop for $N$ steps and writes results back in-place. No inter-thread communication is needed.</p>
+
+          <p><strong>Flip detection</strong> runs inside the per-step loop. A "flip" occurs when the lower bob passes over the top, detected when $\sin(\theta_2)$ changes sign while $\cos(\theta_2) &lt; 0$:</p>
+          $$\sin(\theta_2^{\text{prev}}) \cdot \sin(\theta_2^{\text{new}}) &lt; 0 \;\text{ and }\; \cos(\theta_2^{\text{new}}) &lt; 0$$
+          <p><span class="tech-inline">firstFlipTime</span> is recorded once and never overwritten. A separate reinit shader resets the buffer on resolution or region change, avoiding a 20 MB CPU→GPU upload.</p>
+
+          <p><strong>Coloring modes:</strong></p>
+          <p><strong>Time to first flip</strong>: each pixel's color encodes <span class="tech-inline">firstFlipTime</span>. The boundary between fast-flip and slow-flip regions is fractal: a one-pixel shift in initial angle can double the flip time.</p>
+          <p><strong>Live $\theta_2$</strong>: pixels colored by the current lower angle through a palette. Colors evolve continuously as the simulation advances, revealing the flow structure of phase space.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
   <!-- ── Export modal ── -->
   <div id="export-overlay">
     <div id="export-modal">
@@ -996,6 +1389,9 @@
   </div>
 
   <script type="module" src="/src/main.ts"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+          onload="renderMathInElement(document.getElementById('page-tech'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
 </body>
 
 </html>
