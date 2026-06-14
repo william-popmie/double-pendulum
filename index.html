@@ -1084,8 +1084,8 @@
           <span class="tech-summary-label">Why the double pendulum is interesting</span>
         </summary>
         <div class="tech-body">
-          <p>Take a single pendulum — a weight on a string. You can tell exactly where it will be tomorrow, in a year, any time you want. A physicist can write a formula and calculate it.</p>
-          <p>Now connect a second pendulum to the bottom of the first. Start two copies from positions that are nearly identical — a millimetre apart, say. For the first second or two they look the same. Then one dips a little earlier, the other swings wide, and within maybe ten seconds they are doing completely different things. After a minute, the starting positions are completely irrelevant.</p>
+          <p>Take a single pendulum, a weight on a string. You can tell exactly where it will be tomorrow, in a year, any time you want. A physicist can write a formula and calculate it.</p>
+          <p>Now connect a second pendulum to the bottom of the first. Start two copies from positions that are nearly identical, a millimetre apart, say. For the first second or two they look the same. Then one dips a little earlier, the other swings wide, and within maybe ten seconds they are doing completely different things. After a minute, the starting positions are completely irrelevant.</p>
           <p>This is not randomness. Both pendulums are following Newton's laws exactly. The issue is that the system is extremely sensitive to starting conditions. Any tiny difference grows. Double it by a small factor, wait, it grows again. That compounding amplification is what physicists call chaos, and it only shows up at large angles where the coupling between the two rods is strongly nonlinear. For small starting angles the system actually behaves predictably, like two linked springs.</p>
 
           <svg class="tech-diagram" viewBox="0 0 480 180" xmlns="http://www.w3.org/2000/svg" aria-label="Two pendulum trajectories starting nearly identically then diverging wildly">
@@ -1276,7 +1276,7 @@ Global error / s    ~  h⁴  =  (0.005)⁴  ≈  6.3 × 10⁻¹⁰</div>
           <span class="tech-summary-label">Floating-point precision and error accumulation</span>
         </summary>
         <div class="tech-body">
-          <p>This simulator runs physics in two separate places. The Pendulum page runs on the <strong>CPU</strong> in JavaScript, which uses IEEE 754 64-bit floats (f64) by default. The Phase Map runs on the <strong>GPU</strong> in a WGSL compute shader, which uses 32-bit floats (f32) — the native type for GPU arithmetic. f64 on GPU hardware is rare and typically 16–32× slower, so f32 is the practical choice.</p>
+          <p>This simulator runs physics in two separate places. The Pendulum page runs on the <strong>CPU</strong> in JavaScript, which uses IEEE 754 64-bit floats (f64) by default. The Phase Map runs on the <strong>GPU</strong> in a WGSL compute shader, which uses 32-bit floats (f32), the native type for GPU arithmetic. f64 on GPU hardware is rare and typically 16–32× slower, so f32 is the practical choice.</p>
 
           <div class="tech-table">                f64 (double)    f32 (single)
 total bits           64              32
