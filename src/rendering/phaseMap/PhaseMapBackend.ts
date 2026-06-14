@@ -29,9 +29,9 @@ export class PhaseMapBackend {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
 
-    // Uniforms: g, dt, steps, freeze, m1, m2, L1, L2 = 32 bytes
+    // Uniforms: g, dt, steps, freeze, m1, m2, L1, L2, damping + 3 pad = 48 bytes
     this.uniformBuffer = device.createBuffer({
-      size: 32,
+      size: 48,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
@@ -94,7 +94,7 @@ export class PhaseMapBackend {
 
   // Advance all pendulums by stepsPerDispatch RK4 steps.
   step(p: PhysicsParams, dt: number, stepsPerDispatch: number, freeze: boolean): void {
-    const buf = new ArrayBuffer(32);
+    const buf = new ArrayBuffer(48);
     const f = new Float32Array(buf);
     const u = new Uint32Array(buf);
     f[0] = p.g;
@@ -105,6 +105,7 @@ export class PhaseMapBackend {
     f[5] = p.m2;
     f[6] = p.L1;
     f[7] = p.L2;
+    f[8] = p.damping;
     this.device.queue.writeBuffer(this.uniformBuffer, 0, buf);
     this.dispatchCompute(this.computePipeline, this.bindGroup, this.width * this.height);
   }

@@ -11,6 +11,7 @@ export interface PhysicsParams {
   m2: number;
   L1: number;
   L2: number;
+  damping: number;
 }
 
 export interface SimConfig {

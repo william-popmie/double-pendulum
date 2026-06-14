@@ -53,6 +53,7 @@ async function init(): Promise<void> {
   const physL2Input      = document.getElementById('phys-L2')          as HTMLInputElement;
   const physM1Input      = document.getElementById('phys-m1')          as HTMLInputElement;
   const physM2Input      = document.getElementById('phys-m2')          as HTMLInputElement;
+  const physDampingInput = document.getElementById('phys-damping')     as HTMLInputElement;
   const physResetBtn     = document.getElementById('phys-reset-btn')   as HTMLButtonElement;
 
   // Export modal refs
@@ -83,11 +84,12 @@ async function init(): Promise<void> {
 
   function readPhysics() {
     return {
-      g:  DEFAULT_PHYSICS.g,
-      L1: Math.max(0.1, parseFloat(physL1Input.value) || 1),
-      L2: Math.max(0.1, parseFloat(physL2Input.value) || 1),
-      m1: Math.max(0.1, parseFloat(physM1Input.value) || 1),
-      m2: Math.max(0.1, parseFloat(physM2Input.value) || 1),
+      g:       DEFAULT_PHYSICS.g,
+      L1:      Math.max(0.1, parseFloat(physL1Input.value) || 1),
+      L2:      Math.max(0.1, parseFloat(physL2Input.value) || 1),
+      m1:      Math.max(0.1, parseFloat(physM1Input.value) || 1),
+      m2:      Math.max(0.1, parseFloat(physM2Input.value) || 1),
+      damping: Math.max(0,   parseFloat(physDampingInput.value) || 0),
     };
   }
 
@@ -124,15 +126,16 @@ async function init(): Promise<void> {
   physicsToggleBtn.addEventListener('click', physBtnClickHandler);
   mapPhysicsToggleBtn.addEventListener('click', physBtnClickHandler);
 
-  for (const input of [physL1Input, physL2Input, physM1Input, physM2Input]) {
+  for (const input of [physL1Input, physL2Input, physM1Input, physM2Input, physDampingInput]) {
     input.addEventListener('change', applyPhysics);
   }
 
   physResetBtn.addEventListener('click', () => {
-    physL1Input.value = String(DEFAULT_PHYSICS.L1);
-    physL2Input.value = String(DEFAULT_PHYSICS.L2);
-    physM1Input.value = String(DEFAULT_PHYSICS.m1);
-    physM2Input.value = String(DEFAULT_PHYSICS.m2);
+    physL1Input.value      = String(DEFAULT_PHYSICS.L1);
+    physL2Input.value      = String(DEFAULT_PHYSICS.L2);
+    physM1Input.value      = String(DEFAULT_PHYSICS.m1);
+    physM2Input.value      = String(DEFAULT_PHYSICS.m2);
+    physDampingInput.value = String(DEFAULT_PHYSICS.damping);
     applyPhysics();
   });
 

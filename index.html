@@ -1045,6 +1045,17 @@
       <span class="phys-unit">kg</span>
     </div>
     <div class="phys-divider"></div>
+    <div class="phys-section-label">Damping</div>
+    <div class="phys-row">
+      <span class="phys-label">b</span>
+      <div class="num-ctrl">
+        <button class="num-btn" data-target="phys-damping" data-dir="-1">−</button>
+        <input type="number" id="phys-damping" value="0" min="0" max="2" step="0.05" />
+        <button class="num-btn" data-target="phys-damping" data-dir="1">+</button>
+      </div>
+      <span class="phys-unit">s⁻¹</span>
+    </div>
+    <div class="phys-divider"></div>
     <button id="phys-reset-btn" class="phys-reset-btn">Reset to defaults</button>
   </div>
 

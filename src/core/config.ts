@@ -6,6 +6,7 @@ export const DEFAULT_PHYSICS: PhysicsParams = {
   m2: 1,
   L1: 1,
   L2: 1,
+  damping: 0,
 };
 
 export const DEFAULT_SIM: SimConfig = {

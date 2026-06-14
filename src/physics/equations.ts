@@ -3,7 +3,7 @@ import type { PendulumState, PhysicsParams } from '../core/types';
 // Returns [dtheta1, domega1, dtheta2, domega2]
 export function derivatives(s: PendulumState, p: PhysicsParams): PendulumState {
   const { theta1, omega1, theta2, omega2 } = s;
-  const { g, m1, m2, L1, L2 } = p;
+  const { g, m1, m2, L1, L2, damping } = p;
 
   const delta = theta1 - theta2;
   const denom = 2 * m1 + m2 - m2 * Math.cos(2 * delta);
@@ -12,7 +12,7 @@ export function derivatives(s: PendulumState, p: PhysicsParams): PendulumState {
     -g * (2 * m1 + m2) * Math.sin(theta1)
     - m2 * g * Math.sin(theta1 - 2 * theta2)
     - 2 * Math.sin(delta) * m2 * (omega2 * omega2 * L2 + omega1 * omega1 * L1 * Math.cos(delta))
-  ) / (L1 * denom);
+  ) / (L1 * denom) - damping * omega1;
 
   const dOmega2 = (
     2 * Math.sin(delta) * (
@@ -20,7 +20,7 @@ export function derivatives(s: PendulumState, p: PhysicsParams): PendulumState {
       + g * (m1 + m2) * Math.cos(theta1)
       + omega2 * omega2 * L2 * m2 * Math.cos(delta)
     )
-  ) / (L2 * denom);
+  ) / (L2 * denom) - damping * omega2;
 
   return { theta1: omega1, omega1: dOmega1, theta2: omega2, omega2: dOmega2 };
 }

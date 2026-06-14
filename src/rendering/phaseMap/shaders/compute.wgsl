@@ -4,14 +4,15 @@
 //   [4] flipCount  [5] firstFlipTime (-1 = never)  [6] elapsed  [7] frozen
 
 struct Uniforms {
-  g:      f32,
-  dt:     f32,
-  steps:  u32,
-  freeze: u32,  // 1 = freeze pendulum after first flip
-  m1:     f32,
-  m2:     f32,
-  L1:     f32,
-  L2:     f32,
+  g:       f32,
+  dt:      f32,
+  steps:   u32,
+  freeze:  u32,  // 1 = freeze pendulum after first flip
+  m1:      f32,
+  m2:      f32,
+  L1:      f32,
+  L2:      f32,
+  damping: f32,
 }
 
 @group(0) @binding(0) var<storage, read_write> states: array<f32>;
@@ -39,7 +40,7 @@ fn derivatives(s: vec4f) -> vec4f {
     -g * (2.0 * m1 + m2) * sin(t1)
     - m2 * g * sin(t1 - 2.0 * t2)
     - 2.0 * sin_d * m2 * (w2 * w2 * L2 + w1 * w1 * L1 * cos_d)
-  ) / (L1 * D);
+  ) / (L1 * D) - uni.damping * w1;
 
   let dw2 = (
     2.0 * sin_d * (
@@ -47,7 +48,7 @@ fn derivatives(s: vec4f) -> vec4f {
       + g * (m1 + m2) * cos(t1)
       + w2 * w2 * L2 * m2 * cos_d
     )
-  ) / (L2 * D);
+  ) / (L2 * D) - uni.damping * w2;
 
   return vec4f(w1, dw1, w2, dw2);
 }
