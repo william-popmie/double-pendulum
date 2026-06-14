@@ -175,7 +175,7 @@ async function init(): Promise<void> {
       probeMapHint.classList.add('hidden');
     }, { once: true });
 
-    mapResetBtn.addEventListener('click', () => phaseMapView!.resetView());
+    mapResetBtn.addEventListener('click', () => phaseMapView!.resetProbe());
 
     // ── Export modal ──────────────────────────────────────────────────────────
     let activeExporter: PhaseMapExporter | null = null;

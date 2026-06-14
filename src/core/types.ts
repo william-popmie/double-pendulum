@@ -15,7 +15,6 @@ export interface PhysicsParams {
 
 export interface SimConfig {
   dt: number;
-  stepsPerFrame: number;
 }
 
 export interface PhaseRegion {

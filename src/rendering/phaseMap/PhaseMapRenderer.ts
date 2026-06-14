@@ -21,13 +21,11 @@ export class PhaseMapRenderer {
   private canvasFormat!: GPUTextureFormat;
   private pipeline!: GPURenderPipeline;
   private renderUniformBuffer!: GPUBuffer;
-  private viewUniformBuffer!: GPUBuffer;   // 32 bytes: view region + sim region
+  private viewUniformBuffer!: GPUBuffer;   // 16 bytes: 4×f32 region bounds
   private bindGroupLayout!: GPUBindGroupLayout;
   private bindGroup: GPUBindGroup | null = null;
   private width = 0;
   private height = 0;
-  private simW = 0;
-  private simH = 0;
 
   async init(device: GPUDevice, canvas: HTMLCanvasElement): Promise<void> {
     this.device = device;
@@ -38,17 +36,15 @@ export class PhaseMapRenderer {
     this.canvasFormat = navigator.gpu.getPreferredCanvasFormat();
     this.context.configure({ device, format: this.canvasFormat, alphaMode: 'opaque' });
 
-    // Render uniforms: width, height, colorMode, maxFlipTime, simWidth, simHeight, pad×2 = 32 bytes
+    // Render uniforms: width, height, colorMode, maxFlipTime, palette, pad×3 = 32 bytes
     this.renderUniformBuffer = device.createBuffer({
       size: 32,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
-    // View region uniforms: 8×f32 = 32 bytes
-    // [viewTheta1Min, viewTheta1Max, viewTheta2Min, viewTheta2Max,
-    //  simTheta1Min,  simTheta1Max,  simTheta2Min,  simTheta2Max]
+    // View region: theta1Min, theta1Max, theta2Min, theta2Max = 16 bytes
     this.viewUniformBuffer = device.createBuffer({
-      size: 32,
+      size: 16,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
@@ -95,17 +91,10 @@ export class PhaseMapRenderer {
     });
   }
 
-  // Call once after setStateBuffer() and after every reinitialize().
-  // viewRegion = current pan/zoom; simRegion = canonical ≤ 2π period from the backend.
-  // simW/simH = number of active sim entries per axis (packed at buffer start).
-  setView(viewRegion: PhaseRegion, simRegion: PhaseRegion, simW: number, simH: number): void {
-    this.simW = simW;
-    this.simH = simH;
-    const buf = new Float32Array(8);
-    buf[0] = viewRegion.theta1Min;  buf[1] = viewRegion.theta1Max;
-    buf[2] = viewRegion.theta2Min;  buf[3] = viewRegion.theta2Max;
-    buf[4] = simRegion.theta1Min;   buf[5] = simRegion.theta1Max;
-    buf[6] = simRegion.theta2Min;   buf[7] = simRegion.theta2Max;
+  setView(region: PhaseRegion): void {
+    const buf = new Float32Array(4);
+    buf[0] = region.theta1Min;  buf[1] = region.theta1Max;
+    buf[2] = region.theta2Min;  buf[3] = region.theta2Max;
     this.device.queue.writeBuffer(this.viewUniformBuffer, 0, buf);
   }
 
@@ -119,9 +108,7 @@ export class PhaseMapRenderer {
     u[1] = this.height;
     u[2] = opts.colorMode === 'theta2' ? 0 : 1;
     f[3] = opts.maxFlipTime;
-    u[4] = this.simW;
-    u[5] = this.simH;
-    u[6] = PALETTE_INDEX[opts.palette];
+    u[4] = PALETTE_INDEX[opts.palette];
     this.device.queue.writeBuffer(this.renderUniformBuffer, 0, buf);
 
     const encoder = this.device.createCommandEncoder();

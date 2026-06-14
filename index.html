@@ -542,19 +542,7 @@
       height: 100%;
     }
 
-    #phase-grid-bg {
-      position: absolute;
-      inset: -300px;
-      /* extends 300px beyond the canvas wrap into the void */
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
-      background-size: 50px 50px;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    #no-gpu-msg {
+#no-gpu-msg {
       color: var(--text-muted);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -916,7 +904,6 @@
       </div>
       <div id="phasemap-map-cell">
         <div id="phase-canvas-wrap">
-          <div id="phase-grid-bg"></div>
           <canvas id="canvas-phasemap"></canvas>
         </div>
         <div id="probe-map-hint">click the map to inspect a pendulum</div>
