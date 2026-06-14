@@ -753,8 +753,9 @@
     /* ── Tech page ─────────────────────────────────────────────────────────── */
     #page-tech {
       flex: 1;
-      overflow-y: auto;
+      overflow-y: scroll;
       background: var(--bg);
+      scrollbar-gutter: stable;
     }
 
     .tech-content {
@@ -764,7 +765,7 @@
     }
 
     .tech-content h1 {
-      font-size: 18px;
+      font-size: 22px;
       font-weight: 600;
       color: var(--text);
       margin-bottom: 10px;
@@ -772,7 +773,7 @@
     }
 
     .tech-intro {
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1.75;
       color: var(--text-muted);
       margin-bottom: 36px;
@@ -803,23 +804,15 @@
     }
 
     .tech-summary-label {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: var(--text-muted);
+      color: var(--text);
       transition: color 0.15s;
       flex-shrink: 0;
     }
 
-    .tech-summary-sub {
-      font-size: 12px;
-      font-weight: 400;
-      color: var(--text-dim);
-      letter-spacing: 0;
-      text-transform: none;
-      transition: color 0.15s;
-    }
 
     .tech-summary::after {
       content: '›';
@@ -836,21 +829,20 @@
       transform: rotate(90deg);
     }
 
-    .tech-summary:hover .tech-summary-label,
-    .tech-summary:hover .tech-summary-sub {
-      color: var(--text);
+    .tech-summary:hover .tech-summary-label {
+      color: var(--accent);
     }
 
     .tech-body {
       padding-bottom: 32px;
-      max-width: 680px;
     }
 
     .tech-body p {
-      font-size: 13px;
-      line-height: 1.75;
+      font-size: 14px;
+      line-height: 1.8;
       color: var(--text);
-      margin-bottom: 14px;
+      margin-bottom: 16px;
+      max-width: 600px;
     }
 
     .tech-body p:last-child {
@@ -1090,12 +1082,11 @@
       <details class="tech-section" open>
         <summary class="tech-summary">
           <span class="tech-summary-label">Why the double pendulum is interesting</span>
-          <span class="tech-summary-sub">Chaos, sensitivity, and what makes this system special</span>
         </summary>
         <div class="tech-body">
-          <p>A single pendulum is completely predictable: given initial angle and velocity, you can write down the exact position at any future time (for small angles, it's a sine wave; for large angles, an elliptic integral). Two coupled pendulums destroy this property.</p>
-          <p>For <strong>small angles</strong> the coupling is weak. The system is approximately linear, motion decomposes into two independent normal modes, and phase portraits trace tidy Lissajous curves. For <strong>large angles</strong> the nonlinear coupling dominates, and the system becomes chaotic.</p>
-          <p>Chaos here means <em>sensitive dependence on initial conditions</em>: two starting states separated by $\varepsilon$ diverge at an exponential rate $e^{\lambda t}$, where $\lambda$ is the Lyapunov exponent. After a few seconds, a shift of $10^{-10}$ radians in the starting angle produces a completely different trajectory.</p>
+          <p>Take a single pendulum — a weight on a string. You can tell exactly where it will be tomorrow, in a year, any time you want. A physicist can write a formula and calculate it.</p>
+          <p>Now connect a second pendulum to the bottom of the first. Start two copies from positions that are nearly identical — a millimetre apart, say. For the first second or two they look the same. Then one dips a little earlier, the other swings wide, and within maybe ten seconds they are doing completely different things. After a minute, the starting positions are completely irrelevant.</p>
+          <p>This is not randomness. Both pendulums are following Newton's laws exactly. The issue is that the system is extremely sensitive to starting conditions. Any tiny difference grows. Double it by a small factor, wait, it grows again. That compounding amplification is what physicists call chaos, and it only shows up at large angles where the coupling between the two rods is strongly nonlinear. For small starting angles the system actually behaves predictably, like two linked springs.</p>
 
           <svg class="tech-diagram" viewBox="0 0 480 180" xmlns="http://www.w3.org/2000/svg" aria-label="Two pendulum trajectories starting nearly identically then diverging wildly">
             <defs>
@@ -1127,45 +1118,44 @@
       <details class="tech-section">
         <summary class="tech-summary">
           <span class="tech-summary-label">Geometry: positions, velocities, accelerations</span>
-          <span class="tech-summary-sub">Kinematics derivation from first principles</span>
         </summary>
         <div class="tech-body">
           <p>Origin at the upper pivot. $y$ increases upward. Subscript 1 = upper, 2 = lower. $\theta$ is measured from the downward vertical, counter-clockwise positive. Dots denote $d/dt$.</p>
 
-          <svg class="tech-diagram" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg" aria-label="Double pendulum geometry diagram with labeled angles, lengths, and masses">
-            <rect width="320" height="260" fill="var(--bg)" rx="8"/>
+          <svg class="tech-diagram" viewBox="0 0 320 270" xmlns="http://www.w3.org/2000/svg" aria-label="Double pendulum geometry diagram with labeled angles, lengths, and masses">
+            <rect width="320" height="270" fill="var(--bg)" rx="8"/>
             <!-- Coordinate axes -->
-            <line x1="100" y1="30" x2="100" y2="230" stroke="var(--border)" stroke-width="1"/>
-            <line x1="60" y1="50" x2="220" y2="50" stroke="var(--border)" stroke-width="1"/>
-            <text x="224" y="54" fill="var(--text-muted)" font-size="10" font-family="inherit">x</text>
-            <text x="96" y="26" fill="var(--text-muted)" font-size="10" font-family="inherit" text-anchor="end">y</text>
+            <line x1="65" y1="50" x2="262" y2="50" stroke="var(--border)" stroke-width="1"/>
+            <polyline points="254,45 263,50 254,55" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <text x="267" y="54" fill="var(--text-muted)" font-size="11" font-family="inherit">x</text>
+            <line x1="105" y1="248" x2="105" y2="22" stroke="var(--border)" stroke-width="1"/>
+            <polyline points="100,30 105,21 110,30" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <text x="101" y="17" fill="var(--text-muted)" font-size="11" font-family="inherit" text-anchor="end">y</text>
+            <!-- Dashed vertical reference lines -->
+            <line x1="105" y1="50" x2="105" y2="220" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>
+            <line x1="165" y1="136" x2="165" y2="220" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
             <!-- Pivot -->
-            <circle cx="100" cy="50" r="4" fill="var(--text)" />
-            <!-- Rod 1: to approx 45° = (70,120) -->
-            <line x1="100" y1="50" x2="170" y2="140" stroke="var(--text)" stroke-width="2.5"/>
-            <!-- Theta1 arc -->
-            <path d="M 100,80 A 30,30 0 0,1 121,63" fill="none" stroke="var(--text-muted)" stroke-width="1.2"/>
-            <text x="114" y="88" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">θ₁</text>
-            <!-- L1 label -->
-            <text x="126" y="96" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">L₁</text>
+            <circle cx="105" cy="50" r="4.5" fill="var(--text)"/>
+            <!-- Rod 1: 35° from vertical → m1 at (165, 136) -->
+            <line x1="105" y1="50" x2="165" y2="136" stroke="var(--text)" stroke-width="2.5"/>
+            <!-- θ₁ arc: start on downward vertical (105,82), end on rod1 at r=32: (105+32·sin35°,50+32·cos35°)=(123,76) -->
+            <path d="M 105,82 A 32,32 0 0,1 123,76" fill="none" stroke="var(--text-muted)" stroke-width="1.3"/>
+            <text x="112" y="94" fill="var(--text-muted)" font-size="12" font-family="inherit" font-style="italic">θ₁</text>
+            <text x="140" y="88" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">L₁</text>
             <!-- Mass 1 -->
-            <circle cx="170" cy="140" r="9" fill="var(--accent)" opacity="0.9"/>
-            <text x="182" y="137" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">m₁</text>
-            <!-- Rod 2: from m1 roughly 20° -->
-            <line x1="170" y1="140" x2="200" y2="220" stroke="var(--text)" stroke-width="2.5"/>
-            <!-- Theta2 arc -->
-            <path d="M 170,168 A 28,28 0 0,1 183,156" fill="none" stroke="var(--text-muted)" stroke-width="1.2"/>
-            <text x="176" y="178" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">θ₂</text>
-            <!-- L2 label -->
-            <text x="195" y="182" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">L₂</text>
+            <circle cx="165" cy="136" r="9" fill="var(--accent)" opacity="0.9"/>
+            <text x="178" y="133" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">m₁</text>
+            <text x="143" y="155" fill="var(--text-muted)" font-size="9" font-family="inherit" opacity="0.6">(x₁, y₁)</text>
+            <!-- Rod 2: 20° from vertical → m2 at (165+85·sin20°, 136+85·cos20°)=(194,216) -->
+            <line x1="165" y1="136" x2="194" y2="216" stroke="var(--text)" stroke-width="2.5"/>
+            <!-- θ₂ arc: start on downward vertical from m1 (165,164), end on rod2 at r=28: (165+28·sin20°,136+28·cos20°)=(175,162) -->
+            <path d="M 165,164 A 28,28 0 0,1 175,162" fill="none" stroke="var(--text-muted)" stroke-width="1.3"/>
+            <text x="172" y="178" fill="var(--text-muted)" font-size="12" font-family="inherit" font-style="italic">θ₂</text>
+            <text x="188" y="177" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">L₂</text>
             <!-- Mass 2 -->
-            <circle cx="200" cy="220" r="9" fill="var(--accent)" opacity="0.9"/>
-            <text x="212" y="217" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">m₂</text>
-            <!-- Position labels -->
-            <text x="148" y="152" fill="var(--text-dim)" font-size="9" font-family="inherit">(x₁,y₁)</text>
-            <text x="177" y="238" fill="var(--text-dim)" font-size="9" font-family="inherit">(x₂,y₂)</text>
-            <!-- Vertical dashed guide from pivot -->
-            <line x1="100" y1="50" x2="100" y2="140" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+            <circle cx="194" cy="216" r="9" fill="var(--accent)" opacity="0.9"/>
+            <text x="207" y="213" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">m₂</text>
+            <text x="170" y="235" fill="var(--text-muted)" font-size="9" font-family="inherit" opacity="0.6">(x₂, y₂)</text>
           </svg>
 
           <p><strong>Positions</strong> (direct trigonometry from pivot):</p>
@@ -1188,7 +1178,6 @@
       <details class="tech-section">
         <summary class="tech-summary">
           <span class="tech-summary-label">Deriving the equations of motion</span>
-          <span class="tech-summary-sub">Newtonian F = ma with tension elimination</span>
         </summary>
         <div class="tech-body">
           <p>$T_1$ and $T_2$ are the rod tensions (directed along each rod toward its pivot). Apply $F = ma$ to each point mass independently.</p>
@@ -1217,7 +1206,6 @@
       <details class="tech-section">
         <summary class="tech-summary">
           <span class="tech-summary-label">Solving it numerically: Runge-Kutta 4</span>
-          <span class="tech-summary-sub">Why RK4, how it works, and actual error numbers at dt = 0.005 s</span>
         </summary>
         <div class="tech-body">
           <p>The equations of motion give $\ddot\theta_1$ and $\ddot\theta_2$, which are second-order ODEs. Numerical integrators need first-order systems. Introduce $\omega_1 = \dot\theta_1$ and $\omega_2 = \dot\theta_2$ as explicit state variables:</p>
@@ -1273,7 +1261,6 @@ Global error / s    ~  h⁴  =  (0.005)⁴  ≈  6.3 × 10⁻¹⁰</div>
       <details class="tech-section">
         <summary class="tech-summary">
           <span class="tech-summary-label">Floating-point precision and error accumulation</span>
-          <span class="tech-summary-sub">f64 on the CPU vs f32 on the GPU, and what that means for accuracy</span>
         </summary>
         <div class="tech-body">
           <p>This simulator runs physics in two separate places. The Pendulum page runs on the <strong>CPU</strong> in JavaScript, which uses IEEE 754 64-bit floats (f64) by default. The Phase Map runs on the <strong>GPU</strong> in a WGSL compute shader, which uses 32-bit floats (f32) — the native type for GPU arithmetic. f64 on GPU hardware is rare and typically 16–32× slower, so f32 is the practical choice.</p>
@@ -1301,7 +1288,6 @@ decimal digits       ~15–16          ~7</div>
       <details class="tech-section">
         <summary class="tech-summary">
           <span class="tech-summary-label">Running 640,000 simulations at once</span>
-          <span class="tech-summary-sub">WebGPU compute pipeline, buffer layout, flip detection, and coloring modes</span>
         </summary>
         <div class="tech-body">
           <p>The Phase Map simulates an $N \times N$ grid of pendulums in parallel. Each pixel is one independent starting condition $(\theta_1, \theta_2)$ with $\omega_1 = \omega_2 = 0$.</p>
