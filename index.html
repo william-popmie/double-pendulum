@@ -1122,40 +1122,53 @@
         <div class="tech-body">
           <p>Origin at the upper pivot. $y$ increases upward. Subscript 1 = upper, 2 = lower. $\theta$ is measured from the downward vertical, counter-clockwise positive. Dots denote $d/dt$.</p>
 
-          <svg class="tech-diagram" viewBox="0 0 320 270" xmlns="http://www.w3.org/2000/svg" aria-label="Double pendulum geometry diagram with labeled angles, lengths, and masses">
-            <rect width="320" height="270" fill="var(--bg)" rx="8"/>
-            <!-- Coordinate axes -->
-            <line x1="65" y1="50" x2="262" y2="50" stroke="var(--border)" stroke-width="1"/>
-            <polyline points="254,45 263,50 254,55" fill="none" stroke="var(--border)" stroke-width="1"/>
-            <text x="267" y="54" fill="var(--text-muted)" font-size="11" font-family="inherit">x</text>
-            <line x1="105" y1="248" x2="105" y2="22" stroke="var(--border)" stroke-width="1"/>
-            <polyline points="100,30 105,21 110,30" fill="none" stroke="var(--border)" stroke-width="1"/>
-            <text x="101" y="17" fill="var(--text-muted)" font-size="11" font-family="inherit" text-anchor="end">y</text>
-            <!-- Dashed vertical reference lines -->
-            <line x1="105" y1="50" x2="105" y2="220" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>
-            <line x1="165" y1="136" x2="165" y2="220" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+          <svg class="tech-diagram" viewBox="0 0 440 300" xmlns="http://www.w3.org/2000/svg" aria-label="Double pendulum geometry diagram">
+            <rect width="440" height="300" fill="var(--bg)" rx="8"/>
+
+            <!-- Axes -->
+            <line x1="70" y1="55" x2="360" y2="55" stroke="var(--border)" stroke-width="1"/>
+            <polyline points="352,50 361,55 352,60" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <text x="366" y="59" fill="var(--text-muted)" font-size="13" font-family="inherit">x</text>
+            <line x1="120" y1="278" x2="120" y2="24" stroke="var(--border)" stroke-width="1"/>
+            <polyline points="115,32 120,23 125,32" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <text x="116" y="19" fill="var(--text-muted)" font-size="13" font-family="inherit" text-anchor="end">y</text>
+
+            <!-- Dashed reference verticals -->
+            <line x1="120" y1="55" x2="120" y2="260" stroke="var(--border)" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
+            <line x1="205" y1="140" x2="205" y2="255" stroke="var(--border)" stroke-width="1" stroke-dasharray="5,4" opacity="0.3"/>
+
+            <!-- θ₁ filled sector (pivot at 120,55; vertical to 120,105; rod to 155,90 at r=50) -->
+            <path d="M 120,55 L 120,105 A 50,50 0 0,1 155,90 Z" fill="rgba(255,255,255,0.05)" stroke="none"/>
+            <path d="M 120,105 A 50,50 0 0,1 155,90" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="126" y="115" fill="var(--text-muted)" font-size="14" font-family="inherit" font-style="italic">θ₁</text>
+
+            <!-- Rod 1: 45° → m1=(205,140) -->
+            <line x1="120" y1="55" x2="205" y2="140" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round"/>
+            <text x="172" y="90" fill="var(--text-muted)" font-size="13" font-family="inherit" font-style="italic">L₁</text>
+
+            <!-- θ₂ filled sector (m1 at 205,140; vertical to 205,180; rod to 222,176 at r=40) -->
+            <path d="M 205,140 L 205,180 A 40,40 0 0,1 222,176 Z" fill="rgba(255,255,255,0.05)" stroke="none"/>
+            <path d="M 205,180 A 40,40 0 0,1 222,176" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="210" y="192" fill="var(--text-muted)" font-size="14" font-family="inherit" font-style="italic">θ₂</text>
+
+            <!-- Rod 2: 25° → m2=(247,231) -->
+            <line x1="205" y1="140" x2="247" y2="231" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round"/>
+            <text x="234" y="184" fill="var(--text-muted)" font-size="13" font-family="inherit" font-style="italic">L₂</text>
+
             <!-- Pivot -->
-            <circle cx="105" cy="50" r="4.5" fill="var(--text)"/>
-            <!-- Rod 1: 35° from vertical → m1 at (165, 136) -->
-            <line x1="105" y1="50" x2="165" y2="136" stroke="var(--text)" stroke-width="2.5"/>
-            <!-- θ₁ arc: start on downward vertical (105,82), end on rod1 at r=32: (105+32·sin35°,50+32·cos35°)=(123,76) -->
-            <path d="M 105,82 A 32,32 0 0,1 123,76" fill="none" stroke="var(--text-muted)" stroke-width="1.3"/>
-            <text x="112" y="94" fill="var(--text-muted)" font-size="12" font-family="inherit" font-style="italic">θ₁</text>
-            <text x="140" y="88" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">L₁</text>
-            <!-- Mass 1 -->
-            <circle cx="165" cy="136" r="9" fill="var(--accent)" opacity="0.9"/>
-            <text x="178" y="133" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">m₁</text>
-            <text x="143" y="155" fill="var(--text-muted)" font-size="9" font-family="inherit" opacity="0.6">(x₁, y₁)</text>
-            <!-- Rod 2: 20° from vertical → m2 at (165+85·sin20°, 136+85·cos20°)=(194,216) -->
-            <line x1="165" y1="136" x2="194" y2="216" stroke="var(--text)" stroke-width="2.5"/>
-            <!-- θ₂ arc: start on downward vertical from m1 (165,164), end on rod2 at r=28: (165+28·sin20°,136+28·cos20°)=(175,162) -->
-            <path d="M 165,164 A 28,28 0 0,1 175,162" fill="none" stroke="var(--text-muted)" stroke-width="1.3"/>
-            <text x="172" y="178" fill="var(--text-muted)" font-size="12" font-family="inherit" font-style="italic">θ₂</text>
-            <text x="188" y="177" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">L₂</text>
-            <!-- Mass 2 -->
-            <circle cx="194" cy="216" r="9" fill="var(--accent)" opacity="0.9"/>
-            <text x="207" y="213" fill="var(--text-muted)" font-size="11" font-family="inherit" font-style="italic">m₂</text>
-            <text x="170" y="235" fill="var(--text-muted)" font-size="9" font-family="inherit" opacity="0.6">(x₂, y₂)</text>
+            <circle cx="120" cy="55" r="5" fill="var(--text)"/>
+
+            <!-- Mass 1 (glow + core) -->
+            <circle cx="205" cy="140" r="15" fill="var(--accent)" opacity="0.1"/>
+            <circle cx="205" cy="140" r="10" fill="var(--accent)" opacity="0.88"/>
+            <text x="220" y="137" fill="var(--text-muted)" font-size="13" font-family="inherit" font-style="italic">m₁</text>
+            <text x="183" y="164" fill="var(--text-muted)" font-size="10" font-family="inherit" opacity="0.5">(x₁, y₁)</text>
+
+            <!-- Mass 2 (glow + core) -->
+            <circle cx="247" cy="231" r="15" fill="var(--accent)" opacity="0.1"/>
+            <circle cx="247" cy="231" r="10" fill="var(--accent)" opacity="0.88"/>
+            <text x="262" y="228" fill="var(--text-muted)" font-size="13" font-family="inherit" font-style="italic">m₂</text>
+            <text x="224" y="255" fill="var(--text-muted)" font-size="10" font-family="inherit" opacity="0.5">(x₂, y₂)</text>
           </svg>
 
           <p><strong>Positions</strong> (direct trigonometry from pivot):</p>
