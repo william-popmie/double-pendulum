@@ -148,7 +148,7 @@
       font-size: 11px;
       line-height: 1.5;
       color: var(--text);
-      white-space: normal;
+      white-space: pre-wrap;
       width: 200px;
       word-break: normal;
       pointer-events: none;
@@ -851,7 +851,12 @@
 
       <div class="ctrl-sep"></div>
 
-      <span class="ctrl-label">Resolution</span>
+      <span class="ctrl-label">Resolution</span><span class="help-icon" data-tip="Grid resolution: number of initial conditions sampled per axis. Higher values show more detail but take longer to compute."><svg
+          width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
+            text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
+            fill-opacity="0.75">?</text>
+        </svg></span>
       <select id="mapRes">
         <option value="100">100 × 100</option>
         <option value="200">200 × 200</option>
@@ -863,10 +868,15 @@
 
       <div class="ctrl-sep"></div>
 
-      <span class="ctrl-label">Mode</span>
+      <span class="ctrl-label">Mode</span><span class="help-icon" data-tip="Live angle: continuously color by the live combination of both pendulum angles.&#10;&#10;Time to first flip: color each initial condition by how long until the lower rod first rotates over the top, the fractal boundary reveals chaotic sensitivity."><svg
+          width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
+            text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
+            fill-opacity="0.75">?</text>
+        </svg></span>
       <select id="mapMode">
-        <option value="flipTime">Flip time</option>
-        <option value="theta2" selected>Live θ₂</option>
+        <option value="theta2" selected>Live angle</option>
+        <option value="flipTime">Time to first flip</option>
       </select>
 
       <div class="ctrl-sep"></div>
@@ -883,7 +893,12 @@
 
       <div class="ctrl-sep"></div>
 
-      <span class="ctrl-label">Speed</span>
+      <span class="ctrl-label">Speed</span><span class="help-icon" data-tip="Steps per frame advanced by the GPU each render tick. Higher values animate faster but may overshoot fine structure."><svg
+          width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
+            text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
+            fill-opacity="0.75">?</text>
+        </svg></span>
       <input type="range" id="mapSpeed" min="1" max="50" value="10" />
       <span class="ctrl-value" id="mapSpeedLabel">10</span>
 
