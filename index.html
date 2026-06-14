@@ -1087,30 +1087,6 @@
           <p>Take a single pendulum, a weight on a string. You can tell exactly where it will be tomorrow, in a year, any time you want. A physicist can write a formula and calculate it.</p>
           <p>Now connect a second pendulum to the bottom of the first. Start two copies from positions that are nearly identical, a millimetre apart, say. For the first second or two they look the same. Then one dips a little earlier, the other swings wide, and within maybe ten seconds they are doing completely different things. After a minute, the starting positions are completely irrelevant.</p>
           <p>This is not randomness. Both pendulums are following Newton's laws exactly. The issue is that the system is extremely sensitive to starting conditions. Any tiny difference grows. Double it by a small factor, wait, it grows again. That compounding amplification is what physicists call chaos, and it only shows up at large angles where the coupling between the two rods is strongly nonlinear. For small starting angles the system actually behaves predictably, like two linked springs.</p>
-
-          <svg class="tech-diagram" viewBox="0 0 480 180" xmlns="http://www.w3.org/2000/svg" aria-label="Two pendulum trajectories starting nearly identically then diverging wildly">
-            <defs>
-              <marker id="arr1" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-                <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted)" />
-              </marker>
-            </defs>
-            <!-- Background -->
-            <rect width="480" height="180" fill="var(--bg)" rx="8"/>
-            <!-- Two paths: nearly identical start, wild divergence -->
-            <path d="M 40,90 C 80,88 110,85 140,80 C 170,75 185,60 210,50 C 235,40 255,35 280,20 C 305,5 330,15 360,30 C 385,42 410,55 440,70"
-                  fill="none" stroke="var(--text)" stroke-width="2" opacity="0.85"/>
-            <path d="M 40,92 C 80,90 110,88 140,86 C 170,84 185,90 210,105 C 235,120 255,140 280,155 C 305,168 330,162 360,148 C 385,136 410,120 440,108"
-                  fill="none" stroke="var(--accent)" stroke-width="2" opacity="0.75"/>
-            <!-- Start label -->
-            <line x1="40" y1="70" x2="40" y2="95" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
-            <text x="42" y="68" fill="var(--text-muted)" font-size="10" font-family="inherit">ε apart at t = 0</text>
-            <!-- End labels -->
-            <text x="443" y="68" fill="var(--text)" font-size="10" font-family="inherit" opacity="0.85">path A</text>
-            <text x="443" y="112" fill="var(--accent)" font-size="10" font-family="inherit" opacity="0.85">path B</text>
-            <text x="200" y="170" fill="var(--text-muted)" font-size="10" font-family="inherit" text-anchor="middle">trajectories diverge exponentially after a few seconds</text>
-          </svg>
-
-          <p>This is why the Phase Map is so striking: the fractal boundary between "flips quickly" and "flips slowly" reveals the geometry of chaos: a tiny change in initial angle can completely alter the long-term outcome.</p>
         </div>
       </details>
 
@@ -1120,8 +1096,6 @@
           <span class="tech-summary-label">Geometry: positions, velocities, accelerations</span>
         </summary>
         <div class="tech-body">
-          <p>Origin at the upper pivot. $y$ increases upward. Subscript 1 = upper, 2 = lower. $\theta$ is measured from the downward vertical, counter-clockwise positive. Dots denote $d/dt$.</p>
-
           <svg class="tech-diagram" viewBox="0 0 440 300" xmlns="http://www.w3.org/2000/svg" aria-label="Double pendulum geometry diagram">
             <rect width="440" height="300" fill="var(--bg)" rx="8"/>
 
@@ -1193,25 +1167,13 @@
           <span class="tech-summary-label">Deriving the equations of motion</span>
         </summary>
         <div class="tech-body">
-          <p>$T_1$ and $T_2$ are the rod tensions (directed along each rod toward its pivot). Apply $F = ma$ to each point mass independently.</p>
-
-          <p><strong>Upper mass $m_1$</strong>: tension $T_1$ pulls up along rod 1, tension $T_2$ pulls toward $m_2$ along rod 2, gravity pulls down:</p>
-          $$m_1 \ddot{x}_1 = -T_1 \sin\theta_1 + T_2 \sin\theta_2$$
-          $$m_1 \ddot{y}_1 = \phantom{-}T_1 \cos\theta_1 - T_2 \cos\theta_2 - m_1 g$$
-
-          <p><strong>Lower mass $m_2$</strong>: only $T_2$ (toward $m_1$) and gravity:</p>
-          $$m_2 \ddot{x}_2 = -T_2 \sin\theta_2$$
-          $$m_2 \ddot{y}_2 = \phantom{-}T_2 \cos\theta_2 - m_2 g$$
-
-          <p>Substitute the lower equations into the upper to eliminate $T_2$. Then cross-multiply by $\sin\theta$ and $\cos\theta$ to eliminate $T_1$. Solve the two remaining equations for $\ddot\theta_1$ and $\ddot\theta_2$:</p>
-
-          $$\Delta = \theta_1 - \theta_2 \qquad D = 2m_1 + m_2 - m_2\cos(2\Delta)$$
+          <p>Applying Newton's second law to the geometry above gives the angular accelerations. Let $\Delta = \theta_1 - \theta_2$ and $D = 2m_1 + m_2 - m_2\cos(2\Delta)$:</p>
 
           $$\ddot\theta_1 = \frac{-g(2m_1+m_2)\sin\theta_1 - m_2 g\sin(\theta_1-2\theta_2) - 2\sin\Delta\,m_2(\dot\theta_2^2 L_2 + \dot\theta_1^2 L_1\cos\Delta)}{L_1 D}$$
 
           $$\ddot\theta_2 = \frac{2\sin\Delta\,\bigl[\dot\theta_1^2 L_1(m_1+m_2) + g(m_1+m_2)\cos\theta_1 + \dot\theta_2^2 L_2 m_2\cos\Delta\bigr]}{L_2 D}$$
 
-          <p>No small-angle approximations are made. These are implemented verbatim in <span class="tech-inline">src/physics/equations.ts:derivatives()</span>. For the GPU Phase Map where $m_1 = m_2 = L_1 = L_2 = 1$, $D$ collapses to $3 - \cos(2\Delta)$.</p>
+          <p>No small-angle approximations are made. These are exact for any angle.</p>
         </div>
       </details>
 
@@ -1221,12 +1183,10 @@
           <span class="tech-summary-label">Solving it numerically: Runge-Kutta 4</span>
         </summary>
         <div class="tech-body">
-          <p>The equations of motion give $\ddot\theta_1$ and $\ddot\theta_2$, which are second-order ODEs. Numerical integrators need first-order systems. Introduce $\omega_1 = \dot\theta_1$ and $\omega_2 = \dot\theta_2$ as explicit state variables:</p>
+          <p>The equations of motion give $\ddot\theta_1$ and $\ddot\theta_2$. To integrate numerically, introduce $\omega_1 = \dot\theta_1$ and $\omega_2 = \dot\theta_2$ so everything is first-order:</p>
           $$\mathbf{s} = (\theta_1,\, \omega_1,\, \theta_2,\, \omega_2) \qquad \dot{\mathbf{s}} = f(\mathbf{s}) = (\omega_1,\; \ddot\theta_1,\; \omega_2,\; \ddot\theta_2)$$
 
-          <p>The simplest integrator is Euler's method: $\mathbf{s}_{n+1} = \mathbf{s}_n + h\,f(\mathbf{s}_n)$. Its local error per step is $O(h^2)$ and global error is $O(h)$: halving $h$ halves the error and doubles cost. For a chaotic system this is far too slow to converge.</p>
-
-          <p>RK4 evaluates $f$ four times per step at strategically chosen points, then takes a weighted combination that cancels all error terms through $h^4$:</p>
+          <p>Each time step advances $\mathbf{s}$ using Runge-Kutta 4, which evaluates $f$ four times per step:</p>
 
           $$k_1 = f(\mathbf{s}_n)$$
           $$k_2 = f\!\left(\mathbf{s}_n + \tfrac{h}{2}k_1\right)$$
@@ -1234,35 +1194,6 @@
           $$k_4 = f(\mathbf{s}_n + h\,k_3)$$
           $$\mathbf{s}_{n+1} = \mathbf{s}_n + \frac{h}{6}(k_1 + 2k_2 + 2k_3 + k_4)$$
 
-          <svg class="tech-diagram" viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg" aria-label="RK4 slope evaluations diagram">
-            <rect width="480" height="160" fill="var(--bg)" rx="8"/>
-            <!-- True solution curve -->
-            <path d="M 40,110 C 140,105 240,80 440,45" fill="none" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="5,4"/>
-            <!-- Step interval markers -->
-            <line x1="40" y1="120" x2="40" y2="45" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
-            <line x1="240" y1="120" x2="240" y2="45" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
-            <line x1="440" y1="120" x2="440" y2="45" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
-            <text x="40" y="130" fill="var(--text-muted)" font-size="9" font-family="inherit" text-anchor="middle">sₙ</text>
-            <text x="240" y="130" fill="var(--text-muted)" font-size="9" font-family="inherit" text-anchor="middle">sₙ + h/2</text>
-            <text x="440" y="130" fill="var(--text-muted)" font-size="9" font-family="inherit" text-anchor="middle">sₙ + h</text>
-            <!-- k1 slope at start -->
-            <line x1="20" y1="120" x2="90" y2="94" stroke="var(--text)" stroke-width="2" opacity="0.9"/>
-            <text x="22" y="92" fill="var(--text)" font-size="10" font-family="inherit" font-style="italic">k₁</text>
-            <!-- k2 slope at midpoint (via k1) -->
-            <line x1="195" y1="98" x2="285" y2="74" stroke="var(--text-muted)" stroke-width="2" opacity="0.8"/>
-            <text x="195" y="70" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">k₂</text>
-            <!-- k3 slope at midpoint (corrected) -->
-            <line x1="195" y1="90" x2="285" y2="70" stroke="var(--accent)" stroke-width="2" opacity="0.7"/>
-            <text x="286" y="68" fill="var(--accent)" font-size="10" font-family="inherit" font-style="italic">k₃</text>
-            <!-- k4 slope at endpoint -->
-            <line x1="400" y1="62" x2="478" y2="44" stroke="var(--text-muted)" stroke-width="2" opacity="0.6"/>
-            <text x="408" y="40" fill="var(--text-muted)" font-size="10" font-family="inherit" font-style="italic">k₄</text>
-            <!-- Final step arrow -->
-            <line x1="40" y1="110" x2="438" y2="46" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arr1)" opacity="0.7"/>
-            <text x="220" y="92" fill="var(--text-dim)" font-size="9" font-family="inherit" text-anchor="middle">weighted step  (1:2:2:1)</text>
-          </svg>
-
-          <p>The 1:2:2:1 weights arise from matching the Taylor expansion of the true solution through the $h^4$ term. Local truncation error is $O(h^5)$; global error is $O(h^4)$. Halving $h$ reduces error by $16\times$, versus Euler's $2\times$.</p>
           <p>With $h = \Delta t = 0.005\,\text{s}$:</p>
           <div class="tech-table">Local error / step  ~  h⁵  =  (0.005)⁵  ≈  3.1 × 10⁻¹²
 Global error / s    ~  h⁴  =  (0.005)⁴  ≈  6.3 × 10⁻¹⁰</div>
