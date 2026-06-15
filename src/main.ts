@@ -5,7 +5,6 @@ import { PhaseMapView } from './views/PhaseMapView';
 import { PhaseMapExporter } from './rendering/phaseMap/PhaseMapExporter';
 import { getGPUDevice } from './rendering/device';
 import { DEFAULT_PHYSICS, DEFAULT_SIM } from './core/config';
-import { Tutorial } from './tutorial/Tutorial';
 import type { ColorMode, Palette } from './core/types';
 
 const SVG_PLAY  = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
@@ -30,13 +29,15 @@ async function init(): Promise<void> {
   const pageTech     = document.getElementById('page-tech')       as HTMLElement;
 
   // Pendulum page controls
-  const numPendulumsInput   = document.getElementById('numPendulums')       as HTMLInputElement;
-  const deltaAngleInput     = document.getElementById('deltaAngle')         as HTMLInputElement;
-  const playPauseBtn        = document.getElementById('playPauseBtn')       as HTMLButtonElement;
-  const resetBtn            = document.getElementById('resetBtn')           as HTMLButtonElement;
+  const numPendulumsInput   = document.getElementById('numPendulums')        as HTMLInputElement;
+  const deltaAngleInput     = document.getElementById('deltaAngle')          as HTMLInputElement;
+  const playPauseBtn        = document.getElementById('playPauseBtn')        as HTMLButtonElement;
+  const resetBtn            = document.getElementById('resetBtn')            as HTMLButtonElement;
   const showSelectContainer = document.getElementById('showSelectContainer') as HTMLElement;
-  const speedRange          = document.getElementById('speed')              as HTMLInputElement;
-  const speedLabel          = document.getElementById('speedLabel')         as HTMLSpanElement;
+  const speedRange          = document.getElementById('speed')               as HTMLInputElement;
+  const speedLabel          = document.getElementById('speedLabel')          as HTMLSpanElement;
+  const angleTheta1Input    = document.getElementById('angle-theta1')        as HTMLInputElement;
+  const angleTheta2Input    = document.getElementById('angle-theta2')        as HTMLInputElement;
 
   // Pendulum canvases
   const pendCanvasEl  = document.getElementById('canvas-pendulum') as HTMLCanvasElement;
@@ -45,18 +46,18 @@ async function init(): Promise<void> {
   const t2CanvasEl    = document.getElementById('canvas-t2')       as HTMLCanvasElement;
 
   // Phase map page controls
-  const mapResSelect    = document.getElementById('mapRes')               as HTMLSelectElement;
-  const mapModeSelect    = document.getElementById('mapMode')              as HTMLSelectElement;
-  const mapPaletteSelect = document.getElementById('mapPalette')           as HTMLSelectElement;
-  const mapSpeedRange   = document.getElementById('mapSpeed')             as HTMLInputElement;
-  const mapSpeedLabel   = document.getElementById('mapSpeedLabel')        as HTMLSpanElement;
-  const mapPlayPauseBtn = document.getElementById('mapPlayPauseBtn')       as HTMLButtonElement;
-  const mapResetBtn     = document.getElementById('mapResetView')         as HTMLButtonElement;
-  const mapCanvasEl     = document.getElementById('canvas-phasemap')      as HTMLCanvasElement;
-  const probePendulumEl = document.getElementById('canvas-probe-pendulum') as HTMLCanvasElement;
-  const probePhaseEl    = document.getElementById('canvas-probe-phase')   as HTMLCanvasElement;
-  const noGpuMsg        = document.getElementById('no-gpu-msg')           as HTMLElement;
-  const probeMapHint    = document.getElementById('probe-map-hint')       as HTMLElement;
+  const mapResSelect     = document.getElementById('mapRes')                as HTMLSelectElement;
+  const mapModeSelect    = document.getElementById('mapMode')               as HTMLSelectElement;
+  const mapPaletteSelect = document.getElementById('mapPalette')            as HTMLSelectElement;
+  const mapSpeedRange    = document.getElementById('mapSpeed')              as HTMLInputElement;
+  const mapSpeedLabel    = document.getElementById('mapSpeedLabel')         as HTMLSpanElement;
+  const mapPlayPauseBtn  = document.getElementById('mapPlayPauseBtn')       as HTMLButtonElement;
+  const mapResetBtn      = document.getElementById('mapResetView')          as HTMLButtonElement;
+  const mapCanvasEl      = document.getElementById('canvas-phasemap')       as HTMLCanvasElement;
+  const probePendulumEl  = document.getElementById('canvas-probe-pendulum') as HTMLCanvasElement;
+  const probePhaseEl     = document.getElementById('canvas-probe-phase')    as HTMLCanvasElement;
+  const noGpuMsg         = document.getElementById('no-gpu-msg')            as HTMLElement;
+  const probeMapHint     = document.getElementById('probe-map-hint')        as HTMLElement;
 
   // Physics panel refs
   const physicsToggleBtn    = document.getElementById('physicsToggleBtn')    as HTMLButtonElement;
@@ -64,31 +65,30 @@ async function init(): Promise<void> {
   const physicsPanel        = document.getElementById('physics-panel')       as HTMLElement;
   const physicsBackdrop     = document.getElementById('physics-backdrop')    as HTMLElement;
   const physicsPanelClose   = document.getElementById('physics-panel-close') as HTMLButtonElement;
-  const physicsMobileSlot   = document.getElementById('physics-mobile-slot') as HTMLElement;
-  const physL1Input      = document.getElementById('phys-L1')          as HTMLInputElement;
-  const physL2Input      = document.getElementById('phys-L2')          as HTMLInputElement;
-  const physM1Input      = document.getElementById('phys-m1')          as HTMLInputElement;
-  const physM2Input      = document.getElementById('phys-m2')          as HTMLInputElement;
-  const physDampingInput = document.getElementById('phys-damping')     as HTMLInputElement;
-  const physResetBtn     = document.getElementById('phys-reset-btn')   as HTMLButtonElement;
+  const physL1Input         = document.getElementById('phys-L1')             as HTMLInputElement;
+  const physL2Input         = document.getElementById('phys-L2')             as HTMLInputElement;
+  const physM1Input         = document.getElementById('phys-m1')             as HTMLInputElement;
+  const physM2Input         = document.getElementById('phys-m2')             as HTMLInputElement;
+  const physDampingInput    = document.getElementById('phys-damping')        as HTMLInputElement;
+  const physResetBtn        = document.getElementById('phys-reset-btn')      as HTMLButtonElement;
 
   // Export modal refs
-  const mapExportBtn      = document.getElementById('mapExportBtn')          as HTMLButtonElement;
-  const exportOverlay     = document.getElementById('export-overlay')        as HTMLElement;
-  const exportSettings    = document.getElementById('export-settings')       as HTMLElement;
-  const exportProgress    = document.getElementById('export-progress')       as HTMLElement;
-  const exportResSelect   = document.getElementById('export-res')            as HTMLSelectElement;
-  const exportDurInput    = document.getElementById('export-dur')            as HTMLInputElement;
-  const exportStepsHint   = document.getElementById('export-steps-hint')     as HTMLElement;
-  const exportModeSelect    = document.getElementById('export-mode')          as HTMLSelectElement;
-  const exportPaletteSelect = document.getElementById('export-palette')       as HTMLSelectElement;
-  const exportRegionSel   = document.getElementById('export-region')         as HTMLSelectElement;
-  const exportGenerateBtn = document.getElementById('export-generate')       as HTMLButtonElement;
-  const exportComposite   = document.getElementById('export-composite')      as HTMLCanvasElement;
-  const exportProgBar     = document.getElementById('export-progress-bar')   as HTMLElement;
-  const exportProgLabel   = document.getElementById('export-progress-label') as HTMLElement;
-  const exportCloseBtn    = document.getElementById('export-close')          as HTMLButtonElement;
-  const exportCancelBtn   = document.getElementById('export-cancel')         as HTMLButtonElement;
+  const mapExportBtn        = document.getElementById('mapExportBtn')          as HTMLButtonElement;
+  const exportOverlay       = document.getElementById('export-overlay')        as HTMLElement;
+  const exportSettings      = document.getElementById('export-settings')       as HTMLElement;
+  const exportProgress      = document.getElementById('export-progress')       as HTMLElement;
+  const exportResSelect     = document.getElementById('export-res')            as HTMLSelectElement;
+  const exportDurInput      = document.getElementById('export-dur')            as HTMLInputElement;
+  const exportStepsHint     = document.getElementById('export-steps-hint')     as HTMLElement;
+  const exportModeSelect    = document.getElementById('export-mode')           as HTMLSelectElement;
+  const exportPaletteSelect = document.getElementById('export-palette')        as HTMLSelectElement;
+  const exportRegionSel     = document.getElementById('export-region')         as HTMLSelectElement;
+  const exportGenerateBtn   = document.getElementById('export-generate')       as HTMLButtonElement;
+  const exportComposite     = document.getElementById('export-composite')      as HTMLCanvasElement;
+  const exportProgBar       = document.getElementById('export-progress-bar')   as HTMLElement;
+  const exportProgLabel     = document.getElementById('export-progress-label') as HTMLElement;
+  const exportCloseBtn      = document.getElementById('export-close')          as HTMLButtonElement;
+  const exportCancelBtn     = document.getElementById('export-cancel')         as HTMLButtonElement;
 
   // ── Pendulum view ─────────────────────────────────────────────────────────
   const pendulumView = new PendulumView(
@@ -96,7 +96,73 @@ async function init(): Promise<void> {
     showSelectContainer,
   );
 
-  // ── Physics panel ────────────────────────────────────────────────────────
+  // ── Tile-hint dismissal ───────────────────────────────────────────────────
+  let tileHintsDismissed = false;
+  function dismissTileHints(): void {
+    if (tileHintsDismissed) return;
+    tileHintsDismissed = true;
+    document.querySelectorAll<HTMLElement>('.tile-hint')
+      .forEach(el => el.classList.add('hidden'));
+  }
+
+  pendulumView.onFirstDrag = dismissTileHints;
+
+  // ── Angle inputs ──────────────────────────────────────────────────────────
+  angleTheta1Input.addEventListener('change', () =>
+    pendulumView.setBaseAngle1Deg(parseFloat(angleTheta1Input.value)));
+  angleTheta2Input.addEventListener('change', () =>
+    pendulumView.setBaseAngle2Deg(parseFloat(angleTheta2Input.value)));
+
+  pendulumView.onAnglesChanged = (t1, t2) => {
+    angleTheta1Input.value = String(Math.round(t1));
+    angleTheta2Input.value = String(Math.round(t2));
+  };
+
+  // ── Physics panel ─────────────────────────────────────────────────────────
+  let physicsEverOpened = false;
+  const mobileMQ = window.matchMedia('(max-width: 767px)');
+
+  function setPhysicsPanelOpen(open: boolean): void {
+    physicsPanel.hidden = !open;
+    physicsToggleBtn.classList.toggle('active', open);
+    mapPhysicsToggleBtn.classList.toggle('active', open);
+    pendulumView.showPhysicsLabels = open;
+    physicsBackdrop.classList.toggle('active', open && mobileMQ.matches);
+    if (open) {
+      dismissTileHints();
+      if (!physicsEverOpened) {
+        physicsEverOpened = true;
+        physicsToggleBtn.classList.remove('phys-btn-glow');
+      }
+      if (mobileMQ.matches) {
+        const closeOnOutside = (ev: PointerEvent) => {
+          if (!physicsPanel.contains(ev.target as Node) &&
+              ev.target !== physicsToggleBtn &&
+              ev.target !== mapPhysicsToggleBtn) {
+            setPhysicsPanelOpen(false);
+            document.removeEventListener('pointerdown', closeOnOutside, true);
+          }
+        };
+        document.addEventListener('pointerdown', closeOnOutside, true);
+      }
+    }
+  }
+
+  mobileMQ.addEventListener('change', () => {
+    if (!physicsPanel.hidden) {
+      physicsBackdrop.classList.toggle('active', mobileMQ.matches);
+    }
+  });
+
+  const physBtnClickHandler = (e: MouseEvent): void => {
+    e.stopPropagation();
+    setPhysicsPanelOpen(physicsPanel.hasAttribute('hidden'));
+  };
+
+  physicsPanelClose.addEventListener('click', () => setPhysicsPanelOpen(false));
+  physicsBackdrop.addEventListener('click', () => setPhysicsPanelOpen(false));
+  physicsToggleBtn.addEventListener('click', physBtnClickHandler);
+  mapPhysicsToggleBtn.addEventListener('click', physBtnClickHandler);
 
   function readPhysics() {
     return {
@@ -114,40 +180,6 @@ async function init(): Promise<void> {
     pendulumView.setPhysics(p);
     phaseMapView?.setPhysics(p);
   }
-
-  const narrowMQ = window.matchMedia('(max-width: 960px)');
-  const mobileMQ = window.matchMedia('(max-width: 640px)');
-
-  function setPhysicsPanelOpen(open: boolean): void {
-    physicsPanel.hidden = !open;
-    physicsToggleBtn.classList.toggle('active', open);
-    mapPhysicsToggleBtn.classList.toggle('active', open);
-    pendulumView.showPhysicsLabels = open;
-    physicsBackdrop.style.display = mobileMQ.matches && open ? 'block' : '';
-  }
-
-  const physBtnClickHandler = (e: MouseEvent): void => {
-    e.stopPropagation();
-    const opening = physicsPanel.hasAttribute('hidden');
-    setPhysicsPanelOpen(opening);
-    if (opening && !mobileMQ.matches) {
-      const closeOnOutside = (ev: PointerEvent): void => {
-        if (!physicsPanel.contains(ev.target as Node) &&
-            ev.target !== physicsToggleBtn &&
-            ev.target !== mapPhysicsToggleBtn) {
-          setPhysicsPanelOpen(false);
-          document.removeEventListener('pointerdown', closeOnOutside, true);
-        }
-      };
-      document.addEventListener('pointerdown', closeOnOutside, true);
-    }
-  };
-
-  physicsPanelClose.addEventListener('click', () => setPhysicsPanelOpen(false));
-  physicsBackdrop.addEventListener('click', () => setPhysicsPanelOpen(false));
-
-  physicsToggleBtn.addEventListener('click', physBtnClickHandler);
-  mapPhysicsToggleBtn.addEventListener('click', physBtnClickHandler);
 
   for (const input of [physL1Input, physL2Input, physM1Input, physM2Input, physDampingInput]) {
     input.addEventListener('change', () => {
@@ -169,49 +201,14 @@ async function init(): Promise<void> {
     posthog.capture('physics parameters reset');
   });
 
-  // ── Responsive layout: collapse controls into physics panel when narrow ──────
-  // Grab the three movable groups and the ctrl-bar insertion point once
-  const grpPendulums  = document.getElementById('ctrl-group-pendulums') as HTMLElement;
-  const grpSelect     = document.getElementById('ctrl-group-select')    as HTMLElement;
-  const grpSpeed      = document.getElementById('ctrl-group-speed')     as HTMLElement;
-  const ctrlBar       = (document.getElementById('ctrl-group-actions') as HTMLElement).parentElement!;
-  const ctrlSpacer    = ctrlBar.querySelector('.ctrl-spacer') as HTMLElement;
-
-  function applyNarrowLayout(narrow: boolean): void {
-    if (narrow) {
-      physicsMobileSlot.appendChild(grpPendulums);
-      physicsMobileSlot.appendChild(grpSelect);
-      physicsMobileSlot.appendChild(grpSpeed);
-    } else {
-      ctrlBar.insertBefore(grpPendulums, ctrlSpacer);
-      ctrlBar.insertBefore(grpSelect,    ctrlSpacer);
-      ctrlBar.insertBefore(grpSpeed,     ctrlSpacer);
-    }
-  }
-
-  // ── Tutorial ──────────────────────────────────────────────────────────────
-  // Skip the progressive tutorial when starting narrow — controls live inside
-  // the physics panel and the step-by-step reveal doesn't make sense there
-  if (narrowMQ.matches) localStorage.setItem('dp_visited', '1');
-
-  const tutorial = new Tutorial({
-    tileHints:   document.querySelectorAll<HTMLElement>('.tile-hint'),
-    grpActions:  document.getElementById('ctrl-group-actions')   as HTMLElement,
-    grpPendulums,
-    grpSelect,
-    grpSpeed,
-  });
-  tutorial.onCompleted = () => tabPhasemap.classList.add('tab-flash');
-  pendulumView.onFirstDrag = () => tutorial.onFirstDrag();
-
-  applyNarrowLayout(narrowMQ.matches);
-  narrowMQ.addEventListener('change', e => applyNarrowLayout(e.matches));
-
+  // ── Pendulum controls ─────────────────────────────────────────────────────
   playPauseBtn.addEventListener('click', () => {
     pendulumView.paused = !pendulumView.paused;
     playPauseBtn.innerHTML = pendulumView.paused ? `${SVG_PLAY}Play` : `${SVG_PAUSE}Pause`;
     playPauseBtn.className = pendulumView.paused ? 'btn-play' : 'btn-pause';
-    tutorial.onPlay(pendulumView.paused);
+    if (!pendulumView.paused && !physicsEverOpened) {
+      physicsToggleBtn.classList.add('phys-btn-glow');
+    }
     posthog.capture(pendulumView.paused ? 'simulation paused' : 'simulation played');
   });
 
@@ -224,7 +221,6 @@ async function init(): Promise<void> {
     const n = parseInt(numPendulumsInput.value, 10);
     if (n >= 1 && n <= 50) {
       pendulumView.setNumPendulums(n);
-      tutorial.onPendulumCount(n);
       posthog.capture('pendulum count changed', { count: n });
     }
   });
@@ -418,6 +414,9 @@ async function init(): Promise<void> {
   }
 
   // ── Tab navigation ────────────────────────────────────────────────────────
+  const panelSectionPendulum  = document.getElementById('panel-section-pendulum')  as HTMLElement;
+  const panelSectionPhasemap  = document.getElementById('panel-section-phasemap')  as HTMLElement;
+
   let currentPage: 'pendulum' | 'phasemap' | 'tech' = 'pendulum';
   pendulumView.activate();
 
@@ -431,6 +430,9 @@ async function init(): Promise<void> {
     tabPendulum.classList.remove('active');
     tabPhasemap.classList.remove('active');
     tabTech.classList.remove('active');
+
+    panelSectionPendulum.hidden = page !== 'pendulum';
+    panelSectionPhasemap.hidden = page !== 'phasemap';
 
     if (page === 'pendulum') {
       pagePendulum.style.display = 'flex';

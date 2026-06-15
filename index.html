@@ -461,6 +461,23 @@
       border-color: rgba(248, 113, 113, 0.55);
     }
 
+    /* ── App layout ────────────────────────────────────────────────────────── */
+    #app-body {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #app-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
     /* ── Pendulum page ─────────────────────────────────────────────────────── */
     #page-pendulum {
       flex: 1;
@@ -754,12 +771,6 @@
       letter-spacing: 0.04em;
     }
 
-    .ctrl-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
     /* ── Physics panel ─────────────────────────────────────────────────────── */
     .phys-toggle-btn {
       background: transparent;
@@ -781,21 +792,32 @@
     }
 
     .physics-panel {
-      position: fixed;
-      top: calc(48px + 44px + 6px);
-      right: 16px;
+      width: 340px;
+      flex-shrink: 0;
       background: #111;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      z-index: 200;
+      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      min-width: 260px;
+      gap: 14px;
+      padding: 16px 16px 24px;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .physics-panel[hidden] { display: none; }
+
+    #panel-section-pendulum,
+    #panel-section-phasemap {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .phys-panel-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
     .phys-section-label {
       font-size: 10px;
@@ -832,7 +854,7 @@
     .phys-divider {
       height: 1px;
       background: var(--border);
-      margin: 2px 0;
+      margin: 0;
     }
 
     .phys-reset-btn {
@@ -853,51 +875,47 @@
       border-color: var(--border-hover);
     }
 
-    .ctrl-group.hidden {
-      display: none;
-    }
-
-    .ctrl-group.fade-in {
-      animation: ctrlFadeIn 0.5s ease forwards;
-    }
-
-    @keyframes ctrlFadeIn {
-      from {
-        opacity: 0;
-      }
-
-      to {
-        opacity: 1;
-      }
-    }
-
-    /* ── Physics panel backdrop (mobile) ───────────────────────────────────── */
+    /* ── Physics panel backdrop ────────────────────────────────────────────── */
     #physics-backdrop {
-      display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.55);
       z-index: 199;
+      display: none;
+      pointer-events: none;
     }
 
-    /* ── Physics panel mobile additions ────────────────────────────────────── */
+    #physics-backdrop.active {
+      display: block;
+    }
+
+    /* ── Physics button glow (nudge before first panel open) ────────────────── */
+    @keyframes physGlow {
+      0%, 100% { border-color: var(--border); box-shadow: none; }
+      50%       { border-color: rgba(255, 255, 255, 0.55); box-shadow: 0 0 10px rgba(255, 255, 255, 0.25); }
+    }
+
+    .phys-btn-glow {
+      animation: physGlow 1.8s ease-in-out infinite;
+    }
+
+    /* ── Physics panel extras ───────────────────────────────────────────────── */
     .physics-panel-handle {
       display: none;
       width: 36px;
       height: 4px;
       background: rgba(255, 255, 255, 0.18);
       border-radius: 2px;
-      margin: 0 auto 14px;
+      margin: 0 auto 10px;
     }
 
-    #physics-panel-mobile-header {
-      display: none;
+    .phys-panel-header {
+      display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
-    #physics-panel-mobile-header .phys-section-label {
+    .phys-panel-header .phys-section-label {
       margin-bottom: 0;
     }
 
@@ -918,52 +936,29 @@
       background: rgba(255, 255, 255, 0.06);
     }
 
-    #physics-mobile-slot {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
+    .phys-row-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--text-muted);
+      min-width: 72px;
+      flex-shrink: 0;
     }
 
-    #physics-mobile-divider {
-      display: none;
-    }
-
-    /* ── Mobile layout ─────────────────────────────────────────────────────── */
-    /* ── Narrow: controls collapse into physics panel (≤960px) ────────────── */
-    @media (max-width: 960px) {
-      #physics-panel-mobile-header {
-        display: flex;
-      }
-
-      #physics-mobile-slot {
-        display: flex;
-      }
-
-      #physics-mobile-divider {
-        display: block;
-      }
-
-      /* Ctrl-groups inside the physics panel wrap and lose their separators */
-      .physics-panel .ctrl-group {
-        flex-wrap: wrap;
-        gap: 6px 8px;
-      }
-
-      .physics-panel .ctrl-sep {
-        display: none;
-      }
-    }
-
-    /* ── Mobile: physics panel becomes a bottom sheet (≤640px) ─────────────── */
-    @media (max-width: 640px) {
+    /* ── Mobile: physics panel becomes a bottom sheet (≤767px) ─────────────── */
+    @media (max-width: 767px) {
       .physics-panel {
-        top: auto;
+        position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
+        width: auto;
+        border-right: none;
+        border-top: 1px solid var(--border);
         border-radius: 12px 12px 0 0;
-        min-width: unset;
+        max-height: 85vh;
         padding: 14px 16px 32px;
+        z-index: 200;
       }
 
       .physics-panel-handle {
@@ -974,6 +969,11 @@
       .physics-panel .cs-dropdown {
         top: auto;
         bottom: calc(100% + 4px);
+      }
+
+      #physics-backdrop.active {
+        background: rgba(0, 0, 0, 0.55);
+        pointer-events: auto;
       }
     }
 
@@ -1153,121 +1153,173 @@
     <button class="tab-btn" id="tab-tech">How it works</button>
   </nav>
 
-  <div id="physics-backdrop"></div>
-
+  <div id="app-body">
   <div id="physics-panel" class="physics-panel" hidden>
     <div class="physics-panel-handle"></div>
-    <div id="physics-panel-mobile-header">
+    <div class="phys-panel-header">
       <span class="phys-section-label">Settings</span>
       <button id="physics-panel-close">✕</button>
     </div>
-    <div id="physics-mobile-slot"></div>
-    <div class="phys-divider" id="physics-mobile-divider"></div>
-    <div class="phys-section-label">Rod &amp; Bob</div>
-    <div class="phys-row">
-      <span class="phys-label">L₁</span>
-      <div class="num-ctrl">
-        <button class="num-btn" data-target="phys-L1" data-dir="-1">−</button>
-        <input type="number" id="phys-L1" value="1.0" min="0.1" max="5" step="0.1" />
-        <button class="num-btn" data-target="phys-L1" data-dir="1">+</button>
+
+    <div id="panel-section-pendulum">
+      <div class="phys-panel-section">
+        <div class="phys-section-label">Starting position</div>
+        <div class="phys-row">
+          <span class="phys-label">θ₁</span>
+          <div class="num-ctrl">
+            <button class="num-btn" data-target="angle-theta1" data-dir="-1">−</button>
+            <input type="number" id="angle-theta1" value="75" min="-180" max="180" step="1" />
+            <button class="num-btn" data-target="angle-theta1" data-dir="1">+</button>
+          </div>
+          <span class="phys-unit">°</span>
+        </div>
+        <div class="phys-row">
+          <span class="phys-label">θ₂</span>
+          <div class="num-ctrl">
+            <button class="num-btn" data-target="angle-theta2" data-dir="-1">−</button>
+            <input type="number" id="angle-theta2" value="45" min="-180" max="180" step="1" />
+            <button class="num-btn" data-target="angle-theta2" data-dir="1">+</button>
+          </div>
+          <span class="phys-unit">°</span>
+        </div>
       </div>
-      <span class="phys-unit">m</span>
-      <span class="phys-label">m₁</span>
-      <div class="num-ctrl">
-        <button class="num-btn" data-target="phys-m1" data-dir="-1">−</button>
-        <input type="number" id="phys-m1" value="1.0" min="0.1" max="10" step="0.1" />
-        <button class="num-btn" data-target="phys-m1" data-dir="1">+</button>
+      <div class="phys-divider"></div>
+      <div class="phys-panel-section">
+        <div class="phys-section-label">Simulation</div>
+        <div class="phys-row">
+          <span class="phys-row-label">Show</span>
+          <div id="showSelectContainer" class="custom-select"></div>
+        </div>
+        <div class="phys-row">
+          <span class="phys-row-label">Pendulums</span>
+          <div class="num-ctrl">
+            <button class="num-btn" data-target="numPendulums" data-dir="-1">−</button>
+            <input type="number" id="numPendulums" value="1" min="1" max="50" step="1" />
+            <button class="num-btn" data-target="numPendulums" data-dir="1">+</button>
+          </div>
+          <span class="help-icon tip-left" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle: tiny differences grow into completely different trajectories, revealing chaos."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
+        </div>
+        <div class="phys-row">
+          <span class="phys-row-label">Spread</span>
+          <div class="num-ctrl">
+            <button class="num-btn" data-target="deltaAngle" data-dir="-1">−</button>
+            <input type="number" id="deltaAngle" value="5" min="0.2" max="45" step="0.2" />
+            <button class="num-btn" data-target="deltaAngle" data-dir="1">+</button>
+          </div>
+          <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions: larger values spread them across a wider range."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
+        </div>
       </div>
-      <span class="phys-unit">kg</span>
     </div>
-    <div class="phys-row">
-      <span class="phys-label">L₂</span>
-      <div class="num-ctrl">
-        <button class="num-btn" data-target="phys-L2" data-dir="-1">−</button>
-        <input type="number" id="phys-L2" value="1.0" min="0.1" max="5" step="0.1" />
-        <button class="num-btn" data-target="phys-L2" data-dir="1">+</button>
+
+    <div id="panel-section-phasemap" hidden>
+      <div class="phys-panel-section">
+        <div class="phys-section-label">Display</div>
+        <div class="phys-row">
+          <span class="phys-row-label">Resolution</span>
+          <select id="mapRes">
+            <option value="100">100 × 100</option>
+            <option value="200">200 × 200</option>
+            <option value="400">400 × 400</option>
+            <option value="800" selected>800 × 800</option>
+            <option value="1200">1200 × 1200</option>
+            <option value="1600">1600 × 1600</option>
+          </select>
+        </div>
+        <div class="phys-row">
+          <span class="phys-row-label">Mode</span>
+          <select id="mapMode">
+            <option value="theta2" selected>Live angle</option>
+            <option value="flipTime">Time to first flip</option>
+          </select>
+        </div>
+        <div class="phys-row">
+          <span class="phys-row-label">Palette</span>
+          <select id="mapPalette">
+            <option value="rainbow" selected>Rainbow</option>
+            <option value="lsd">LSD</option>
+            <option value="shrooms">Shrooms</option>
+            <option value="snow">Snow</option>
+            <option value="acid">Acid</option>
+            <option value="mdma">MDMA</option>
+          </select>
+        </div>
       </div>
-      <span class="phys-unit">m</span>
-      <span class="phys-label">m₂</span>
-      <div class="num-ctrl">
-        <button class="num-btn" data-target="phys-m2" data-dir="-1">−</button>
-        <input type="number" id="phys-m2" value="1.0" min="0.1" max="10" step="0.1" />
-        <button class="num-btn" data-target="phys-m2" data-dir="1">+</button>
-      </div>
-      <span class="phys-unit">kg</span>
     </div>
+
     <div class="phys-divider"></div>
-    <div class="phys-section-label">Damping</div>
-    <div class="phys-row">
-      <span class="phys-label">b</span>
-      <div class="num-ctrl">
-        <button class="num-btn" data-target="phys-damping" data-dir="-1">−</button>
-        <input type="number" id="phys-damping" value="0" min="0" max="2" step="0.05" />
-        <button class="num-btn" data-target="phys-damping" data-dir="1">+</button>
+
+    <div class="phys-panel-section">
+      <div class="phys-section-label">Rod &amp; Bob</div>
+      <div class="phys-row">
+        <span class="phys-label">L₁</span>
+        <div class="num-ctrl">
+          <button class="num-btn" data-target="phys-L1" data-dir="-1">−</button>
+          <input type="number" id="phys-L1" value="1.0" min="0.1" max="5" step="0.1" />
+          <button class="num-btn" data-target="phys-L1" data-dir="1">+</button>
+        </div>
+        <span class="phys-unit">m</span>
       </div>
-      <span class="phys-unit">s⁻¹</span>
+      <div class="phys-row">
+        <span class="phys-label">m₁</span>
+        <div class="num-ctrl">
+          <button class="num-btn" data-target="phys-m1" data-dir="-1">−</button>
+          <input type="number" id="phys-m1" value="1.0" min="0.1" max="10" step="0.1" />
+          <button class="num-btn" data-target="phys-m1" data-dir="1">+</button>
+        </div>
+        <span class="phys-unit">kg</span>
+      </div>
+      <div class="phys-row">
+        <span class="phys-label">L₂</span>
+        <div class="num-ctrl">
+          <button class="num-btn" data-target="phys-L2" data-dir="-1">−</button>
+          <input type="number" id="phys-L2" value="1.0" min="0.1" max="5" step="0.1" />
+          <button class="num-btn" data-target="phys-L2" data-dir="1">+</button>
+        </div>
+        <span class="phys-unit">m</span>
+      </div>
+      <div class="phys-row">
+        <span class="phys-label">m₂</span>
+        <div class="num-ctrl">
+          <button class="num-btn" data-target="phys-m2" data-dir="-1">−</button>
+          <input type="number" id="phys-m2" value="1.0" min="0.1" max="10" step="0.1" />
+          <button class="num-btn" data-target="phys-m2" data-dir="1">+</button>
+        </div>
+        <span class="phys-unit">kg</span>
+      </div>
     </div>
+
+    <div class="phys-divider"></div>
+
+    <div class="phys-panel-section">
+      <div class="phys-section-label">Damping</div>
+      <div class="phys-row">
+        <span class="phys-label">b</span>
+        <div class="num-ctrl">
+          <button class="num-btn" data-target="phys-damping" data-dir="-1">−</button>
+          <input type="number" id="phys-damping" value="0" min="0" max="2" step="0.05" />
+          <button class="num-btn" data-target="phys-damping" data-dir="1">+</button>
+        </div>
+        <span class="phys-unit">s⁻¹</span>
+      </div>
+    </div>
+
     <div class="phys-divider"></div>
     <button id="phys-reset-btn" class="phys-reset-btn">Reset to defaults</button>
   </div>
 
+  <div id="app-content">
   <!-- ── Page 1: Pendulum ── -->
   <div id="page-pendulum">
 
     <div class="ctrl-bar">
-
-      <div id="ctrl-group-actions" class="ctrl-group hidden">
-        <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
-        <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
-        <div class="ctrl-sep"></div>
-      </div>
-
-      <div id="ctrl-group-pendulums" class="ctrl-group hidden">
-        <span class="ctrl-label" id="numPendulumsLabel">Pendulums</span>
-        <div class="num-ctrl">
-          <button class="num-btn" data-target="numPendulums" data-dir="-1">−</button>
-          <input type="number" id="numPendulums" value="1" min="1" max="50" step="1" />
-          <button class="num-btn" data-target="numPendulums" data-dir="1">+</button>
-        </div>
-        <span class="help-icon tip-left"
-          data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle: tiny differences grow into completely different trajectories, revealing chaos."><svg
-            width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
-              text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
-              fill-opacity="0.75">?</text>
-          </svg></span>
-        <div class="ctrl-sep"></div>
-        <span class="ctrl-label">Spread</span>
-        <div class="num-ctrl">
-          <button class="num-btn" data-target="deltaAngle" data-dir="-1">−</button>
-          <input type="number" id="deltaAngle" value="5" min="0.2" max="45" step="0.2" />
-          <button class="num-btn" data-target="deltaAngle" data-dir="1">+</button>
-        </div>
-        <span class="help-icon"
-          data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions: larger values spread them across a wider range."><svg
-            width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
-              text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
-              fill-opacity="0.75">?</text>
-          </svg></span>
-        <div class="ctrl-sep"></div>
-      </div>
-
-      <div id="ctrl-group-select" class="ctrl-group hidden">
-        <span class="ctrl-label">Show Pendulum</span>
-        <div id="showSelectContainer" class="custom-select"></div>
-        <div class="ctrl-sep"></div>
-      </div>
-
-      <div id="ctrl-group-speed" class="ctrl-group hidden">
-        <span class="ctrl-label">Speed</span>
-        <input type="range" id="speed" min="0" max="10" value="5" />
-        <span class="ctrl-value" id="speedLabel">5</span>
-      </div>
-
-      <div class="ctrl-spacer"></div>
+      <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
+      <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
+      <div class="ctrl-sep"></div>
       <button id="physicsToggleBtn" class="phys-toggle-btn"><svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="3" fill="currentColor"/><circle cx="16" cy="18" r="3" fill="currentColor"/></svg>Physics</button>
-
+      <div class="ctrl-sep"></div>
+      <span class="ctrl-label">Speed</span>
+      <input type="range" id="speed" min="0" max="10" value="5" />
+      <span class="ctrl-value" id="speedLabel">5</span>
     </div>
 
     <div id="pendulum-grid">
@@ -1279,19 +1331,22 @@
         <canvas id="canvas-t1"></canvas>
         <div class="tile-hint" id="tile-hint-t1">
           <span class="tile-hint-arrow">←</span>
-          <span class="tile-hint-text">set your starting position</span>
+          <span class="tile-hint-text">drag the pendulum to set your starting position</span>
         </div>
       </div>
       <div class="quad-cell">
         <canvas id="canvas-t2"></canvas>
         <div class="tile-hint" id="tile-hint-t2">
           <span class="tile-hint-arrow">↑</span>
-          <span class="tile-hint-text">set your starting position</span>
+          <span class="tile-hint-text">drag the pendulum to set your starting position</span>
         </div>
       </div>
       <div class="quad-cell">
         <canvas id="canvas-phase"></canvas>
-        <div class="tile-hint" id="tile-hint-phase"></div>
+        <div class="tile-hint" id="tile-hint-phase">
+          <span class="tile-hint-arrow">↙</span>
+          <span class="tile-hint-text">drag the pendulum to set your starting position</span>
+        </div>
       </div>
     </div>
 
@@ -1303,64 +1358,14 @@
     <div class="ctrl-bar">
       <button id="mapPlayPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
       <button id="mapResetView"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
-
-      <div class="ctrl-sep"></div>
-
-      <span class="ctrl-label">Resolution</span>
-      <select id="mapRes">
-        <option value="100">100 × 100</option>
-        <option value="200">200 × 200</option>
-        <option value="400">400 × 400</option>
-        <option value="800" selected>800 × 800</option>
-        <option value="1200">1200 × 1200</option>
-        <option value="1600">1600 × 1600</option>
-      </select><span class="help-icon" data-tip="Grid resolution: number of initial conditions sampled per axis. Higher values show more detail but take longer to compute."><svg
-          width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
-            text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
-            fill-opacity="0.75">?</text>
-        </svg></span>
-
-      <div class="ctrl-sep"></div>
-
-      <span class="ctrl-label">Mode</span>
-      <select id="mapMode">
-        <option value="theta2" selected>Live angle</option>
-        <option value="flipTime">Time to first flip</option>
-      </select><span class="help-icon" data-tip="Live angle: continuously color by the live combination of both pendulum angles.&#10;&#10;Time to first flip: color each initial condition by how long until the lower rod first rotates over the top, the fractal boundary reveals chaotic sensitivity."><svg
-          width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
-            text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
-            fill-opacity="0.75">?</text>
-        </svg></span>
-
-      <div class="ctrl-sep"></div>
-
-      <span class="ctrl-label">Palette</span>
-      <select id="mapPalette">
-        <option value="rainbow" selected>Rainbow</option>
-        <option value="lsd">LSD</option>
-        <option value="shrooms">Shrooms</option>
-        <option value="snow">Snow</option>
-        <option value="acid">Acid</option>
-        <option value="mdma">MDMA</option>
-      </select>
-
-      <div class="ctrl-sep"></div>
-
-      <span class="ctrl-label">Speed</span>
-      <input type="range" id="mapSpeed" min="1" max="50" value="10" />
-      <span class="ctrl-value" id="mapSpeedLabel">10</span><span class="help-icon" data-tip="Steps per frame advanced by the GPU each render tick. Higher values animate faster but may overshoot fine structure."><svg
-          width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55" /><text x="7" y="7.7"
-            text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor"
-            fill-opacity="0.75">?</text>
-        </svg></span>
-
-      <div class="ctrl-spacer"></div>
-      <button id="mapExportBtn">↓ Export PNG</button>
       <div class="ctrl-sep"></div>
       <button id="mapPhysicsToggleBtn" class="phys-toggle-btn"><svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="3" fill="currentColor"/><circle cx="16" cy="18" r="3" fill="currentColor"/></svg>Physics</button>
+      <div class="ctrl-sep"></div>
+      <span class="ctrl-label">Speed</span>
+      <input type="range" id="mapSpeed" min="1" max="50" value="10" />
+      <span class="ctrl-value" id="mapSpeedLabel">10</span>
+      <div class="ctrl-spacer"></div>
+      <button id="mapExportBtn">↓ Export PNG</button>
     </div>
 
     <div id="phasemap-grid">
@@ -1569,6 +1574,9 @@ field:   θ₁    ω₁    θ₂    ω₂  flipCount  firstFlipTime  elapsed  fr
       <p class="tech-credit">Built by William Ragnarsson · <a href="mailto:william.ragnarsson@gmail.com">william.ragnarsson@gmail.com</a> · <a href="https://github.com/william-popmie/double-pendulum" target="_blank" rel="noopener">Source on GitHub →</a></p>
     </div>
   </div>
+  </div><!-- #app-content -->
+  </div><!-- #app-body -->
+  <div id="physics-backdrop"></div>
 
   <!-- ── Export modal ── -->
   <div id="export-overlay">

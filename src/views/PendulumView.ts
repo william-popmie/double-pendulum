@@ -24,6 +24,7 @@ export class PendulumView implements View {
   stepsPerFrame = 5;
   showPhysicsLabels = false;
   onFirstDrag?: () => void;
+  onAnglesChanged?: (theta1Deg: number, theta2Deg: number) => void;
 
   private rafId = 0;
   private readonly resizeObserver: ResizeObserver;
@@ -112,6 +113,18 @@ export class PendulumView implements View {
     this.reset();
   }
 
+  setBaseAngle1Deg(deg: number): void {
+    this.baseAngle = deg * DEG;
+    this.reset();
+    this.notifyAnglesChanged();
+  }
+
+  setBaseAngle2Deg(deg: number): void {
+    this.baseAngle2 = deg * DEG;
+    this.reset();
+    this.notifyAnglesChanged();
+  }
+
   setPhysics(p: PhysicsParams): void {
     this.physics = { ...p };
     this.sim.setPhysics(this.physics);
@@ -127,6 +140,10 @@ export class PendulumView implements View {
   }
 
   // ── Internals ─────────────────────────────────────────────────────────────
+
+  private notifyAnglesChanged(): void {
+    this.onAnglesChanged?.(this.baseAngle / DEG, this.baseAngle2 / DEG);
+  }
 
   private buildInitialStates(): PendulumState[] {
     const N = this.numPendulums;
@@ -236,8 +253,8 @@ export class PendulumView implements View {
       pivotX,
       pivotY,
       startAngle:      hit.target === 'rod1' ? ref.theta1 : ref.theta2,
-      startBaseAngle:  this.baseAngle,
-      startBaseAngle2: this.baseAngle2,
+      startBaseAngle:  ref.theta1,   // grab from current sim position, not stored base
+      startBaseAngle2: ref.theta2,
       wasPaused:       this.paused,
     };
     if (this.onFirstDrag) { this.onFirstDrag(); this.onFirstDrag = undefined; }
@@ -261,8 +278,10 @@ export class PendulumView implements View {
         this.baseAngle  = startBaseAngle  + delta;
         this.baseAngle2 = startBaseAngle2 + delta;
       } else {
+        this.baseAngle  = startBaseAngle;            // freeze bob1 at captured position
         this.baseAngle2 = startBaseAngle2 + delta;
       }
+      this.notifyAnglesChanged();
 
       const displayAngle = target === 'rod1' ? this.baseAngle : this.baseAngle2;
       this.hintState = { target, theta1: this.baseAngle, angle: displayAngle };
