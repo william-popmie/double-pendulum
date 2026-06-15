@@ -834,6 +834,108 @@
       }
     }
 
+    /* ── Physics panel backdrop (mobile) ───────────────────────────────────── */
+    #physics-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 199;
+    }
+
+    /* ── Physics panel mobile additions ────────────────────────────────────── */
+    .physics-panel-handle {
+      display: none;
+      width: 36px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+
+    #physics-panel-mobile-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    #physics-panel-mobile-header .phys-section-label {
+      margin-bottom: 0;
+    }
+
+    #physics-panel-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      padding: 2px 6px;
+      cursor: pointer;
+      border-radius: 4px;
+      line-height: 1;
+      font-family: inherit;
+    }
+
+    #physics-panel-close:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    #physics-mobile-slot {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #physics-mobile-divider {
+      display: none;
+    }
+
+    /* ── Mobile layout ─────────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .physics-panel {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 12px 12px 0 0;
+        min-width: unset;
+        padding: 14px 16px 32px;
+      }
+
+      .physics-panel-handle {
+        display: block;
+      }
+
+      #physics-panel-mobile-header {
+        display: flex;
+      }
+
+      #physics-mobile-slot {
+        display: flex;
+      }
+
+      #physics-mobile-divider {
+        display: block;
+      }
+
+      /* Ctrl-groups inside the physics panel wrap and lose their separators */
+      .physics-panel .ctrl-group {
+        flex-wrap: wrap;
+        gap: 6px 8px;
+      }
+
+      .physics-panel .ctrl-sep {
+        display: none;
+      }
+
+      /* Custom-select dropdown opens upward inside physics panel */
+      .physics-panel .cs-dropdown {
+        top: auto;
+        bottom: calc(100% + 4px);
+      }
+    }
+
     @keyframes tabFlash {
       0%, 100% { color: var(--text-muted); text-shadow: none; }
       50%       { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.4); }
@@ -1010,7 +1112,16 @@
     <button class="tab-btn" id="tab-tech">How it works</button>
   </nav>
 
+  <div id="physics-backdrop"></div>
+
   <div id="physics-panel" class="physics-panel" hidden>
+    <div class="physics-panel-handle"></div>
+    <div id="physics-panel-mobile-header">
+      <span class="phys-section-label">Settings</span>
+      <button id="physics-panel-close">✕</button>
+    </div>
+    <div id="physics-mobile-slot"></div>
+    <div class="phys-divider" id="physics-mobile-divider"></div>
     <div class="phys-section-label">Rod &amp; Bob</div>
     <div class="phys-row">
       <span class="phys-label">L₁</span>

@@ -50,6 +50,9 @@ async function init(): Promise<void> {
   const physicsToggleBtn    = document.getElementById('physicsToggleBtn')    as HTMLButtonElement;
   const mapPhysicsToggleBtn = document.getElementById('mapPhysicsToggleBtn') as HTMLButtonElement;
   const physicsPanel        = document.getElementById('physics-panel')       as HTMLElement;
+  const physicsBackdrop     = document.getElementById('physics-backdrop')    as HTMLElement;
+  const physicsPanelClose   = document.getElementById('physics-panel-close') as HTMLButtonElement;
+  const physicsMobileSlot   = document.getElementById('physics-mobile-slot') as HTMLElement;
   const physL1Input      = document.getElementById('phys-L1')          as HTMLInputElement;
   const physL2Input      = document.getElementById('phys-L2')          as HTMLInputElement;
   const physM1Input      = document.getElementById('phys-m1')          as HTMLInputElement;
@@ -100,18 +103,21 @@ async function init(): Promise<void> {
     phaseMapView?.setPhysics(p);
   }
 
+  const isMobile = window.matchMedia('(max-width: 640px)').matches;
+
   function setPhysicsPanelOpen(open: boolean): void {
     physicsPanel.hidden = !open;
     physicsToggleBtn.classList.toggle('active', open);
     mapPhysicsToggleBtn.classList.toggle('active', open);
     pendulumView.showPhysicsLabels = open;
+    physicsBackdrop.style.display = isMobile && open ? 'block' : '';
   }
 
   const physBtnClickHandler = (e: MouseEvent): void => {
     e.stopPropagation();
     const opening = physicsPanel.hasAttribute('hidden');
     setPhysicsPanelOpen(opening);
-    if (opening) {
+    if (opening && !isMobile) {
       const closeOnOutside = (ev: PointerEvent): void => {
         if (!physicsPanel.contains(ev.target as Node) &&
             ev.target !== physicsToggleBtn &&
@@ -123,6 +129,9 @@ async function init(): Promise<void> {
       document.addEventListener('pointerdown', closeOnOutside, true);
     }
   };
+
+  physicsPanelClose.addEventListener('click', () => setPhysicsPanelOpen(false));
+  physicsBackdrop.addEventListener('click', () => setPhysicsPanelOpen(false));
 
   physicsToggleBtn.addEventListener('click', physBtnClickHandler);
   mapPhysicsToggleBtn.addEventListener('click', physBtnClickHandler);
@@ -148,6 +157,9 @@ async function init(): Promise<void> {
   });
 
   // ── Tutorial ──────────────────────────────────────────────────────────────
+  // On mobile, skip the progressive tutorial so all controls start visible
+  if (isMobile) localStorage.setItem('dp_visited', '1');
+
   const tutorial = new Tutorial({
     tileHints:   document.querySelectorAll<HTMLElement>('.tile-hint'),
     grpActions:  document.getElementById('ctrl-group-actions')   as HTMLElement,
@@ -157,6 +169,16 @@ async function init(): Promise<void> {
   });
   tutorial.onCompleted = () => tabPhasemap.classList.add('tab-flash');
   pendulumView.onFirstDrag = () => tutorial.onFirstDrag();
+
+  // On mobile: move the non-essential ctrl-groups into the physics panel slot
+  if (isMobile) {
+    const grpPendulums = document.getElementById('ctrl-group-pendulums')!;
+    const grpSelect    = document.getElementById('ctrl-group-select')!;
+    const grpSpeed     = document.getElementById('ctrl-group-speed')!;
+    physicsMobileSlot.appendChild(grpPendulums);
+    physicsMobileSlot.appendChild(grpSelect);
+    physicsMobileSlot.appendChild(grpSpeed);
+  }
 
   playPauseBtn.addEventListener('click', () => {
     pendulumView.paused = !pendulumView.paused;
