@@ -8,6 +8,18 @@ import { DEFAULT_PHYSICS, DEFAULT_SIM } from './core/config';
 import { Tutorial } from './tutorial/Tutorial';
 import type { ColorMode, Palette } from './core/types';
 
+const SVG_PLAY  = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+const SVG_PAUSE = `<svg width="10" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
+
+let toastTimer = 0;
+function showToast(msg: string, durationMs = 3000): void {
+  const el = document.getElementById('toast')!;
+  el.textContent = msg;
+  el.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => el.classList.remove('visible'), durationMs);
+}
+
 async function init(): Promise<void> {
   // ── DOM refs ──────────────────────────────────────────────────────────────
   const tabPendulum  = document.getElementById('tab-pendulum')    as HTMLButtonElement;
@@ -103,21 +115,22 @@ async function init(): Promise<void> {
     phaseMapView?.setPhysics(p);
   }
 
-  const isMobile = window.matchMedia('(max-width: 640px)').matches;
+  const narrowMQ = window.matchMedia('(max-width: 960px)');
+  const mobileMQ = window.matchMedia('(max-width: 640px)');
 
   function setPhysicsPanelOpen(open: boolean): void {
     physicsPanel.hidden = !open;
     physicsToggleBtn.classList.toggle('active', open);
     mapPhysicsToggleBtn.classList.toggle('active', open);
     pendulumView.showPhysicsLabels = open;
-    physicsBackdrop.style.display = isMobile && open ? 'block' : '';
+    physicsBackdrop.style.display = mobileMQ.matches && open ? 'block' : '';
   }
 
   const physBtnClickHandler = (e: MouseEvent): void => {
     e.stopPropagation();
     const opening = physicsPanel.hasAttribute('hidden');
     setPhysicsPanelOpen(opening);
-    if (opening && !isMobile) {
+    if (opening && !mobileMQ.matches) {
       const closeOnOutside = (ev: PointerEvent): void => {
         if (!physicsPanel.contains(ev.target as Node) &&
             ev.target !== physicsToggleBtn &&
@@ -156,34 +169,48 @@ async function init(): Promise<void> {
     posthog.capture('physics parameters reset');
   });
 
+  // ── Responsive layout: collapse controls into physics panel when narrow ──────
+  // Grab the three movable groups and the ctrl-bar insertion point once
+  const grpPendulums  = document.getElementById('ctrl-group-pendulums') as HTMLElement;
+  const grpSelect     = document.getElementById('ctrl-group-select')    as HTMLElement;
+  const grpSpeed      = document.getElementById('ctrl-group-speed')     as HTMLElement;
+  const ctrlBar       = (document.getElementById('ctrl-group-actions') as HTMLElement).parentElement!;
+  const ctrlSpacer    = ctrlBar.querySelector('.ctrl-spacer') as HTMLElement;
+
+  function applyNarrowLayout(narrow: boolean): void {
+    if (narrow) {
+      physicsMobileSlot.appendChild(grpPendulums);
+      physicsMobileSlot.appendChild(grpSelect);
+      physicsMobileSlot.appendChild(grpSpeed);
+    } else {
+      ctrlBar.insertBefore(grpPendulums, ctrlSpacer);
+      ctrlBar.insertBefore(grpSelect,    ctrlSpacer);
+      ctrlBar.insertBefore(grpSpeed,     ctrlSpacer);
+    }
+  }
+
   // ── Tutorial ──────────────────────────────────────────────────────────────
-  // On mobile, skip the progressive tutorial so all controls start visible
-  if (isMobile) localStorage.setItem('dp_visited', '1');
+  // Skip the progressive tutorial when starting narrow — controls live inside
+  // the physics panel and the step-by-step reveal doesn't make sense there
+  if (narrowMQ.matches) localStorage.setItem('dp_visited', '1');
 
   const tutorial = new Tutorial({
     tileHints:   document.querySelectorAll<HTMLElement>('.tile-hint'),
     grpActions:  document.getElementById('ctrl-group-actions')   as HTMLElement,
-    grpPendulums: document.getElementById('ctrl-group-pendulums') as HTMLElement,
-    grpSelect:   document.getElementById('ctrl-group-select')    as HTMLElement,
-    grpSpeed:    document.getElementById('ctrl-group-speed')     as HTMLElement,
+    grpPendulums,
+    grpSelect,
+    grpSpeed,
   });
   tutorial.onCompleted = () => tabPhasemap.classList.add('tab-flash');
   pendulumView.onFirstDrag = () => tutorial.onFirstDrag();
 
-  // On mobile: move the non-essential ctrl-groups into the physics panel slot
-  if (isMobile) {
-    const grpPendulums = document.getElementById('ctrl-group-pendulums')!;
-    const grpSelect    = document.getElementById('ctrl-group-select')!;
-    const grpSpeed     = document.getElementById('ctrl-group-speed')!;
-    physicsMobileSlot.appendChild(grpPendulums);
-    physicsMobileSlot.appendChild(grpSelect);
-    physicsMobileSlot.appendChild(grpSpeed);
-  }
+  applyNarrowLayout(narrowMQ.matches);
+  narrowMQ.addEventListener('change', e => applyNarrowLayout(e.matches));
 
   playPauseBtn.addEventListener('click', () => {
     pendulumView.paused = !pendulumView.paused;
-    playPauseBtn.textContent = pendulumView.paused ? '▶ Play' : '⏸ Pause';
-    playPauseBtn.className   = pendulumView.paused ? 'btn-play' : 'btn-pause';
+    playPauseBtn.innerHTML = pendulumView.paused ? `${SVG_PLAY}Play` : `${SVG_PAUSE}Pause`;
+    playPauseBtn.className = pendulumView.paused ? 'btn-play' : 'btn-pause';
     tutorial.onPlay(pendulumView.paused);
     posthog.capture(pendulumView.paused ? 'simulation paused' : 'simulation played');
   });
@@ -263,7 +290,7 @@ async function init(): Promise<void> {
 
     mapPlayPauseBtn.addEventListener('click', () => {
       phaseMapView!.paused = !phaseMapView!.paused;
-      mapPlayPauseBtn.textContent = phaseMapView!.paused ? '▶ Play' : '⏸ Pause';
+      mapPlayPauseBtn.innerHTML = phaseMapView!.paused ? `${SVG_PLAY}Play` : `${SVG_PAUSE}Pause`;
       mapPlayPauseBtn.className = phaseMapView!.paused ? 'btn-play' : 'btn-pause';
       posthog.capture(phaseMapView!.paused ? 'phase map paused' : 'phase map played');
     });
@@ -378,11 +405,16 @@ async function init(): Promise<void> {
     });
 
   } else {
-    tabPhasemap.disabled = true;
+    tabPhasemap.classList.add('tab-unavailable');
     tabPhasemap.title = 'WebGPU not available in this browser';
     mapPlayPauseBtn.disabled = true;
     noGpuMsg.style.display = 'block';
     mapCanvasEl.style.display = 'none';
+
+    tabPhasemap.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showToast('Phase Map requires a desktop browser with WebGPU');
+    });
   }
 
   // ── Tab navigation ────────────────────────────────────────────────────────
@@ -420,7 +452,7 @@ async function init(): Promise<void> {
   }
 
   tabPendulum.addEventListener('click', () => { switchTo('pendulum'); posthog.capture('tab switched', { tab: 'pendulum' }); });
-  tabPhasemap.addEventListener('click', () => { switchTo('phasemap'); posthog.capture('tab switched', { tab: 'phasemap' }); });
+  tabPhasemap.addEventListener('click', () => { if (phaseMapView) { switchTo('phasemap'); posthog.capture('tab switched', { tab: 'phasemap' }); } });
   tabTech.addEventListener('click', () => { switchTo('tech'); posthog.capture('tab switched', { tab: 'tech' }); });
 }
 

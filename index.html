@@ -107,6 +107,35 @@
       cursor: not-allowed;
     }
 
+    .tab-btn.tab-unavailable {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ── Toast notification ─────────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: #1a1a1a;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--text);
+      white-space: nowrap;
+      z-index: 600;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    #toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
     /* ── Control bar ───────────────────────────────────────────────────────── */
     .ctrl-bar {
       flex-shrink: 0;
@@ -378,7 +407,15 @@
       color: var(--text);
     }
 
+    button svg {
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
     button {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       background: transparent;
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -892,21 +929,8 @@
     }
 
     /* ── Mobile layout ─────────────────────────────────────────────────────── */
-    @media (max-width: 640px) {
-      .physics-panel {
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        border-radius: 12px 12px 0 0;
-        min-width: unset;
-        padding: 14px 16px 32px;
-      }
-
-      .physics-panel-handle {
-        display: block;
-      }
-
+    /* ── Narrow: controls collapse into physics panel (≤960px) ────────────── */
+    @media (max-width: 960px) {
       #physics-panel-mobile-header {
         display: flex;
       }
@@ -928,8 +952,25 @@
       .physics-panel .ctrl-sep {
         display: none;
       }
+    }
 
-      /* Custom-select dropdown opens upward inside physics panel */
+    /* ── Mobile: physics panel becomes a bottom sheet (≤640px) ─────────────── */
+    @media (max-width: 640px) {
+      .physics-panel {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 12px 12px 0 0;
+        min-width: unset;
+        padding: 14px 16px 32px;
+      }
+
+      .physics-panel-handle {
+        display: block;
+      }
+
+      /* Custom-select dropdown opens upward inside bottom-sheet panel */
       .physics-panel .cs-dropdown {
         top: auto;
         bottom: calc(100% + 4px);
@@ -1176,8 +1217,8 @@
     <div class="ctrl-bar">
 
       <div id="ctrl-group-actions" class="ctrl-group hidden">
-        <button id="playPauseBtn" class="btn-play">▶&thinsp;Play</button>
-        <button id="resetBtn">↺&thinsp;Reset</button>
+        <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
+        <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
         <div class="ctrl-sep"></div>
       </div>
 
@@ -1225,7 +1266,7 @@
       </div>
 
       <div class="ctrl-spacer"></div>
-      <button id="physicsToggleBtn" class="phys-toggle-btn">⚙ Physics</button>
+      <button id="physicsToggleBtn" class="phys-toggle-btn"><svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="3" fill="currentColor"/><circle cx="16" cy="18" r="3" fill="currentColor"/></svg>Physics</button>
 
     </div>
 
@@ -1260,8 +1301,8 @@
   <div id="page-phasemap">
 
     <div class="ctrl-bar">
-      <button id="mapPlayPauseBtn" class="btn-play">▶&thinsp;Play</button>
-      <button id="mapResetView">↺&thinsp;Reset</button>
+      <button id="mapPlayPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
+      <button id="mapResetView"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
 
       <div class="ctrl-sep"></div>
 
@@ -1319,7 +1360,7 @@
       <div class="ctrl-spacer"></div>
       <button id="mapExportBtn">↓ Export PNG</button>
       <div class="ctrl-sep"></div>
-      <button id="mapPhysicsToggleBtn" class="phys-toggle-btn">⚙ Physics</button>
+      <button id="mapPhysicsToggleBtn" class="phys-toggle-btn"><svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="3" fill="currentColor"/><circle cx="16" cy="18" r="3" fill="currentColor"/></svg>Physics</button>
     </div>
 
     <div id="phasemap-grid">
@@ -1592,6 +1633,8 @@ field:   θ₁    ω₁    θ₂    ω₂  flipCount  firstFlipTime  elapsed  fr
       </div>
     </div>
   </div>
+
+  <div id="toast"></div>
 
   <script type="module" src="/src/main.ts"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
