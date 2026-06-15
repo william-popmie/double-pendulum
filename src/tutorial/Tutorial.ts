@@ -1,3 +1,5 @@
+import posthog from '../analytics';
+
 export class Tutorial {
   private state = 0;
   private readonly active: boolean;
@@ -12,7 +14,11 @@ export class Tutorial {
     grpSpeed: HTMLElement;
   }) {
     this.active = localStorage.getItem('dp_visited') !== '1';
-    if (!this.active) this.skipToEnd();
+    if (!this.active) {
+      this.skipToEnd();
+    } else {
+      posthog.capture('tutorial started');
+    }
   }
 
   onFirstDrag(): void {
@@ -31,7 +37,10 @@ export class Tutorial {
     } else if (this.state === 3) {
       this.state = 4;
       this.reveal(this.els.grpSpeed, 1200);
-      setTimeout(() => this.onCompleted?.(), 1200);
+      setTimeout(() => {
+        posthog.capture('tutorial completed');
+        this.onCompleted?.();
+      }, 1200);
     }
   }
 

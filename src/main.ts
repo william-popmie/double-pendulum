@@ -1,4 +1,5 @@
 import { inject } from '@vercel/analytics';
+import posthog from './analytics';
 import { PendulumView } from './views/PendulumView';
 import { PhaseMapView } from './views/PhaseMapView';
 import { PhaseMapExporter } from './rendering/phaseMap/PhaseMapExporter';
@@ -127,7 +128,13 @@ async function init(): Promise<void> {
   mapPhysicsToggleBtn.addEventListener('click', physBtnClickHandler);
 
   for (const input of [physL1Input, physL2Input, physM1Input, physM2Input, physDampingInput]) {
-    input.addEventListener('change', applyPhysics);
+    input.addEventListener('change', () => {
+      applyPhysics();
+      const p = readPhysics();
+      posthog.capture('physics parameters updated', {
+        L1: p.L1, L2: p.L2, m1: p.m1, m2: p.m2, damping: p.damping,
+      });
+    });
   }
 
   physResetBtn.addEventListener('click', () => {
@@ -137,6 +144,7 @@ async function init(): Promise<void> {
     physM2Input.value      = String(DEFAULT_PHYSICS.m2);
     physDampingInput.value = String(DEFAULT_PHYSICS.damping);
     applyPhysics();
+    posthog.capture('physics parameters reset');
   });
 
   // ── Tutorial ──────────────────────────────────────────────────────────────
@@ -155,15 +163,20 @@ async function init(): Promise<void> {
     playPauseBtn.textContent = pendulumView.paused ? '▶ Play' : '⏸ Pause';
     playPauseBtn.className   = pendulumView.paused ? 'btn-play' : 'btn-pause';
     tutorial.onPlay(pendulumView.paused);
+    posthog.capture(pendulumView.paused ? 'simulation paused' : 'simulation played');
   });
 
-  resetBtn.addEventListener('click', () => pendulumView.reset());
+  resetBtn.addEventListener('click', () => {
+    pendulumView.reset();
+    posthog.capture('simulation reset');
+  });
 
   numPendulumsInput.addEventListener('change', () => {
     const n = parseInt(numPendulumsInput.value, 10);
     if (n >= 1 && n <= 50) {
       pendulumView.setNumPendulums(n);
       tutorial.onPendulumCount(n);
+      posthog.capture('pendulum count changed', { count: n });
     }
   });
 
@@ -181,12 +194,16 @@ async function init(): Promise<void> {
 
   deltaAngleInput.addEventListener('change', () => {
     const d = parseFloat(deltaAngleInput.value);
-    if (d > 0) pendulumView.setDeltaAngleDeg(d);
+    if (d > 0) {
+      pendulumView.setDeltaAngleDeg(d);
+      posthog.capture('angle spread changed', { delta_angle_deg: d });
+    }
   });
 
   speedRange.addEventListener('input', () => {
     pendulumView.stepsPerFrame = parseInt(speedRange.value, 10);
     speedLabel.textContent = speedRange.value;
+    posthog.capture('simulation speed changed', { steps_per_frame: pendulumView.stepsPerFrame });
   });
 
   // ── Phase map view ────────────────────────────────────────────────────────
@@ -198,33 +215,45 @@ async function init(): Promise<void> {
     await phaseMapView.initGPU();
 
     mapResSelect.addEventListener('change', () => {
-      phaseMapView!.changeResolution(parseInt(mapResSelect.value, 10));
+      const resolution = parseInt(mapResSelect.value, 10);
+      phaseMapView!.changeResolution(resolution);
+      posthog.capture('phase map resolution changed', { resolution });
     });
 
     mapModeSelect.addEventListener('change', () => {
-      phaseMapView!.setColorMode(mapModeSelect.value as ColorMode);
+      const color_mode = mapModeSelect.value as ColorMode;
+      phaseMapView!.setColorMode(color_mode);
+      posthog.capture('phase map color mode changed', { color_mode });
     });
 
     mapPaletteSelect.addEventListener('change', () => {
-      phaseMapView!.setPalette(mapPaletteSelect.value as Palette);
+      const palette = mapPaletteSelect.value as Palette;
+      phaseMapView!.setPalette(palette);
+      posthog.capture('phase map palette changed', { palette });
     });
 
     mapSpeedRange.addEventListener('input', () => {
-      phaseMapView!.setStepsPerDispatch(parseInt(mapSpeedRange.value, 10));
+      const steps_per_dispatch = parseInt(mapSpeedRange.value, 10);
+      phaseMapView!.setStepsPerDispatch(steps_per_dispatch);
       mapSpeedLabel.textContent = mapSpeedRange.value;
+      posthog.capture('phase map speed changed', { steps_per_dispatch });
     });
 
     mapPlayPauseBtn.addEventListener('click', () => {
       phaseMapView!.paused = !phaseMapView!.paused;
       mapPlayPauseBtn.textContent = phaseMapView!.paused ? '▶ Play' : '⏸ Pause';
       mapPlayPauseBtn.className = phaseMapView!.paused ? 'btn-play' : 'btn-pause';
+      posthog.capture(phaseMapView!.paused ? 'phase map paused' : 'phase map played');
     });
 
     mapCanvasEl.addEventListener('pointerdown', () => {
       probeMapHint.classList.add('hidden');
     }, { once: true });
 
-    mapResetBtn.addEventListener('click', () => phaseMapView!.reset());
+    mapResetBtn.addEventListener('click', () => {
+      phaseMapView!.reset();
+      posthog.capture('phase map reset');
+    });
 
     // ── Export modal ──────────────────────────────────────────────────────────
     let activeExporter: PhaseMapExporter | null = null;
@@ -278,6 +307,7 @@ async function init(): Promise<void> {
       const region          = exportRegionSel.value === 'current'
         ? phaseMapView!.getRegion()
         : { theta1Min: -Math.PI, theta1Max: Math.PI, theta2Min: -Math.PI, theta2Max: Math.PI };
+      posthog.capture('phase map export started', { resolution, duration_seconds: durationSeconds, color_mode: colorMode, palette, region_type: exportRegionSel.value });
 
       exportComposite.width  = resolution;
       exportComposite.height = resolution;
@@ -315,8 +345,10 @@ async function init(): Promise<void> {
       phaseMapView!.paused = wasPaused;
 
       if (result === 'done') {
+        posthog.capture('phase map export completed', { resolution, duration_seconds: durationSeconds, color_mode: colorMode, palette });
         closeExportModal();
       } else {
+        posthog.capture('phase map export cancelled', { resolution, duration_seconds: durationSeconds });
         exportSettings.style.display = '';
         exportProgress.style.display = 'none';
         exportCloseBtn.style.display = '';
@@ -365,9 +397,9 @@ async function init(): Promise<void> {
     }
   }
 
-  tabPendulum.addEventListener('click', () => switchTo('pendulum'));
-  tabPhasemap.addEventListener('click', () => switchTo('phasemap'));
-  tabTech.addEventListener('click', () => switchTo('tech'));
+  tabPendulum.addEventListener('click', () => { switchTo('pendulum'); posthog.capture('tab switched', { tab: 'pendulum' }); });
+  tabPhasemap.addEventListener('click', () => { switchTo('phasemap'); posthog.capture('tab switched', { tab: 'phasemap' }); });
+  tabTech.addEventListener('click', () => { switchTo('tech'); posthog.capture('tab switched', { tab: 'tech' }); });
 }
 
 // Initialize Vercel Web Analytics

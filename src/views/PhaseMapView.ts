@@ -1,3 +1,4 @@
+import posthog from '../analytics';
 import { PhaseMapBackend } from '../rendering/phaseMap/PhaseMapBackend';
 import { PhaseMapRenderer } from '../rendering/phaseMap/PhaseMapRenderer';
 import { PendulumCanvas } from '../rendering/pendulumCanvas';
@@ -179,6 +180,9 @@ export class PhaseMapView implements View {
     this.probeIndex = j * this.gridRes + i;
     this.probeState = null;
     this.probePhaseCanvas.reset(1);
+    const theta1 = this.region.theta1Min + (i / (this.gridRes - 1)) * (this.region.theta1Max - this.region.theta1Min);
+    const theta2 = this.region.theta2Max - (j / (this.gridRes - 1)) * (this.region.theta2Max - this.region.theta2Min);
+    posthog.capture('phase map probe clicked', { theta1: Math.round(theta1 * 1000) / 1000, theta2: Math.round(theta2 * 1000) / 1000 });
   }
 
   private fetchProbeState(): void {

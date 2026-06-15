@@ -1,3 +1,4 @@
+import posthog from '../analytics';
 import { Simulation } from '../physics/simulation';
 import { PendulumCanvas, pendulumScale } from '../rendering/pendulumCanvas';
 import type { AngleHint } from '../rendering/pendulumCanvas';
@@ -275,11 +276,13 @@ export class PendulumView implements View {
 
   private onPointerUp = (e: PointerEvent): void => {
     if (!this.dragState || e.pointerId !== this.dragState.pointerId) return;
+    const { target } = this.dragState;
     this.paused    = this.dragState.wasPaused;
     this.dragState = null;
     this.hintState = null;
     const { mx, my } = this.canvasCoords(e);
     this.canvas.style.cursor = this.hitTest(mx, my) ? 'grab' : 'default';
+    posthog.capture('pendulum dragged', { rod: target });
     this.render();
   };
 
