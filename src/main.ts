@@ -457,6 +457,32 @@ async function init(): Promise<void> {
   tabPendulum.addEventListener('click', () => { switchTo('pendulum'); posthog.capture('tab switched', { tab: 'pendulum' }); });
   tabPhasemap.addEventListener('click', () => { if (phaseMapView) { switchTo('phasemap'); posthog.capture('tab switched', { tab: 'phasemap' }); } });
   tabTech.addEventListener('click', () => { switchTo('tech'); posthog.capture('tab switched', { tab: 'tech' }); });
+
+  // ── Help-icon tooltips (fixed position, avoids sidebar overflow clipping) ───
+  const helpTooltip = document.createElement('div');
+  helpTooltip.id = 'phys-tooltip';
+  document.body.appendChild(helpTooltip);
+
+  document.querySelectorAll<HTMLElement>('.help-icon').forEach(icon => {
+    icon.addEventListener('mouseenter', () => {
+      const tip = icon.dataset.tip;
+      if (!tip) return;
+      helpTooltip.textContent = tip;
+      helpTooltip.style.opacity = '0';
+      helpTooltip.style.display = 'block';
+
+      const rect = icon.getBoundingClientRect();
+      const left = Math.max(8, rect.right - 200);
+      const top = rect.top - helpTooltip.offsetHeight - 8;
+      helpTooltip.style.left = `${left}px`;
+      helpTooltip.style.top = `${top}px`;
+      helpTooltip.style.opacity = '1';
+    });
+
+    icon.addEventListener('mouseleave', () => {
+      helpTooltip.style.opacity = '0';
+    });
+  });
 }
 
 // Initialize Vercel Web Analytics

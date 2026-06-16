@@ -156,21 +156,23 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 14px;
-      height: 14px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      font-size: 9px;
+      font-weight: 700;
+      font-family: 'SF Mono', 'Fira Code', monospace;
       color: var(--text-muted);
       cursor: default;
-      position: relative;
       flex-shrink: 0;
       user-select: none;
+      margin-left: auto;
     }
 
-    .help-icon::after {
-      content: attr(data-tip);
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%);
+    #phys-tooltip {
+      position: fixed;
+      z-index: 9999;
       background: #151515;
       border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 6px;
@@ -178,25 +180,13 @@
       font-size: 11px;
       line-height: 1.5;
       color: var(--text);
-      white-space: pre-wrap;
       width: 200px;
       word-break: normal;
       pointer-events: none;
-      z-index: 200;
       opacity: 0;
-      transition: opacity 0.15s;
-      font-weight: 400;
+      transition: opacity 0.12s;
       font-family: inherit;
-    }
-
-    .help-icon:hover::after {
-      opacity: 1;
-    }
-
-    .help-icon.tip-left::after {
-      left: 0;
-      right: auto;
-      transform: none;
+      font-weight: 400;
     }
 
     /* ── Custom colored select ─────────────────────────────────────────────── */
@@ -1214,7 +1204,7 @@
             <input type="number" id="numPendulums" value="1" min="1" max="50" step="1" />
             <button class="num-btn" data-target="numPendulums" data-dir="1">+</button>
           </div>
-          <span class="help-icon tip-left" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle: tiny differences grow into completely different trajectories, revealing chaos."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
+          <span class="help-icon" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle: tiny differences grow into completely different trajectories, revealing chaos.">?</span>
         </div>
         <div class="phys-row">
           <span class="phys-row-label">Spread</span>
@@ -1223,7 +1213,7 @@
             <input type="number" id="deltaAngle" value="5" min="0.2" max="45" step="0.2" />
             <button class="num-btn" data-target="deltaAngle" data-dir="1">+</button>
           </div>
-          <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions: larger values spread them across a wider range."><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-opacity="0.55"/><text x="7" y="7.7" text-anchor="middle" font-size="7.5" font-weight="700" font-family="monospace" fill="currentColor" fill-opacity="0.75">?</text></svg></span>
+          <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions: larger values spread them across a wider range.">?</span>
         </div>
       </div>
     </div>
