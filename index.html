@@ -563,6 +563,23 @@
       opacity: 0;
     }
 
+    #phase-hover-tip {
+      position: fixed;
+      z-index: 9999;
+      display: none;
+      background: rgba(10, 10, 10, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 7px;
+      padding: 7px 11px;
+      font-size: 11px;
+      line-height: 1.65;
+      color: var(--text);
+      white-space: pre;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      pointer-events: none;
+      letter-spacing: 0.02em;
+    }
+
     #phase-canvas-wrap {
       position: relative;
       /* nav=48px + ctrl=44px = 92px of chrome above the grid cell */

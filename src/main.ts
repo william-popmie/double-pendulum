@@ -357,6 +357,31 @@ async function init(): Promise<void> {
       probeMapHint.classList.add('hidden');
     }, { once: true });
 
+    // ── Phase-map hover tooltip ───────────────────────────────────────────────
+    const phaseHoverTip = document.createElement('div');
+    phaseHoverTip.id = 'phase-hover-tip';
+    document.body.appendChild(phaseHoverTip);
+
+    mapCanvasEl.addEventListener('mousemove', (e) => {
+      const rect = mapCanvasEl.getBoundingClientRect();
+      const fracX = (e.clientX - rect.left)  / rect.width;
+      const fracY = (e.clientY - rect.top)   / rect.height;
+      const theta1 = Math.round(-180 + fracX * 360);
+      const theta2 = Math.round( 180 - fracY * 360);
+      phaseHoverTip.textContent = `θ₁ = ${theta1}°\nθ₂ = ${theta2}°`;
+      phaseHoverTip.style.display = 'block';
+      const gap = 14;
+      const left = e.clientX + gap + phaseHoverTip.offsetWidth > window.innerWidth - 8
+        ? e.clientX - phaseHoverTip.offsetWidth - gap
+        : e.clientX + gap;
+      phaseHoverTip.style.left = `${left}px`;
+      phaseHoverTip.style.top  = `${e.clientY - 10}px`;
+    });
+
+    mapCanvasEl.addEventListener('mouseleave', () => {
+      phaseHoverTip.style.display = 'none';
+    });
+
     mapResetBtn.addEventListener('click', () => {
       phaseMapView!.reset();
       posthog.capture('phase map reset');
