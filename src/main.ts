@@ -446,6 +446,7 @@ async function init(): Promise<void> {
       pendulumView.deactivate();
       phaseMapView?.activate();
     } else {
+      setPhysicsPanelOpen(false);
       pageTech.style.display = 'flex';
       tabTech.classList.add('active');
       pendulumView.deactivate();

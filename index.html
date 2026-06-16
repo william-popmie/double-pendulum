@@ -840,13 +840,13 @@
     }
 
     .phys-label {
-      width: 20px;
+      min-width: 72px;
       font-size: 14px;
       font-style: italic;
       font-family: 'Georgia', 'Times New Roman', serif;
       color: var(--text);
       flex-shrink: 0;
-      text-align: center;
+      text-align: left;
     }
 
     .phys-unit {
@@ -948,6 +948,18 @@
       color: var(--text-muted);
       min-width: 72px;
       flex-shrink: 0;
+    }
+
+    /* ── Desktop: static sidebar visual treatment ───────────────────────────── */
+    @media (min-width: 768px) {
+      .physics-panel {
+        border-right-color: var(--border-hover);
+        background: #0e0e0e;
+      }
+
+      #physics-panel-close {
+        display: none;
+      }
     }
 
     /* ── Mobile: physics panel becomes a bottom sheet (≤767px) ─────────────── */
