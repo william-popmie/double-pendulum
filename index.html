@@ -781,6 +781,28 @@
       border-color: var(--border-hover);
     }
 
+    .presets-select {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      padding: 5px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .presets-select:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+    }
+
+    .presets-select option {
+      background: #1a1a1a;
+      color: var(--text);
+    }
+
     .physics-panel {
       width: 340px;
       flex-shrink: 0;
@@ -1322,6 +1344,9 @@
       <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
       <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
       <div class="ctrl-sep"></div>
+      <select id="presetsSelect" class="presets-select">
+        <option value="" disabled selected>Presets</option>
+      </select>
       <button id="physicsToggleBtn" class="phys-toggle-btn"><svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="3" fill="currentColor"/><circle cx="16" cy="18" r="3" fill="currentColor"/></svg>Physics</button>
       <div class="ctrl-sep"></div>
       <span class="ctrl-label">Speed</span>

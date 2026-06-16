@@ -71,6 +71,7 @@ async function init(): Promise<void> {
   const physM2Input         = document.getElementById('phys-m2')             as HTMLInputElement;
   const physDampingInput    = document.getElementById('phys-damping')        as HTMLInputElement;
   const physResetBtn        = document.getElementById('phys-reset-btn')      as HTMLButtonElement;
+  const presetsSelect       = document.getElementById('presetsSelect')!      as HTMLSelectElement;
 
   // Export modal refs
   const mapExportBtn        = document.getElementById('mapExportBtn')          as HTMLButtonElement;
@@ -116,6 +117,7 @@ async function init(): Promise<void> {
   pendulumView.onAnglesChanged = (t1, t2) => {
     angleTheta1Input.value = String(Math.round(t1));
     angleTheta2Input.value = String(Math.round(t2));
+    resetPresetLabel();
   };
 
   // ── Physics panel ─────────────────────────────────────────────────────────
@@ -130,9 +132,9 @@ async function init(): Promise<void> {
     physicsBackdrop.classList.toggle('active', open && mobileMQ.matches);
     if (open) {
       dismissTileHints();
+      presetsSelect.classList.remove('phys-btn-glow');
       if (!physicsEverOpened) {
         physicsEverOpened = true;
-        physicsToggleBtn.classList.remove('phys-btn-glow');
       }
       if (mobileMQ.matches) {
         const closeOnOutside = (ev: PointerEvent) => {
@@ -184,6 +186,7 @@ async function init(): Promise<void> {
   for (const input of [physL1Input, physL2Input, physM1Input, physM2Input, physDampingInput]) {
     input.addEventListener('change', () => {
       applyPhysics();
+      resetPresetLabel();
       const p = readPhysics();
       posthog.capture('physics parameters updated', {
         L1: p.L1, L2: p.L2, m1: p.m1, m2: p.m2, damping: p.damping,
@@ -198,7 +201,64 @@ async function init(): Promise<void> {
     physM2Input.value      = String(DEFAULT_PHYSICS.m2);
     physDampingInput.value = String(DEFAULT_PHYSICS.damping);
     applyPhysics();
+    resetPresetLabel();
     posthog.capture('physics parameters reset');
+  });
+
+  // ── Presets ───────────────────────────────────────────────────────────────
+  const presetsList = [
+    { name: 'Butterfly Effect', theta1: 120, theta2: 90,  n: 20, spread: 1,   L1: 1,   m1: 1,   L2: 1,   m2: 1,   b: 0   },
+    { name: 'Precipice',        theta1: 175, theta2: 175, n: 30, spread: 0.4, L1: 1,   m1: 1,   L2: 1,   m2: 1,   b: 0   },
+    { name: 'Waltz',            theta1: 100, theta2: 80,  n: 6,  spread: 4,   L1: 1,   m1: 1,   L2: 1,   m2: 1,   b: 0.1 },
+    { name: 'Asymmetry',        theta1: 90,  theta2: -60, n: 8,  spread: 5,   L1: 1.5, m1: 2,   L2: 0.6, m2: 0.4, b: 0   },
+  ] as const;
+
+  type Preset = typeof presetsList[number];
+
+  let applyingPreset = false;
+
+  function resetPresetLabel(): void {
+    if (!applyingPreset) presetsSelect.value = '';
+  }
+
+  function applyPreset(p: Preset): void {
+    applyingPreset = true;
+    angleTheta1Input.value  = String(p.theta1);
+    angleTheta2Input.value  = String(p.theta2);
+    numPendulumsInput.value = String(p.n);
+    deltaAngleInput.value   = String(p.spread);
+    physL1Input.value       = String(p.L1);
+    physM1Input.value       = String(p.m1);
+    physL2Input.value       = String(p.L2);
+    physM2Input.value       = String(p.m2);
+    physDampingInput.value  = String(p.b);
+    applyPhysics();
+    pendulumView.setBaseAngle1Deg(p.theta1);
+    pendulumView.setBaseAngle2Deg(p.theta2);
+    pendulumView.setNumPendulums(p.n);
+    pendulumView.setDeltaAngleDeg(p.spread);
+    applyingPreset = false;
+    posthog.capture('preset applied', { preset: p.name });
+  }
+
+  let presetsEverUsed = false;
+
+  for (let i = 0; i < presetsList.length; i++) {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = presetsList[i].name;
+    presetsSelect.appendChild(opt);
+  }
+
+  presetsSelect.addEventListener('change', () => {
+    const idx = parseInt(presetsSelect.value, 10);
+    if (isNaN(idx)) return;
+    applyPreset(presetsList[idx]);
+    dismissTileHints();
+    if (!presetsEverUsed) {
+      presetsEverUsed = true;
+      presetsSelect.classList.remove('phys-btn-glow');
+    }
   });
 
   // ── Pendulum controls ─────────────────────────────────────────────────────
@@ -206,8 +266,8 @@ async function init(): Promise<void> {
     pendulumView.paused = !pendulumView.paused;
     playPauseBtn.innerHTML = pendulumView.paused ? `${SVG_PLAY}Play` : `${SVG_PAUSE}Pause`;
     playPauseBtn.className = pendulumView.paused ? 'btn-play' : 'btn-pause';
-    if (!pendulumView.paused && !physicsEverOpened) {
-      physicsToggleBtn.classList.add('phys-btn-glow');
+    if (!pendulumView.paused && !presetsEverUsed) {
+      presetsSelect.classList.add('phys-btn-glow');
     }
     posthog.capture(pendulumView.paused ? 'simulation paused' : 'simulation played');
   });
@@ -221,6 +281,7 @@ async function init(): Promise<void> {
     const n = parseInt(numPendulumsInput.value, 10);
     if (n >= 1 && n <= 50) {
       pendulumView.setNumPendulums(n);
+      resetPresetLabel();
       posthog.capture('pendulum count changed', { count: n });
     }
   });
@@ -241,6 +302,7 @@ async function init(): Promise<void> {
     const d = parseFloat(deltaAngleInput.value);
     if (d > 0) {
       pendulumView.setDeltaAngleDeg(d);
+      resetPresetLabel();
       posthog.capture('angle spread changed', { delta_angle_deg: d });
     }
   });
