@@ -7,6 +7,9 @@
   <title>Double Pendulum</title>
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
@@ -1186,6 +1189,285 @@
     .tech-credit a:hover {
       color: var(--text);
     }
+
+    /* ════════════════════════════════════════════════════════════════════════
+       RETRO THEME — Pendulum tab only (Balatro-inspired, pixel font)
+       Scoped under body.retro, toggled in main.ts when the Pendulum tab is active
+       ════════════════════════════════════════════════════════════════════════ */
+    body.retro {
+      --r-cream:    #f4ecd6;
+      --r-cream-2:  #e7dcbe;
+      --r-cream-hi: #fff7e3;
+      --r-ink:      #20212c;
+      --r-text:     #34302a;
+      --r-text-dim: #8a7f68;
+      --r-red:      #ff5a5f;
+      --r-red-d:    #c33f48;
+      --r-blue:     #2bb5e6;
+      --r-blue-d:   #1b86ad;
+      --r-gold:     #ffb02e;
+      --r-gold-d:   #cf8412;
+      --r-green:    #5fc56a;
+      --r-green-d:  #3f9b4c;
+      background: radial-gradient(ellipse at 50% -10%, #3c3e52 0%, #2c2e3e 45%, #232433 100%);
+      font-family: 'Pixelify Sans', monospace;
+    }
+
+    /* CRT scanlines + vignette overlay */
+    body.retro::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1000;
+      background:
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px),
+        radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(0,0,0,0.30) 100%);
+    }
+
+    /* ── Nav ── */
+    body.retro #nav { gap: 7px; }
+    body.retro #nav-tabs {
+      background: var(--r-cream);
+      border: 3px solid var(--r-ink);
+      border-radius: 12px;
+      box-shadow: 0 4px 0 var(--r-ink);
+    }
+    body.retro #nav-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      color: var(--r-ink);
+      text-shadow: 2px 2px 0 var(--r-gold);
+      letter-spacing: 0;
+      margin-right: 20px;
+    }
+    body.retro .tab-btn {
+      font-family: 'Pixelify Sans', monospace;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--r-ink);
+      background: var(--r-cream-2);
+      border: 3px solid var(--r-ink);
+      border-radius: 8px;
+      box-shadow: 0 3px 0 var(--r-ink);
+      padding: 5px 12px 6px;
+      transition: transform .06s, box-shadow .06s, background .1s;
+    }
+    body.retro .tab-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 0 var(--r-ink); background: var(--r-cream-hi); color: var(--r-ink); }
+    body.retro .tab-btn:active { transform: translateY(3px); box-shadow: 0 0 0 var(--r-ink); }
+    body.retro .tab-btn.active { background: var(--r-gold); color: var(--r-ink); }
+    body.retro .tab-btn.active::after { display: none; }
+
+    /* ── Control bar ── */
+    body.retro .ctrl-bar {
+      background: var(--r-cream);
+      border-bottom: 4px solid var(--r-ink);
+      height: 58px;
+      gap: 9px;
+    }
+    body.retro .ctrl-sep { background: var(--r-ink); width: 3px; height: 24px; opacity: .45; }
+    body.retro .ctrl-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: var(--r-ink);
+      letter-spacing: 0;
+    }
+    body.retro .ctrl-value {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: var(--r-ink);
+    }
+
+    /* ── Chunky pressable buttons ── */
+    body.retro button {
+      font-family: 'Pixelify Sans', monospace;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--r-ink);
+      background: var(--r-cream-2);
+      border: 3px solid var(--r-ink);
+      border-radius: 9px;
+      box-shadow: 0 4px 0 var(--r-ink);
+      padding: 6px 12px 7px;
+      transition: transform .06s, box-shadow .06s, background .1s, color .1s;
+    }
+    body.retro button:hover { transform: translateY(-1px); box-shadow: 0 5px 0 var(--r-ink); background: var(--r-cream-hi); color: var(--r-ink); }
+    body.retro button:active { transform: translateY(4px); box-shadow: 0 0 0 var(--r-ink); }
+
+    body.retro .btn-play { background: var(--r-green); color: #10331a; box-shadow: 0 4px 0 var(--r-green-d); }
+    body.retro .btn-play:hover { background: #74d97f; box-shadow: 0 5px 0 var(--r-green-d); color: #10331a; }
+    body.retro .btn-play:active { box-shadow: 0 0 0 var(--r-green-d); }
+    body.retro .btn-pause { background: var(--r-red); color: #3a1012; box-shadow: 0 4px 0 var(--r-red-d); }
+    body.retro .btn-pause:hover { background: #ff7378; box-shadow: 0 5px 0 var(--r-red-d); color: #3a1012; }
+    body.retro .btn-pause:active { box-shadow: 0 0 0 var(--r-red-d); }
+    body.retro #physicsToggleBtn, body.retro .phys-toggle-btn { background: var(--r-blue); color: #06303d; box-shadow: 0 4px 0 var(--r-blue-d); }
+    body.retro #physicsToggleBtn:hover, body.retro .phys-toggle-btn:hover { background: #4fc8f0; box-shadow: 0 5px 0 var(--r-blue-d); color: #06303d; }
+    body.retro #physicsToggleBtn:active, body.retro .phys-toggle-btn:active { box-shadow: 0 0 0 var(--r-blue-d); }
+    body.retro #physicsToggleBtn.active, body.retro .phys-toggle-btn.active { background: var(--r-gold); box-shadow: 0 4px 0 var(--r-gold-d); color: var(--r-ink); }
+
+    /* ── Selects ── */
+    body.retro select, body.retro .presets-select {
+      font-family: 'Pixelify Sans', monospace;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--r-ink);
+      background: var(--r-cream-2);
+      border: 3px solid var(--r-ink);
+      border-radius: 9px;
+      box-shadow: 0 4px 0 var(--r-ink);
+      padding: 6px 10px 7px;
+    }
+    body.retro select option, body.retro .presets-select option { background: var(--r-cream); color: var(--r-ink); }
+
+    /* ── Range slider ── */
+    body.retro input[type="range"] { accent-color: var(--r-red); }
+
+    /* ── Number inputs ── */
+    body.retro .num-ctrl {
+      border: 3px solid var(--r-ink);
+      border-radius: 9px;
+      background: var(--r-cream-2);
+      box-shadow: 0 3px 0 var(--r-ink);
+    }
+    body.retro input[type="number"],
+    body.retro .num-ctrl input[type="number"] {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      color: var(--r-ink);
+      background: transparent;
+      border-color: var(--r-ink);
+    }
+    body.retro .num-ctrl input[type="number"] { border-left: 3px solid var(--r-ink); border-right: 3px solid var(--r-ink); }
+    body.retro .num-btn {
+      color: var(--r-ink);
+      font-size: 16px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    body.retro .num-btn:hover { background: rgba(0,0,0,0.08); transform: none; box-shadow: none; color: var(--r-ink); }
+    body.retro .num-btn:active { background: rgba(0,0,0,0.16); transform: none; box-shadow: none; }
+
+    /* ── Pendulum grid: chunky framed tiles ── */
+    body.retro #pendulum-grid { background: var(--r-ink); gap: 4px; padding: 4px; }
+    body.retro .quad-cell {
+      border: 3px solid var(--r-ink);
+      border-radius: 10px;
+      background: #15161e;
+      overflow: hidden;
+    }
+    body.retro .quad-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: var(--r-cream);
+      background: var(--r-ink);
+      border-radius: 0 0 8px 0;
+      top: 0;
+      left: 0;
+      padding: 6px 9px;
+      letter-spacing: 0;
+    }
+
+    /* ── Physics panel ── */
+    body.retro .physics-panel { background: var(--r-cream); border-right: 4px solid var(--r-ink); }
+    body.retro .phys-section-label { font-family: 'Press Start 2P', monospace; font-size: 9px; color: var(--r-ink); }
+    body.retro .phys-label { font-family: 'Pixelify Sans', monospace; font-style: normal; font-weight: 700; color: var(--r-ink); }
+    body.retro .phys-row-label { font-family: 'Pixelify Sans', monospace; font-weight: 700; color: var(--r-ink); }
+    body.retro .phys-unit { font-family: 'Press Start 2P', monospace; font-size: 7px; color: var(--r-text-dim); }
+    body.retro .phys-divider { background: var(--r-ink); height: 2px; opacity: .3; }
+    body.retro .phys-reset-btn {
+      background: var(--r-red);
+      color: #3a1012;
+      border: 3px solid var(--r-ink);
+      box-shadow: 0 4px 0 var(--r-red-d);
+      font-family: 'Pixelify Sans', monospace;
+      font-weight: 700;
+    }
+    body.retro .phys-reset-btn:hover { background: #ff7378; box-shadow: 0 5px 0 var(--r-red-d); color: #3a1012; }
+    body.retro .phys-reset-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--r-red-d); }
+    body.retro #physics-panel-close { background: transparent; border: none; box-shadow: none; color: var(--r-ink); }
+    body.retro #physics-panel-close:hover { background: rgba(0,0,0,0.08); transform: none; box-shadow: none; }
+
+    @media (min-width: 768px) {
+      body.retro .physics-panel { background: var(--r-cream); border-right-color: var(--r-ink); }
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+       FLOATING DOCK LAYOUT (all tabs) — top nav cluster, left + right docks
+       ════════════════════════════════════════════════════════════════════════ */
+    #nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: auto;
+      padding: 10px 16px 0;
+      background: transparent;
+      border-bottom: none;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 200;
+    }
+    #nav > * { pointer-events: auto; }
+    /* Centered tab cluster is the header; corner title would collide with the
+       quadrant badges, so hide the standalone title in the floating layout. */
+    #nav-title { display: none; }
+    #nav-tabs {
+      display: inline-flex;
+      gap: 4px;
+      padding: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    #app-body { height: 100vh; }
+
+    /* Pages fill the viewport; docks float over them */
+    #page-pendulum, #page-phasemap { position: relative; }
+
+    .dock {
+      position: fixed;
+      top: 78px;
+      z-index: 150;
+      width: 234px;
+      max-height: calc(100vh - 96px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+    .dock-left  { left: 14px; }
+    .dock-right { right: 14px; }
+
+    .dock-heading {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .dock-actions { display: flex; gap: 8px; }
+    .dock-actions button { flex: 1; justify-content: center; }
+    .dock .presets-select { width: 100%; }
+    .dock .phys-row select { flex: 1; }
+
+    /* Retro skin for the floating chrome (Pendulum tab) */
+    body.retro .dock {
+      background: var(--r-cream);
+      border: 3px solid var(--r-ink);
+      border-radius: 16px;
+      box-shadow: 0 6px 0 var(--r-ink), 0 16px 26px rgba(0, 0, 0, 0.45);
+    }
+    body.retro .dock-heading {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: var(--r-ink);
+    }
   </style>
 </head>
 
@@ -1194,105 +1476,16 @@
   <!-- ── Nav ── -->
   <nav id="nav">
     <span id="nav-title">Double Pendulum</span>
-    <button class="tab-btn active" id="tab-pendulum">Pendulum</button>
-    <button class="tab-btn" id="tab-phasemap">Phase Map</button>
-    <button class="tab-btn" id="tab-tech">How it works</button>
+    <div id="nav-tabs">
+      <button class="tab-btn active" id="tab-pendulum">Pendulum</button>
+      <button class="tab-btn" id="tab-phasemap">Phase Map</button>
+      <button class="tab-btn" id="tab-tech">How it works</button>
+    </div>
   </nav>
 
   <div id="app-body">
-  <div id="physics-panel" class="physics-panel" hidden>
-    <div class="physics-panel-handle"></div>
-    <div class="phys-panel-header">
-      <span class="phys-section-label">Settings</span>
-      <button id="physics-panel-close">✕</button>
-    </div>
-
-    <div id="panel-section-pendulum">
-      <div class="phys-panel-section">
-        <div class="phys-section-label">Starting position</div>
-        <div class="phys-row">
-          <span class="phys-label">θ₁</span>
-          <div class="num-ctrl">
-            <button class="num-btn" data-target="angle-theta1" data-dir="-1">−</button>
-            <input type="number" id="angle-theta1" value="75" min="-180" max="180" step="1" />
-            <button class="num-btn" data-target="angle-theta1" data-dir="1">+</button>
-          </div>
-          <span class="phys-unit">°</span>
-        </div>
-        <div class="phys-row">
-          <span class="phys-label">θ₂</span>
-          <div class="num-ctrl">
-            <button class="num-btn" data-target="angle-theta2" data-dir="-1">−</button>
-            <input type="number" id="angle-theta2" value="45" min="-180" max="180" step="1" />
-            <button class="num-btn" data-target="angle-theta2" data-dir="1">+</button>
-          </div>
-          <span class="phys-unit">°</span>
-        </div>
-      </div>
-      <div class="phys-divider"></div>
-      <div class="phys-panel-section">
-        <div class="phys-section-label">Simulation</div>
-        <div class="phys-row">
-          <span class="phys-row-label">Show</span>
-          <div id="showSelectContainer" class="custom-select"></div>
-        </div>
-        <div class="phys-row">
-          <span class="phys-row-label">Pendulums</span>
-          <div class="num-ctrl">
-            <button class="num-btn" data-target="numPendulums" data-dir="-1">−</button>
-            <input type="number" id="numPendulums" value="1" min="1" max="50" step="1" />
-            <button class="num-btn" data-target="numPendulums" data-dir="1">+</button>
-          </div>
-          <span class="help-icon" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle: tiny differences grow into completely different trajectories, revealing chaos.">?</span>
-        </div>
-        <div class="phys-row">
-          <span class="phys-row-label">Spread</span>
-          <div class="num-ctrl">
-            <button class="num-btn" data-target="deltaAngle" data-dir="-1">−</button>
-            <input type="number" id="deltaAngle" value="5" min="0.2" max="45" step="0.2" />
-            <button class="num-btn" data-target="deltaAngle" data-dir="1">+</button>
-          </div>
-          <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions: larger values spread them across a wider range.">?</span>
-        </div>
-      </div>
-    </div>
-
-    <div id="panel-section-phasemap" hidden>
-      <div class="phys-panel-section">
-        <div class="phys-section-label">Display</div>
-        <div class="phys-row">
-          <span class="phys-row-label">Resolution</span>
-          <select id="mapRes">
-            <option value="100">100 × 100</option>
-            <option value="200">200 × 200</option>
-            <option value="400">400 × 400</option>
-            <option value="800" selected>800 × 800</option>
-            <option value="1200">1200 × 1200</option>
-            <option value="1600">1600 × 1600</option>
-          </select>
-        </div>
-        <div class="phys-row">
-          <span class="phys-row-label">Mode</span>
-          <select id="mapMode">
-            <option value="theta2" selected>Live angle</option>
-            <option value="flipTime">Time to first flip</option>
-          </select>
-        </div>
-        <div class="phys-row">
-          <span class="phys-row-label">Palette</span>
-          <select id="mapPalette">
-            <option value="rainbow" selected>Rainbow</option>
-            <option value="lsd">LSD</option>
-            <option value="shrooms">Shrooms</option>
-            <option value="snow">Snow</option>
-            <option value="acid">Acid</option>
-            <option value="mdma">MDMA</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="phys-divider"></div>
+  <aside id="dock-right" class="dock dock-right">
+    <div class="dock-heading">Physics</div>
 
     <div class="phys-panel-section">
       <div class="phys-section-label">Rod &amp; Bob</div>
@@ -1351,25 +1544,97 @@
 
     <div class="phys-divider"></div>
     <button id="phys-reset-btn" class="phys-reset-btn">Reset to defaults</button>
-  </div>
+  </aside>
 
   <div id="app-content">
   <!-- ── Page 1: Pendulum ── -->
   <div id="page-pendulum">
 
-    <div class="ctrl-bar">
-      <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
-      <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
-      <div class="ctrl-sep"></div>
+    <aside class="dock dock-left">
+      <div class="dock-actions">
+        <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
+        <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
+      </div>
       <select id="presetsSelect" class="presets-select">
         <option value="" disabled selected>Presets</option>
       </select>
-      <button id="physicsToggleBtn" class="phys-toggle-btn"><svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="3" fill="currentColor"/><circle cx="16" cy="18" r="3" fill="currentColor"/></svg>Physics</button>
-      <div class="ctrl-sep"></div>
-      <span class="ctrl-label">Speed</span>
-      <input type="range" id="speed" min="0" max="10" value="5" />
-      <span class="ctrl-value" id="speedLabel">5</span>
-    </div>
+
+      <div class="phys-divider"></div>
+      <div class="phys-panel-section">
+        <div class="phys-section-label">Speed</div>
+        <div class="phys-row">
+          <input type="range" id="speed" min="0" max="10" value="5" style="flex:1" />
+          <span class="ctrl-value" id="speedLabel">5</span>
+        </div>
+      </div>
+
+      <div class="phys-divider"></div>
+      <div class="phys-panel-section">
+        <div class="phys-section-label">Display</div>
+        <div class="phys-row">
+          <span class="phys-row-label">Trail</span>
+          <select id="trailToggle">
+            <option value="off">Off</option>
+            <option value="on">On</option>
+          </select>
+        </div>
+        <div class="phys-row" id="trailLengthRow" hidden>
+          <span class="phys-row-label">Length</span>
+          <input type="range" id="trailLengthSlider" min="1" max="10" step="1" value="5" style="flex:1;accent-color:rgba(255,255,255,0.7)">
+          <span id="trailLengthVal" style="min-width:18px;text-align:right;font-size:11px;color:var(--text-muted)">5</span>
+        </div>
+      </div>
+
+      <div class="phys-divider"></div>
+      <div class="phys-panel-section">
+        <div class="phys-section-label">Starting position</div>
+        <div class="phys-row">
+          <span class="phys-label">θ₁</span>
+          <div class="num-ctrl">
+            <button class="num-btn" data-target="angle-theta1" data-dir="-1">−</button>
+            <input type="number" id="angle-theta1" value="75" min="-180" max="180" step="1" />
+            <button class="num-btn" data-target="angle-theta1" data-dir="1">+</button>
+          </div>
+          <span class="phys-unit">°</span>
+        </div>
+        <div class="phys-row">
+          <span class="phys-label">θ₂</span>
+          <div class="num-ctrl">
+            <button class="num-btn" data-target="angle-theta2" data-dir="-1">−</button>
+            <input type="number" id="angle-theta2" value="45" min="-180" max="180" step="1" />
+            <button class="num-btn" data-target="angle-theta2" data-dir="1">+</button>
+          </div>
+          <span class="phys-unit">°</span>
+        </div>
+      </div>
+
+      <div class="phys-divider"></div>
+      <div class="phys-panel-section">
+        <div class="phys-section-label">Simulation</div>
+        <div class="phys-row">
+          <span class="phys-row-label">Show</span>
+          <div id="showSelectContainer" class="custom-select"></div>
+        </div>
+        <div class="phys-row">
+          <span class="phys-row-label">Pendulums</span>
+          <div class="num-ctrl">
+            <button class="num-btn" data-target="numPendulums" data-dir="-1">−</button>
+            <input type="number" id="numPendulums" value="1" min="1" max="50" step="1" />
+            <button class="num-btn" data-target="numPendulums" data-dir="1">+</button>
+          </div>
+          <span class="help-icon" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle: tiny differences grow into completely different trajectories, revealing chaos.">?</span>
+        </div>
+        <div class="phys-row">
+          <span class="phys-row-label">Spread</span>
+          <div class="num-ctrl">
+            <button class="num-btn" data-target="deltaAngle" data-dir="-1">−</button>
+            <input type="number" id="deltaAngle" value="5" min="0.2" max="45" step="0.2" />
+            <button class="num-btn" data-target="deltaAngle" data-dir="1">+</button>
+          </div>
+          <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions: larger values spread them across a wider range.">?</span>
+        </div>
+      </div>
+    </aside>
 
     <div id="pendulum-grid">
       <div class="quad-cell">
@@ -1404,18 +1669,56 @@
   <!-- ── Page 2: Phase Map ── -->
   <div id="page-phasemap">
 
-    <div class="ctrl-bar">
-      <button id="mapPlayPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
-      <button id="mapResetView"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
-      <div class="ctrl-sep"></div>
-      <button id="mapPhysicsToggleBtn" class="phys-toggle-btn"><svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="3" fill="currentColor"/><circle cx="16" cy="18" r="3" fill="currentColor"/></svg>Physics</button>
-      <div class="ctrl-sep"></div>
-      <span class="ctrl-label">Speed</span>
-      <input type="range" id="mapSpeed" min="1" max="50" value="10" />
-      <span class="ctrl-value" id="mapSpeedLabel">10</span>
-      <div class="ctrl-spacer"></div>
+    <aside class="dock dock-left">
+      <div class="dock-actions">
+        <button id="mapPlayPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
+        <button id="mapResetView"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
+      </div>
       <button id="mapExportBtn">↓ Export PNG</button>
-    </div>
+
+      <div class="phys-divider"></div>
+      <div class="phys-panel-section">
+        <div class="phys-section-label">Speed</div>
+        <div class="phys-row">
+          <input type="range" id="mapSpeed" min="1" max="50" value="10" style="flex:1" />
+          <span class="ctrl-value" id="mapSpeedLabel">10</span>
+        </div>
+      </div>
+
+      <div class="phys-divider"></div>
+      <div class="phys-panel-section">
+        <div class="phys-section-label">Display</div>
+        <div class="phys-row">
+          <span class="phys-row-label">Resolution</span>
+          <select id="mapRes">
+            <option value="100">100 × 100</option>
+            <option value="200">200 × 200</option>
+            <option value="400">400 × 400</option>
+            <option value="800" selected>800 × 800</option>
+            <option value="1200">1200 × 1200</option>
+            <option value="1600">1600 × 1600</option>
+          </select>
+        </div>
+        <div class="phys-row">
+          <span class="phys-row-label">Mode</span>
+          <select id="mapMode">
+            <option value="theta2" selected>Live angle</option>
+            <option value="flipTime">Time to first flip</option>
+          </select>
+        </div>
+        <div class="phys-row">
+          <span class="phys-row-label">Palette</span>
+          <select id="mapPalette">
+            <option value="rainbow" selected>Rainbow</option>
+            <option value="lsd">LSD</option>
+            <option value="shrooms">Shrooms</option>
+            <option value="snow">Snow</option>
+            <option value="acid">Acid</option>
+            <option value="mdma">MDMA</option>
+          </select>
+        </div>
+      </div>
+    </aside>
 
     <div id="phasemap-grid">
       <div class="quad-cell">

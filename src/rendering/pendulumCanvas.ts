@@ -33,10 +33,13 @@ export class PendulumCanvas {
     highlight: number | 'all' = 'all',
     hint?: AngleHint,
     physicsLabels?: { m1: number; m2: number } | null,
+    trails?: PendulumState[][] | null,
+    trailLength = 5,
   ): void {
     const { ctx, cx, cy } = this;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
+    if (trails) this.drawTrails(trails, L1, L2, highlight, trailLength);
     this.drawRodMode(states, L1, L2, highlight);
 
     const showDual = typeof highlight === 'number' || states.length === 1;
@@ -160,6 +163,53 @@ export class PendulumCanvas {
     const bob1x = cx + Math.sin(state.theta1) * S * L1;
     const bob1y = cy + Math.cos(state.theta1) * S * L1;
     drawArc(bob1x, bob1y, wrap(state.theta2), label2);
+  }
+
+  private drawTrails(
+    trails: PendulumState[][],
+    L1: number,
+    L2: number,
+    highlight: number | 'all',
+    trailLength: number,   // 1–10 relative scale
+  ): void {
+    const { ctx, cx, cy } = this;
+    const S = pendulumScale(ctx.canvas.width, ctx.canvas.height, L1, L2);
+    const n = trails.length;
+    const base = n <= 1 ? 600 : n <= 5 ? 400 : n <= 15 ? 200 : 80;
+    const renderLen = Math.round(base * (trailLength / 5));
+    const BUCKETS = 14;
+    const order = drawOrder(n, highlight);
+
+    ctx.lineWidth = 1;
+    ctx.lineCap = 'round';
+
+    for (const i of order) {
+      const trail = trails[i];
+      const start = Math.max(0, trail.length - renderLen);
+      const segCount = trail.length - start - 1;
+      if (segCount < 1) continue;
+
+      const maxAlpha = highlight === 'all'
+        ? (n <= 1 ? 0.38 : 0.38 * (1 - 0.6 * (i / Math.max(n - 1, 1))))
+        : (i === (highlight as number) ? 0.38 : 0.02);
+
+      for (let b = 0; b < BUCKETS; b++) {
+        const alpha = maxAlpha * ((b + 0.5) / BUCKETS);
+        const segStart = start + Math.floor((b / BUCKETS) * segCount);
+        const segEnd   = start + Math.floor(((b + 1) / BUCKETS) * segCount);
+        if (segEnd <= segStart) continue;
+
+        ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+        ctx.beginPath();
+        for (let j = segStart; j <= segEnd; j++) {
+          const { x2, y2 } = pendulumPositions(trail[j], L1, L2);
+          const sx = cx + x2 * S;
+          const sy = cy - y2 * S;
+          if (j === segStart) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+      }
+    }
   }
 
   private drawRodMode(

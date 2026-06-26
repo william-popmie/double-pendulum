@@ -25,6 +25,8 @@ export class PhaseMapView implements View {
   private physics: PhysicsParams = { ...DEFAULT_PHYSICS };
 
   paused = true;
+  showTrail = false;
+  trailLength = 5;
 
   // Probe state
   private readonly probePendulumCanvas: PendulumCanvas;
@@ -35,6 +37,7 @@ export class PhaseMapView implements View {
   private stagingBuffer!: GPUBuffer;
   private probeIndex: number | null = null;
   private probeState: PendulumState | null = null;
+  private probeTrail: PendulumState[] = [];
   private readInFlight = false;
 
   constructor(
@@ -125,6 +128,7 @@ export class PhaseMapView implements View {
   resetProbe(): void {
     this.probeIndex = null;
     this.probeState = null;
+    this.probeTrail = [];
     this.probePhaseCanvas.reset(1);
   }
 
@@ -141,7 +145,10 @@ export class PhaseMapView implements View {
     }
 
     if (this.probeState) {
-      this.probePendulumCanvas.draw([this.probeState], this.physics.L1, this.physics.L2, 'all');
+      this.probeTrail.push(this.probeState);
+      if (this.probeTrail.length > 600) this.probeTrail.splice(0, 60);
+      const trails = this.showTrail ? [this.probeTrail] : null;
+      this.probePendulumCanvas.draw([this.probeState], this.physics.L1, this.physics.L2, 'all', undefined, null, trails, this.trailLength);
       this.probePhaseCanvas.addPoints([this.probeState]);
       this.probePhaseCanvas.draw([this.probeState], 'all');
     } else {
@@ -179,6 +186,7 @@ export class PhaseMapView implements View {
     const j = Math.round(((clientY - rect.top)  / rect.height) * (this.gridRes - 1));
     this.probeIndex = j * this.gridRes + i;
     this.probeState = null;
+    this.probeTrail = [];
     this.probePhaseCanvas.reset(1);
     const theta1 = this.region.theta1Min + (i / (this.gridRes - 1)) * (this.region.theta1Max - this.region.theta1Min);
     const theta2 = this.region.theta2Max - (j / (this.gridRes - 1)) * (this.region.theta2Max - this.region.theta2Min);

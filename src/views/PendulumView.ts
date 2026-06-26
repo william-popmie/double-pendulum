@@ -23,6 +23,8 @@ export class PendulumView implements View {
   paused = true;
   stepsPerFrame = 5;
   showPhysicsLabels = false;
+  showTrail = false;
+  trailLength = 5;
   onFirstDrag?: () => void;
   onAnglesChanged?: (theta1Deg: number, theta2Deg: number) => void;
 
@@ -185,7 +187,8 @@ export class PendulumView implements View {
 
   private render(): void {
     const labels = this.showPhysicsLabels ? { m1: this.physics.m1, m2: this.physics.m2 } : null;
-    this.pendulumCanvas.draw(this.sim.states, this.physics.L1, this.physics.L2, this.highlight, this.hintState ?? undefined, labels);
+    const trails = this.showTrail ? this.trails : null;
+    this.pendulumCanvas.draw(this.sim.states, this.physics.L1, this.physics.L2, this.highlight, this.hintState ?? undefined, labels, trails, this.trailLength);
     this.phaseCanvas.draw(this.sim.states, this.highlight);
     this.t1Canvas.draw(this.trails, this.highlight);
     this.t2Canvas.draw(this.trails, this.highlight);

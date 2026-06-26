@@ -59,12 +59,8 @@ async function init(): Promise<void> {
   const noGpuMsg         = document.getElementById('no-gpu-msg')            as HTMLElement;
   const probeMapHint     = document.getElementById('probe-map-hint')        as HTMLElement;
 
-  // Physics panel refs
-  const physicsToggleBtn    = document.getElementById('physicsToggleBtn')    as HTMLButtonElement;
-  const mapPhysicsToggleBtn = document.getElementById('mapPhysicsToggleBtn') as HTMLButtonElement;
-  const physicsPanel        = document.getElementById('physics-panel')       as HTMLElement;
-  const physicsBackdrop     = document.getElementById('physics-backdrop')    as HTMLElement;
-  const physicsPanelClose   = document.getElementById('physics-panel-close') as HTMLButtonElement;
+  // Physics dock refs
+  const dockRight           = document.getElementById('dock-right')          as HTMLElement;
   const physL1Input         = document.getElementById('phys-L1')             as HTMLInputElement;
   const physL2Input         = document.getElementById('phys-L2')             as HTMLInputElement;
   const physM1Input         = document.getElementById('phys-m1')             as HTMLInputElement;
@@ -72,6 +68,10 @@ async function init(): Promise<void> {
   const physDampingInput    = document.getElementById('phys-damping')        as HTMLInputElement;
   const physResetBtn        = document.getElementById('phys-reset-btn')      as HTMLButtonElement;
   const presetsSelect       = document.getElementById('presetsSelect')!      as HTMLSelectElement;
+  const trailToggle         = document.getElementById('trailToggle')!        as HTMLSelectElement;
+  const trailLengthRow     = document.getElementById('trailLengthRow')!     as HTMLElement;
+  const trailLengthSlider  = document.getElementById('trailLengthSlider')!  as HTMLInputElement;
+  const trailLengthVal     = document.getElementById('trailLengthVal')!     as HTMLElement;
 
   // Export modal refs
   const mapExportBtn        = document.getElementById('mapExportBtn')          as HTMLButtonElement;
@@ -120,51 +120,9 @@ async function init(): Promise<void> {
     resetPresetLabel();
   };
 
-  // ── Physics panel ─────────────────────────────────────────────────────────
-  let physicsEverOpened = false;
-  const mobileMQ = window.matchMedia('(max-width: 767px)');
-
-  function setPhysicsPanelOpen(open: boolean): void {
-    physicsPanel.hidden = !open;
-    physicsToggleBtn.classList.toggle('active', open);
-    mapPhysicsToggleBtn.classList.toggle('active', open);
-    pendulumView.showPhysicsLabels = open;
-    physicsBackdrop.classList.toggle('active', open && mobileMQ.matches);
-    if (open) {
-      dismissTileHints();
-      presetsSelect.classList.remove('phys-btn-glow');
-      if (!physicsEverOpened) {
-        physicsEverOpened = true;
-      }
-      if (mobileMQ.matches) {
-        const closeOnOutside = (ev: PointerEvent) => {
-          if (!physicsPanel.contains(ev.target as Node) &&
-              ev.target !== physicsToggleBtn &&
-              ev.target !== mapPhysicsToggleBtn) {
-            setPhysicsPanelOpen(false);
-            document.removeEventListener('pointerdown', closeOnOutside, true);
-          }
-        };
-        document.addEventListener('pointerdown', closeOnOutside, true);
-      }
-    }
-  }
-
-  mobileMQ.addEventListener('change', () => {
-    if (!physicsPanel.hidden) {
-      physicsBackdrop.classList.toggle('active', mobileMQ.matches);
-    }
-  });
-
-  const physBtnClickHandler = (e: MouseEvent): void => {
-    e.stopPropagation();
-    setPhysicsPanelOpen(physicsPanel.hasAttribute('hidden'));
-  };
-
-  physicsPanelClose.addEventListener('click', () => setPhysicsPanelOpen(false));
-  physicsBackdrop.addEventListener('click', () => setPhysicsPanelOpen(false));
-  physicsToggleBtn.addEventListener('click', physBtnClickHandler);
-  mapPhysicsToggleBtn.addEventListener('click', physBtnClickHandler);
+  // ── Physics dock (always visible on simulator tabs) ───────────────────────
+  // Knobs live in the right dock now, so keep the canvas itself uncluttered.
+  pendulumView.showPhysicsLabels = false;
 
   function readPhysics() {
     return {
@@ -203,6 +161,21 @@ async function init(): Promise<void> {
     applyPhysics();
     resetPresetLabel();
     posthog.capture('physics parameters reset');
+  });
+
+  trailToggle.addEventListener('change', () => {
+    const on = trailToggle.value === 'on';
+    pendulumView.showTrail = on;
+    if (phaseMapView) phaseMapView.showTrail = on;
+    trailLengthRow.hidden = !on;
+    posthog.capture('trail toggled', { enabled: on });
+  });
+
+  trailLengthSlider.addEventListener('input', () => {
+    const v = Number(trailLengthSlider.value);
+    trailLengthVal.textContent = String(v);
+    pendulumView.trailLength = v;
+    if (phaseMapView) phaseMapView.trailLength = v;
   });
 
   // ── Presets ───────────────────────────────────────────────────────────────
@@ -501,15 +474,16 @@ async function init(): Promise<void> {
   }
 
   // ── Tab navigation ────────────────────────────────────────────────────────
-  const panelSectionPendulum  = document.getElementById('panel-section-pendulum')  as HTMLElement;
-  const panelSectionPhasemap  = document.getElementById('panel-section-phasemap')  as HTMLElement;
-
   let currentPage: 'pendulum' | 'phasemap' | 'tech' = 'pendulum';
   pendulumView.activate();
+  document.body.classList.add('retro');  // Pendulum tab is the default active page
 
   function switchTo(page: 'pendulum' | 'phasemap' | 'tech'): void {
     if (page === currentPage) return;
     currentPage = page;
+
+    // Retro theme is scoped to the Pendulum tab only
+    document.body.classList.toggle('retro', page === 'pendulum');
 
     pagePendulum.style.display = 'none';
     pagePhasemap.style.display = 'none';
@@ -518,8 +492,8 @@ async function init(): Promise<void> {
     tabPhasemap.classList.remove('active');
     tabTech.classList.remove('active');
 
-    panelSectionPendulum.hidden = page !== 'pendulum';
-    panelSectionPhasemap.hidden = page !== 'phasemap';
+    // General physics dock shows on the two simulator tabs, hides on "How it works"
+    dockRight.style.display = page === 'tech' ? 'none' : '';
 
     if (page === 'pendulum') {
       pagePendulum.style.display = 'flex';
@@ -533,7 +507,6 @@ async function init(): Promise<void> {
       pendulumView.deactivate();
       phaseMapView?.activate();
     } else {
-      setPhysicsPanelOpen(false);
       pageTech.style.display = 'flex';
       tabTech.classList.add('active');
       pendulumView.deactivate();
