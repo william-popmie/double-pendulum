@@ -1198,7 +1198,8 @@
       --r-cream:    #f4ecd6;
       --r-cream-2:  #e7dcbe;
       --r-cream-hi: #fff7e3;
-      --r-ink:      #20212c;
+      --r-ink:      #241c12;   /* warm espresso — borders, frames, text on cream */
+      --r-felt:     #181109;   /* warm near-black for the canvas tiles */
       --r-text:     #34302a;
       --r-text-dim: #8a7f68;
       --r-red:      #ff5a5f;
@@ -1209,30 +1210,15 @@
       --r-gold-d:   #cf8412;
       --r-green:    #5fc56a;
       --r-green-d:  #3f9b4c;
-      background: radial-gradient(ellipse at 50% -10%, #3c3e52 0%, #2c2e3e 45%, #232433 100%);
+      background-color: #d7c69e;
+      background-image: radial-gradient(rgba(60, 40, 15, 0.06) 1px, transparent 1.6px);
+      background-size: 18px 18px;
       font-family: 'Pixelify Sans', monospace;
-    }
-
-    /* CRT scanlines + vignette overlay */
-    body.retro::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 1000;
-      background:
-        repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px),
-        radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(0,0,0,0.30) 100%);
     }
 
     /* ── Nav ── */
     body.retro #nav { gap: 7px; }
-    body.retro #nav-tabs {
-      background: var(--r-cream);
-      border: 3px solid var(--r-ink);
-      border-radius: 12px;
-      box-shadow: 0 4px 0 var(--r-ink);
-    }
+    body.retro #nav-tabs { gap: 8px; background: transparent; border: none; box-shadow: none; }
     body.retro #nav-title {
       font-family: 'Press Start 2P', monospace;
       font-size: 12px;
@@ -1349,13 +1335,30 @@
     body.retro .num-btn:hover { background: rgba(0,0,0,0.08); transform: none; box-shadow: none; color: var(--r-ink); }
     body.retro .num-btn:active { background: rgba(0,0,0,0.16); transform: none; box-shadow: none; }
 
-    /* ── Pendulum grid: chunky framed tiles ── */
-    body.retro #pendulum-grid { background: var(--r-ink); gap: 4px; padding: 4px; }
+    /* ── Four dark canvases as separate floating cards on the background ───── */
+    body.retro #pendulum-grid,
+    body.retro #phasemap-grid {
+      background: transparent;
+      gap: 20px;
+      padding: 0;
+      border: none;
+      box-shadow: none;
+    }
     body.retro .quad-cell {
-      border: 3px solid var(--r-ink);
-      border-radius: 10px;
-      background: #15161e;
+      border: 2px solid rgba(0, 0, 0, 0.45);
+      border-radius: 14px;
+      background: var(--r-felt);
       overflow: hidden;
+      box-shadow: 0 12px 26px rgba(40, 26, 8, 0.35), 0 2px 0 rgba(0, 0, 0, 0.4);
+    }
+    /* Faint scanline keeps the retro vibe without the bezel */
+    body.retro .quad-cell::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 3px);
     }
     body.retro .quad-label {
       font-family: 'Press Start 2P', monospace;
@@ -1413,11 +1416,10 @@
     #nav-title { display: none; }
     #nav-tabs {
       display: inline-flex;
-      gap: 4px;
-      padding: 6px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      gap: 8px;
+      padding: 0;
+      background: transparent;
+      border: none;
     }
 
     #app-body { height: 100vh; }
@@ -1425,13 +1427,46 @@
     /* Pages fill the viewport; docks float over them */
     #page-pendulum, #page-phasemap { position: relative; }
 
-    .dock {
+    /* Board is inset only on the left (where the rail flanks it); the right
+       side is free for more screen real estate. The rail overlaps the board's
+       left edge slightly for the "floating on top" look. */
+    #pendulum-grid,
+    #phasemap-grid {
+      margin: 74px 24px 26px 268px;
+      overflow: visible;
+    }
+
+    @media (max-width: 1180px) {
+      #left-rail { width: 200px; }
+      #pendulum-grid, #phasemap-grid { margin: 70px 20px 22px 236px; }
+    }
+    @media (max-width: 860px) {
+      /* Too narrow to flank the board — let the rail overlay the edge instead */
+      #pendulum-grid, #phasemap-grid { margin: 66px 12px 12px 12px; }
+    }
+
+    /* Left rail: a vertical stack of floating cards (page controls + physics) */
+    #left-rail {
       position: fixed;
+      left: 14px;
       top: 78px;
-      z-index: 150;
+      bottom: 14px;
       width: 234px;
-      max-height: calc(100vh - 96px);
+      z-index: 150;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
       overflow-y: auto;
+      pointer-events: none;          /* gaps let canvas drags through */
+      scrollbar-width: none;
+    }
+    #left-rail::-webkit-scrollbar { display: none; }
+    #left-rail > * { pointer-events: auto; }
+    #left-rail > [hidden] { display: none; }
+
+    .dock {
+      width: 100%;
+      flex: 0 0 auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -1441,8 +1476,6 @@
       border-radius: 14px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
     }
-    .dock-left  { left: 14px; }
-    .dock-right { right: 14px; }
 
     .dock-heading {
       font-size: 11px;
@@ -1456,6 +1489,11 @@
     .dock .presets-select { width: 100%; }
     .dock .phys-row select { flex: 1; }
 
+    /* Compact controls so two-per-row physics fits the rail width */
+    .dock .phys-label { min-width: 0; }
+    .dock .num-ctrl input[type="number"] { width: 30px; }
+    .dock .num-btn { min-width: 18px; padding: 0 5px; }
+
     /* Retro skin for the floating chrome (Pendulum tab) */
     body.retro .dock {
       background: var(--r-cream);
@@ -1466,6 +1504,19 @@
     body.retro .dock-heading {
       font-family: 'Press Start 2P', monospace;
       font-size: 9px;
+      color: var(--r-ink);
+    }
+
+    /* Presets: fun yellow to make it pop */
+    body.retro .presets-select {
+      background: var(--r-gold);
+      color: var(--r-ink);
+      box-shadow: 0 4px 0 var(--r-gold-d);
+      font-weight: 700;
+    }
+    body.retro .presets-select:hover {
+      background: #ffc14d;
+      box-shadow: 0 5px 0 var(--r-gold-d);
       color: var(--r-ink);
     }
   </style>
@@ -1496,16 +1547,12 @@
           <input type="number" id="phys-L1" value="1.0" min="0.1" max="5" step="0.1" />
           <button class="num-btn" data-target="phys-L1" data-dir="1">+</button>
         </div>
-        <span class="phys-unit">m</span>
-      </div>
-      <div class="phys-row">
         <span class="phys-label">m₁</span>
         <div class="num-ctrl">
           <button class="num-btn" data-target="phys-m1" data-dir="-1">−</button>
           <input type="number" id="phys-m1" value="1.0" min="0.1" max="10" step="0.1" />
           <button class="num-btn" data-target="phys-m1" data-dir="1">+</button>
         </div>
-        <span class="phys-unit">kg</span>
       </div>
       <div class="phys-row">
         <span class="phys-label">L₂</span>
@@ -1514,16 +1561,12 @@
           <input type="number" id="phys-L2" value="1.0" min="0.1" max="5" step="0.1" />
           <button class="num-btn" data-target="phys-L2" data-dir="1">+</button>
         </div>
-        <span class="phys-unit">m</span>
-      </div>
-      <div class="phys-row">
         <span class="phys-label">m₂</span>
         <div class="num-ctrl">
           <button class="num-btn" data-target="phys-m2" data-dir="-1">−</button>
           <input type="number" id="phys-m2" value="1.0" min="0.1" max="10" step="0.1" />
           <button class="num-btn" data-target="phys-m2" data-dir="1">+</button>
         </div>
-        <span class="phys-unit">kg</span>
       </div>
     </div>
 
@@ -1550,7 +1593,7 @@
   <!-- ── Page 1: Pendulum ── -->
   <div id="page-pendulum">
 
-    <aside class="dock dock-left">
+    <aside id="left-pendulum" class="dock dock-left">
       <div class="dock-actions">
         <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
         <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
@@ -1669,7 +1712,7 @@
   <!-- ── Page 2: Phase Map ── -->
   <div id="page-phasemap">
 
-    <aside class="dock dock-left">
+    <aside id="left-phasemap" class="dock dock-left">
       <div class="dock-actions">
         <button id="mapPlayPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
         <button id="mapResetView"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>

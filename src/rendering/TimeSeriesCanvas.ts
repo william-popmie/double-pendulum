@@ -1,6 +1,6 @@
 import type { PendulumState } from '../core/types';
 import { DEFAULT_SIM } from '../core/config';
-import { pendulumColor } from './colors';
+import { pendulumColor, CHROME } from './colors';
 import { wrap } from '../core/math';
 
 const PAD  = { top: 20, right: 20, bottom: 36, left: 48 };
@@ -93,14 +93,14 @@ export class TimeSeriesCanvas {
     const goingUp  = tipY < zeroY;
     const headSize = 5;
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.strokeStyle = CHROME.marker;
     ctx.lineWidth   = 2.5;
     ctx.beginPath();
     ctx.moveTo(x, zeroY);
     ctx.lineTo(x, tipY + (goingUp ? headSize : -headSize));
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillStyle = CHROME.marker;
     ctx.beginPath();
     ctx.moveTo(x, tipY);
     ctx.lineTo(x - headSize / 2, tipY + (goingUp ? headSize : -headSize));
@@ -108,7 +108,7 @@ export class TimeSeriesCanvas {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle    = 'rgba(255,255,255,0.95)';
+    ctx.fillStyle    = CHROME.marker;
     ctx.font         = 'italic bold 16px serif';
     ctx.textAlign    = 'left';
     ctx.textBaseline = 'middle';
@@ -122,22 +122,22 @@ export class TimeSeriesCanvas {
     const zeroY   = PAD.top + plotH / 2;
     const elapsed = trailLen * DEFAULT_SIM.dt;
 
-    ctx.strokeStyle = '#353535';
+    ctx.strokeStyle = CHROME.axis;
     ctx.lineWidth   = 1;
     ctx.strokeRect(PAD.left, PAD.top, plotW, plotH);
 
     ctx.setLineDash([3, 4]);
-    ctx.strokeStyle = '#222';
+    ctx.strokeStyle = CHROME.gridMinor;
     for (const frac of [-1, 0, 1]) {
       const y = PAD.top + plotH / 2 - frac * plotH / 2;
       ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + plotW, y); ctx.stroke();
     }
     ctx.setLineDash([]);
 
-    ctx.strokeStyle = '#353535';
+    ctx.strokeStyle = CHROME.axis;
     ctx.beginPath(); ctx.moveTo(PAD.left, zeroY); ctx.lineTo(PAD.left + plotW, zeroY); ctx.stroke();
 
-    ctx.fillStyle = '#666';
+    ctx.fillStyle = CHROME.label;
     ctx.font      = '10px monospace';
     ctx.textAlign = 'right';
     ctx.fillText('+180°', PAD.left - 4, PAD.top + 4);
@@ -214,14 +214,14 @@ export class TimeSeriesCanvas {
     const goingRight = tipX > centerX;
     const headSize   = 5;
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.strokeStyle = CHROME.marker;
     ctx.lineWidth   = 2.5;
     ctx.beginPath();
     ctx.moveTo(centerX, y);
     ctx.lineTo(tipX - (goingRight ? headSize : -headSize), y);
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillStyle = CHROME.marker;
     ctx.beginPath();
     ctx.moveTo(tipX, y);
     ctx.lineTo(tipX - (goingRight ? headSize : -headSize), y - headSize / 2);
@@ -229,7 +229,7 @@ export class TimeSeriesCanvas {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle    = 'rgba(255,255,255,0.95)';
+    ctx.fillStyle    = CHROME.marker;
     ctx.font         = 'italic bold 16px serif';
     ctx.textAlign    = goingRight ? 'left' : 'right';
     ctx.textBaseline = 'bottom';
@@ -239,24 +239,24 @@ export class TimeSeriesCanvas {
   private drawRotatedAxes(plotW: number, plotH: number): void {
     const { ctx } = this;
 
-    ctx.strokeStyle = '#353535';
+    ctx.strokeStyle = CHROME.axis;
     ctx.lineWidth   = 1;
     ctx.strokeRect(RPAD.left, RPAD.top, plotW, plotH);
 
     ctx.setLineDash([3, 4]);
-    ctx.strokeStyle = '#222';
+    ctx.strokeStyle = CHROME.gridMinor;
     for (const frac of [-1, 0, 1]) {
       const x = RPAD.left + plotW / 2 + frac * plotW / 2;
       ctx.beginPath(); ctx.moveTo(x, RPAD.top); ctx.lineTo(x, RPAD.top + plotH); ctx.stroke();
     }
     ctx.setLineDash([]);
 
-    ctx.strokeStyle = '#353535';
+    ctx.strokeStyle = CHROME.axis;
     const cx = RPAD.left + plotW / 2;
     ctx.beginPath(); ctx.moveTo(cx, RPAD.top); ctx.lineTo(cx, RPAD.top + plotH); ctx.stroke();
 
     const labelY = RPAD.top + plotH + 14;
-    ctx.fillStyle = '#666';
+    ctx.fillStyle = CHROME.label;
     ctx.font      = '10px monospace';
     ctx.textAlign = 'left';   ctx.fillText('−180°', RPAD.left, labelY);
     ctx.textAlign = 'center'; ctx.fillText('0°', RPAD.left + plotW / 2, labelY);

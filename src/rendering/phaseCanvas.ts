@@ -1,5 +1,5 @@
 import type { PendulumState } from '../core/types';
-import { pendulumColor, drawOrder } from './colors';
+import { pendulumColor, drawOrder, CHROME } from './colors';
 import { wrap } from '../core/math';
 import { TRAIL_MAX, TRAIL_TRIM, MAX_RENDER_POINTS } from '../core/config';
 
@@ -96,7 +96,7 @@ export class PhaseCanvas {
 
         this.ctx.save();
         this.ctx.setLineDash([3, 5]);
-        this.ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        this.ctx.strokeStyle = CHROME.marker;
         this.ctx.lineWidth = 1;
         this.ctx.beginPath();
         this.ctx.moveTo(pad, sy);  this.ctx.lineTo(sx, sy);   // horizontal → β (Y) axis
@@ -104,7 +104,7 @@ export class PhaseCanvas {
         this.ctx.stroke();
         this.ctx.setLineDash([]);
 
-        this.ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        this.ctx.fillStyle = CHROME.marker;
         this.ctx.beginPath();
         this.ctx.arc(sx, sy, 4, 0, Math.PI * 2);
         this.ctx.fill();
@@ -126,8 +126,8 @@ export class PhaseCanvas {
     const pad = 30;
     const tickLen = 5;
 
-    ctx.strokeStyle = '#555';
-    ctx.fillStyle = '#aaa';
+    ctx.strokeStyle = CHROME.axis;
+    ctx.fillStyle = CHROME.label;
     ctx.lineWidth = 1;
     ctx.font = '11px monospace';
     ctx.textAlign = 'center';
@@ -148,7 +148,7 @@ export class PhaseCanvas {
       const [tx] = this.toScreen(angle, 0);
       const [, ty] = this.toScreen(0, angle);
 
-      ctx.fillStyle = '#777';
+      ctx.fillStyle = CHROME.labelDim;
       ctx.beginPath();
       ctx.moveTo(tx, pad); ctx.lineTo(tx, pad + tickLen);
       ctx.moveTo(tx, h - pad); ctx.lineTo(tx, h - pad - tickLen);

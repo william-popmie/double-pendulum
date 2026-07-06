@@ -91,6 +91,16 @@ async function init(): Promise<void> {
   const exportCloseBtn      = document.getElementById('export-close')          as HTMLButtonElement;
   const exportCancelBtn     = document.getElementById('export-cancel')         as HTMLButtonElement;
 
+  // ── Left rail: stack page-specific dock above the general physics dock ──────
+  const appBodyEl     = document.getElementById('app-body')!;
+  const leftPendDock  = document.getElementById('left-pendulum')!;
+  const leftPhaseDock = document.getElementById('left-phasemap')!;
+  const leftRail = document.createElement('aside');
+  leftRail.id = 'left-rail';
+  appBodyEl.prepend(leftRail);
+  leftRail.append(leftPendDock, leftPhaseDock, dockRight);
+  leftPhaseDock.hidden = true;  // pendulum tab is active by default
+
   // ── Pendulum view ─────────────────────────────────────────────────────────
   const pendulumView = new PendulumView(
     pendCanvasEl, phaseCanvasEl, t1CanvasEl, t2CanvasEl,
@@ -492,8 +502,11 @@ async function init(): Promise<void> {
     tabPhasemap.classList.remove('active');
     tabTech.classList.remove('active');
 
-    // General physics dock shows on the two simulator tabs, hides on "How it works"
-    dockRight.style.display = page === 'tech' ? 'none' : '';
+    // Left rail (page controls + physics) shows on the simulator tabs; the
+    // page-specific dock swaps with the tab. Whole rail hides on "How it works".
+    leftRail.style.display = page === 'tech' ? 'none' : '';
+    leftPendDock.hidden = page !== 'pendulum';
+    leftPhaseDock.hidden = page !== 'phasemap';
 
     if (page === 'pendulum') {
       pagePendulum.style.display = 'flex';

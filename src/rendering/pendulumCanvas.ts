@@ -1,6 +1,6 @@
 import { pendulumPositions } from '../physics/equations';
 import type { PendulumState } from '../core/types';
-import { pendulumColor, drawOrder } from './colors';
+import { pendulumColor, drawOrder, CHROME } from './colors';
 import { wrap } from '../core/math';
 
 const BOB_RADIUS = 8;
@@ -52,7 +52,7 @@ export class PendulumCanvas {
     // Pivot — matches focused pendulum, grey in multi-pendulum 'all' mode
     const pivotColor = typeof highlight === 'number'
       ? pendulumColor(highlight, states.length)
-      : 'rgba(255,255,255,0.85)';
+      : CHROME.marker;
     ctx.fillStyle = pivotColor;
     ctx.beginPath();
     ctx.arc(cx, cy, PIVOT_RADIUS, 0, Math.PI * 2);
@@ -121,7 +121,7 @@ export class PendulumCanvas {
       ctx.save();
 
       ctx.setLineDash([3, 4]);
-      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.strokeStyle = CHROME.gridMajor;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(px, py - 8);
@@ -135,7 +135,7 @@ export class PendulumCanvas {
       const arcStart = Math.min(rodA, vertA);
       const arcEnd   = Math.max(rodA, vertA);
 
-      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.strokeStyle = CHROME.label;
       ctx.lineWidth = 1.8;
       ctx.beginPath();
       ctx.arc(px, py, arcR, arcStart, arcEnd, false);
@@ -147,7 +147,7 @@ export class PendulumCanvas {
       const ly = py + Math.sin(midA) * labelR;
 
       const isDeg = label.endsWith('°');
-      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.fillStyle = CHROME.marker;
       ctx.font = isDeg ? 'bold 11px monospace' : 'italic bold 16px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -225,7 +225,7 @@ export class PendulumCanvas {
     const lineW = n <= 5 ? 2 : 1.5;
 
     // Ceiling mount
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.strokeStyle = CHROME.gridMajor;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(cx - 24, cy); ctx.lineTo(cx + 24, cy);
