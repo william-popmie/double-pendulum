@@ -7,1440 +7,252 @@
   <title>Double Pendulum</title>
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --bg: #000000;
-      --surface: #0a0a0a;
-      --border: rgba(255, 255, 255, 0.14);
-      --border-hover: rgba(255, 255, 255, 0.24);
-      --text: #ededed;
-      --text-muted: rgba(255, 255, 255, 0.5);
-      --text-dim: #333333;
-      --accent: #ffffff;
-    }
-
-    html {
-      height: 100%;
-    }
-
-    body {
-      height: 100%;
-      width: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-size: 13px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── Nav ───────────────────────────────────────────────────────────────── */
-    #nav {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      padding: 0 16px;
-      height: 48px;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-    }
-
-    #nav-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      letter-spacing: -0.01em;
-      margin-right: 16px;
-      white-space: nowrap;
-    }
-
-    .tab-btn {
-      background: transparent;
-      border: none;
-      border-radius: 6px;
-      color: var(--text-muted);
-      padding: 6px 10px;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: inherit;
-      font-weight: 400;
-      white-space: nowrap;
-      transition: color 0.15s, background 0.15s;
-      position: relative;
-    }
-
-    .tab-btn:hover {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .tab-btn.active {
-      color: var(--text);
-    }
-
-    .tab-btn.active::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 6px;
-      right: 6px;
-      height: 1px;
-      background: var(--text);
-      border-radius: 1px;
-    }
-
-    .tab-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    .tab-btn.tab-unavailable {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    /* ── Toast notification ─────────────────────────────────────────────────── */
-    #toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(12px);
-      background: #1a1a1a;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 13px;
-      color: var(--text);
-      white-space: nowrap;
-      z-index: 600;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s, transform 0.2s;
-    }
-
-    #toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ── Control bar ───────────────────────────────────────────────────────── */
-    .ctrl-bar {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0 16px;
-      height: 44px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-wrap: nowrap;
-      overflow: visible;
-      position: relative;
-      z-index: 10;
-    }
-
-    .help-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      font-size: 9px;
-      font-weight: 700;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      color: var(--text-muted);
-      cursor: default;
-      flex-shrink: 0;
-      user-select: none;
-      margin-left: auto;
-    }
-
-    #phys-tooltip {
-      position: fixed;
-      z-index: 9999;
-      background: #151515;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 6px;
-      padding: 7px 11px;
-      font-size: 11px;
-      line-height: 1.5;
-      color: var(--text);
-      width: 200px;
-      word-break: normal;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.12s;
-      font-family: inherit;
-      font-weight: 400;
-    }
-
-    /* ── Custom colored select ─────────────────────────────────────────────── */
-    .custom-select {
-      position: relative;
-      display: inline-flex;
-      flex-shrink: 0;
-    }
-
-    .cs-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      padding: 4px 8px;
-      font-size: 12px;
-      font-family: inherit;
-      cursor: pointer;
-      min-width: 120px;
-      transition: border-color 0.15s;
-    }
-
-    .cs-btn:hover {
-      border-color: var(--border-hover);
-    }
-
-    .cs-text {
-      flex: 1;
-      text-align: left;
-    }
-
-    .cs-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .cs-dropdown {
-      display: none;
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 0;
-      background: #111;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      z-index: 150;
-      min-width: 100%;
-      overflow: hidden;
-    }
-
-    .cs-dropdown.open {
-      display: block;
-    }
-
-    .cs-option {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 6px 10px;
-      font-size: 12px;
-      color: var(--text);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.1s;
-    }
-
-    .cs-option:hover {
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    .cs-option.selected {
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .ctrl-sep {
-      width: 1px;
-      height: 16px;
-      background: var(--border-hover);
-      flex-shrink: 0;
-      margin: 0 4px;
-    }
-
-    .ctrl-label {
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-      text-transform: uppercase;
-    }
-
-    .ctrl-value {
-      color: var(--text);
-      font-size: 11px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      min-width: 20px;
-    }
-
-    .ctrl-spacer {
-      flex: 1;
-      min-width: 8px;
-    }
-
-    input[type="number"] {
-      width: 56px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      padding: 4px 8px;
-      font-size: 12px;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    input[type="number"]:focus {
-      border-color: var(--border-hover);
-    }
-
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-      display: none;
-    }
-
-    .num-ctrl {
-      display: inline-flex;
-      align-items: stretch;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-      transition: border-color 0.15s;
-    }
-
-    .num-ctrl:hover,
-    .num-ctrl:focus-within {
-      border-color: var(--border-hover);
-    }
-
-    .num-ctrl input[type="number"] {
-      border: none;
-      border-left: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-      border-radius: 0;
-      text-align: center;
-      width: 40px;
-      padding: 4px 2px;
-    }
-
-    .num-ctrl input[type="number"]:focus {
-      border-color: var(--border);
-      outline: none;
-    }
-
-    .num-btn {
-      background: transparent;
-      border: none;
-      border-radius: 0;
-      color: var(--text-muted);
-      padding: 0 8px;
-      font-size: 14px;
-      line-height: 1;
-      cursor: pointer;
-      user-select: none;
-      font-family: inherit;
-      min-width: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.12s, background 0.12s;
-      white-space: nowrap;
-    }
-
-    .num-btn:hover {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    input[type="range"] {
-      width: 80px;
-      accent-color: var(--text);
-      cursor: pointer;
-    }
-
-    select {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      padding: 4px 8px;
-      font-size: 12px;
-      font-family: inherit;
-      outline: none;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-
-    select:focus {
-      border-color: var(--border-hover);
-    }
-
-    select option {
-      background: #111;
-      color: var(--text);
-    }
-
-    button svg {
-      vertical-align: middle;
-      flex-shrink: 0;
-    }
-
-    button {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-muted);
-      padding: 5px 12px;
-      cursor: pointer;
-      font-size: 12px;
-      font-family: inherit;
-      font-weight: 400;
-      white-space: nowrap;
-      transition: color 0.15s, border-color 0.15s, background 0.15s;
-    }
-
-    button:hover {
-      color: var(--text);
-      border-color: var(--border-hover);
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .btn-play {
-      color: #4ade80;
-      border-color: rgba(74, 222, 128, 0.35);
-      background: rgba(74, 222, 128, 0.08);
-      min-width: 78px;
-      font-weight: 500;
-    }
-
-    .btn-play:hover {
-      background: rgba(74, 222, 128, 0.15);
-      border-color: rgba(74, 222, 128, 0.55);
-    }
-
-    .btn-pause {
-      color: #f87171;
-      border-color: rgba(248, 113, 113, 0.35);
-      background: rgba(248, 113, 113, 0.08);
-      min-width: 78px;
-      font-weight: 500;
-    }
-
-    .btn-pause:hover {
-      background: rgba(248, 113, 113, 0.15);
-      border-color: rgba(248, 113, 113, 0.55);
-    }
-
-    /* ── App layout ────────────────────────────────────────────────────────── */
-    #app-body {
-      flex: 1;
-      display: flex;
-      flex-direction: row;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    #app-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    /* ── Pendulum page ─────────────────────────────────────────────────────── */
-    #page-pendulum {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    #pendulum-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 1px;
-      background: var(--border);
-      min-height: 0;
-    }
-
-    .quad-cell {
-      position: relative;
-      background: var(--bg);
-      overflow: hidden;
-    }
-
-    .quad-cell canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      background: var(--bg);
-    }
-
-    .quad-label {
-      position: absolute;
-      top: 10px;
-      left: 12px;
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      pointer-events: none;
-      z-index: 1;
-      user-select: none;
-    }
-
-    /* ── Phase map page ────────────────────────────────────────────────────── */
-    #page-phasemap {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    #phasemap-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 1px;
-      background: var(--border);
-      min-height: 0;
-    }
-
-    #phasemap-map-cell {
-      grid-column: 2;
-      grid-row: 1 / 3;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg);
-      overflow: hidden;
-    }
-
-    #probe-map-hint {
-      position: absolute;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.55);
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 6px;
-      padding: 5px 12px;
-      pointer-events: none;
-      white-space: nowrap;
-      letter-spacing: 0.02em;
-      transition: opacity 0.4s;
-    }
-
-    #probe-map-hint.hidden {
-      opacity: 0;
-    }
-
-    #phase-hover-tip {
-      position: fixed;
-      z-index: 9999;
-      display: none;
-      background: rgba(10, 10, 10, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 7px;
-      padding: 7px 11px;
-      font-size: 11px;
-      line-height: 1.65;
-      color: var(--text);
-      white-space: pre;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      pointer-events: none;
-      letter-spacing: 0.02em;
-    }
-
-    #phase-canvas-wrap {
-      position: relative;
-      /* nav=48px + ctrl=44px = 92px of chrome above the grid cell */
-      width: min(100%, calc(100vh - 92px));
-      aspect-ratio: 1;
-      flex-shrink: 0;
-    }
-
-    #canvas-phasemap {
-      display: block;
-      image-rendering: pixelated;
-      cursor: crosshair;
-      border-radius: 4px;
-      width: 100%;
-      height: 100%;
-    }
-
-#no-gpu-msg {
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px 32px;
-      font-size: 13px;
-      text-align: center;
-      line-height: 1.6;
-      display: none;
-      max-width: 360px;
-    }
-
-    #no-gpu-msg strong {
-      color: var(--text);
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-
-    /* ── Export modal ──────────────────────────────────────────────────────── */
-    #export-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 500;
-      background: rgba(0, 0, 0, 0.72);
-      align-items: center;
-      justify-content: center;
-    }
-
-    #export-overlay.active {
-      display: flex;
-    }
-
-    #export-modal {
-      background: #0d0d0d;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px 24px;
-      width: 340px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    #export-modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    #export-modal-header span {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    #export-close {
-      border: none;
-      background: none;
-      padding: 2px 6px;
-      color: var(--text-muted);
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-
-    #export-close:hover {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    .export-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .export-row label {
-      width: 76px;
-      flex-shrink: 0;
-    }
-
-    .export-row select,
-    .export-row input[type="number"] {
-      flex: 1;
-    }
-
-    .export-unit {
-      color: var(--text-dim);
-      font-size: 11px;
-    }
-
-    .export-hint {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: -6px;
-      padding-left: 84px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-    }
-
-    #export-generate {
-      width: 100%;
-      margin-top: 2px;
-      color: var(--text);
-      border-color: var(--border-hover);
-      font-weight: 500;
-    }
-
-    #export-generate:hover {
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    #export-progress-bar-wrap {
-      height: 3px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    #export-progress-bar {
-      height: 100%;
-      width: 0%;
-      background: #4ade80;
-      transition: width 0.08s linear;
-      border-radius: 2px;
-    }
-
-    #export-composite {
-      width: 100%;
-      aspect-ratio: 1;
-      image-rendering: pixelated;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: #000;
-    }
-
-    #export-progress-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      text-align: center;
-    }
-
-    #export-cancel {
-      width: 100%;
-      color: var(--text-muted);
-    }
-
-    /* ── Onboarding ───────────────────────────────────────────────────────── */
-    .tile-hint {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      background: var(--bg);
-      pointer-events: none;
-      transition: opacity 0.4s;
-      z-index: 1;
-    }
-
-    .tile-hint.hidden {
-      opacity: 0;
-    }
-
-    .tile-hint-arrow {
-      font-size: 24px;
-      color: rgba(255, 255, 255, 0.3);
-    }
-
-    .tile-hint-text {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.3);
-      letter-spacing: 0.04em;
-    }
-
-    /* ── Physics panel ─────────────────────────────────────────────────────── */
-    .phys-toggle-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-muted);
-      padding: 5px 10px;
-      font-size: 12px;
-      font-family: inherit;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: color 0.15s, border-color 0.15s;
-    }
-
-    .phys-toggle-btn:hover,
-    .phys-toggle-btn.active {
-      color: var(--text);
-      border-color: var(--border-hover);
-    }
-
-    .presets-select {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-muted);
-      padding: 5px 10px;
-      font-size: 12px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-    }
-
-    .presets-select:hover {
-      color: var(--text);
-      border-color: var(--border-hover);
-    }
-
-    .presets-select option {
-      background: #1a1a1a;
-      color: var(--text);
-    }
-
-    .physics-panel {
-      width: 340px;
-      flex-shrink: 0;
-      background: #111;
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      padding: 16px 16px 24px;
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
-
-    .physics-panel[hidden] { display: none; }
-
-    #panel-section-pendulum,
-    #panel-section-phasemap {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    #panel-section-pendulum[hidden],
-    #panel-section-phasemap[hidden] {
-      display: none;
-    }
-
-    .phys-panel-section {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .phys-section-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 2px;
-    }
-
-    .phys-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .phys-label {
-      min-width: 72px;
-      font-size: 14px;
-      font-style: italic;
-      font-family: 'Georgia', 'Times New Roman', serif;
-      color: var(--text);
-      flex-shrink: 0;
-      text-align: left;
-    }
-
-    .phys-unit {
-      font-size: 10px;
-      color: var(--text-muted);
-      min-width: 22px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-    }
-
-    .phys-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 0;
-    }
-
-    .phys-reset-btn {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-muted);
-      padding: 5px 10px;
-      font-size: 11px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-    }
-
-    .phys-reset-btn:hover {
-      color: var(--text);
-      border-color: var(--border-hover);
-    }
-
-    /* ── Physics panel backdrop ────────────────────────────────────────────── */
-    #physics-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 199;
-      display: none;
-      pointer-events: none;
-    }
-
-    #physics-backdrop.active {
-      display: block;
-    }
-
-    /* ── Physics button glow (nudge before first panel open) ────────────────── */
-    @keyframes physGlow {
-      0%, 100% { border-color: var(--border); box-shadow: none; }
-      50%       { border-color: rgba(255, 255, 255, 0.55); box-shadow: 0 0 10px rgba(255, 255, 255, 0.25); }
-    }
-
-    .phys-btn-glow {
-      animation: physGlow 1.8s ease-in-out infinite;
-    }
-
-    /* ── Physics panel extras ───────────────────────────────────────────────── */
-    .physics-panel-handle {
-      display: none;
-      width: 36px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.18);
-      border-radius: 2px;
-      margin: 0 auto 10px;
-    }
-
-    .phys-panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-
-    .phys-panel-header .phys-section-label {
-      margin-bottom: 0;
-    }
-
-    #physics-panel-close {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 16px;
-      padding: 2px 6px;
-      cursor: pointer;
-      border-radius: 4px;
-      line-height: 1;
-      font-family: inherit;
-    }
-
-    #physics-panel-close:hover {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    .phys-row-label {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      color: var(--text-muted);
-      min-width: 72px;
-      flex-shrink: 0;
-    }
-
-    /* ── Desktop: static sidebar visual treatment ───────────────────────────── */
-    @media (min-width: 768px) {
-      .physics-panel {
-        border-right-color: var(--border-hover);
-        background: #0e0e0e;
-      }
-
-      #physics-panel-close {
-        display: none;
-      }
-    }
-
-    /* ── Mobile: physics panel becomes a bottom sheet (≤767px) ─────────────── */
-    @media (max-width: 767px) {
-      .physics-panel {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: auto;
-        border-right: none;
-        border-top: 1px solid var(--border);
-        border-radius: 12px 12px 0 0;
-        max-height: 85vh;
-        padding: 14px 16px 32px;
-        z-index: 200;
-      }
-
-      .physics-panel-handle {
-        display: block;
-      }
-
-      /* Custom-select dropdown opens upward inside bottom-sheet panel */
-      .physics-panel .cs-dropdown {
-        top: auto;
-        bottom: calc(100% + 4px);
-      }
-
-      #physics-backdrop.active {
-        background: rgba(0, 0, 0, 0.55);
-        pointer-events: auto;
-      }
-    }
-
-    @keyframes tabFlash {
-      0%, 100% { color: var(--text-muted); text-shadow: none; }
-      50%       { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.4); }
-    }
-
-    .tab-flash {
-      animation: tabFlash 0.9s ease-in-out infinite;
-    }
-
-    /* ── Tech page ─────────────────────────────────────────────────────────── */
-    #page-tech {
-      flex: 1;
-      overflow-y: auto;
-      background: var(--bg);
-    }
-
-    .tech-content {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 48px 40px 80px;
-    }
-
-    .tech-content h1 {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 10px;
-      letter-spacing: -0.02em;
-    }
-
-    .tech-intro {
-      font-size: 14px;
-      line-height: 1.75;
-      color: var(--text-muted);
-      margin-bottom: 36px;
-      max-width: 600px;
-    }
-
-    details.tech-section {
-      border-top: 1px solid var(--border);
-    }
-
-    details.tech-section:last-of-type {
-      border-bottom: 1px solid var(--border);
-    }
-
-    .tech-summary {
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
-      padding: 16px 0;
-      cursor: pointer;
-      list-style: none;
-      user-select: none;
-      transition: color 0.15s;
-    }
-
-    .tech-summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .tech-summary-label {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text);
-      transition: color 0.15s;
-      flex-shrink: 0;
-    }
-
-
-    .tech-summary::after {
-      content: '›';
-      font-size: 18px;
-      font-weight: 300;
-      margin-left: auto;
-      color: var(--text-muted);
-      transition: transform 0.2s;
-      line-height: 1;
-      flex-shrink: 0;
-    }
-
-    details[open] > .tech-summary::after {
-      transform: rotate(90deg);
-    }
-
-    .tech-summary:hover .tech-summary-label {
-      color: var(--accent);
-    }
-
-    .tech-body {
-      padding-bottom: 32px;
-    }
-
-    .tech-body p {
-      font-size: 14px;
-      line-height: 1.8;
-      color: var(--text);
-      margin-bottom: 16px;
-      max-width: 600px;
-    }
-
-    .tech-body p:last-child {
-      margin-bottom: 0;
-    }
-
-    .tech-diagram {
-      width: 100%;
-      max-width: 480px;
-      margin: 20px 0 24px;
-      display: block;
-    }
-
-    .tech-table {
-      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
-      font-size: 11.5px;
-      line-height: 1.7;
-      color: var(--text);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 18px;
-      margin: 14px 0;
-      white-space: pre;
-      overflow-x: auto;
-    }
-
-    .tech-inline {
-      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
-      font-size: 11.5px;
-      background: rgba(255,255,255,0.06);
-      border-radius: 3px;
-      padding: 1px 5px;
-    }
-
-    /* KaTeX display math */
-    .tech-body .katex-display {
-      margin: 1.4em 0;
-      overflow-x: auto;
-      overflow-y: hidden;
-    }
-
-    .tech-body .katex {
-      font-size: 1.05em;
-    }
-
-    .tech-credit {
-      margin-top: 28px;
-      font-size: 12px;
-      color: var(--text-muted);
-      text-align: center;
-    }
-
-    .tech-credit a {
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-
-    .tech-credit a:hover {
-      color: var(--text);
-    }
-  </style>
+  <link rel="stylesheet" href="/src/style.css" />
 </head>
 
 <body>
 
-  <!-- ── Nav ── -->
-  <nav id="nav">
-    <span id="nav-title">Double Pendulum</span>
-    <button class="tab-btn active" id="tab-pendulum">Pendulum</button>
-    <button class="tab-btn" id="tab-phasemap">Phase Map</button>
-    <button class="tab-btn" id="tab-tech">How it works</button>
-  </nav>
+  <div id="app">
 
-  <div id="app-body">
-  <div id="physics-panel" class="physics-panel" hidden>
-    <div class="physics-panel-handle"></div>
-    <div class="phys-panel-header">
-      <span class="phys-section-label">Settings</span>
-      <button id="physics-panel-close">✕</button>
-    </div>
-
-    <div id="panel-section-pendulum">
-      <div class="phys-panel-section">
-        <div class="phys-section-label">Starting position</div>
-        <div class="phys-row">
-          <span class="phys-label">θ₁</span>
-          <div class="num-ctrl">
-            <button class="num-btn" data-target="angle-theta1" data-dir="-1">−</button>
-            <input type="number" id="angle-theta1" value="75" min="-180" max="180" step="1" />
-            <button class="num-btn" data-target="angle-theta1" data-dir="1">+</button>
+    <!-- ── Floating side panels: always visible on desktop, collapse to a side drawer on narrow screens ── -->
+    <div id="panels">
+      <div id="panel-top" class="panel">
+        <div id="panel-section-pendulum">
+          <div class="panel-row panel-row-controls">
+            <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
+            <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
+            <select id="presetsSelect" class="btn-yellow">
+              <option value="" disabled selected>Presets</option>
+            </select>
           </div>
-          <span class="phys-unit">°</span>
-        </div>
-        <div class="phys-row">
-          <span class="phys-label">θ₂</span>
-          <div class="num-ctrl">
-            <button class="num-btn" data-target="angle-theta2" data-dir="-1">−</button>
-            <input type="number" id="angle-theta2" value="45" min="-180" max="180" step="1" />
-            <button class="num-btn" data-target="angle-theta2" data-dir="1">+</button>
+          <div class="panel-row">
+            <span class="ctrl-label">Speed</span>
+            <input type="range" id="speed" min="0" max="10" value="5" />
+            <span class="ctrl-value" id="speedLabel">5</span>
           </div>
-          <span class="phys-unit">°</span>
-        </div>
-      </div>
-      <div class="phys-divider"></div>
-      <div class="phys-panel-section">
-        <div class="phys-section-label">Simulation</div>
-        <div class="phys-row">
-          <span class="phys-row-label">Show</span>
-          <div id="showSelectContainer" class="custom-select"></div>
-        </div>
-        <div class="phys-row">
-          <span class="phys-row-label">Pendulums</span>
-          <div class="num-ctrl">
-            <button class="num-btn" data-target="numPendulums" data-dir="-1">−</button>
-            <input type="number" id="numPendulums" value="1" min="1" max="50" step="1" />
-            <button class="num-btn" data-target="numPendulums" data-dir="1">+</button>
+
+          <div class="phys-divider"></div>
+          <div class="phys-panel-section">
+            <div class="phys-section-label">Starting position</div>
+            <div class="phys-row">
+              <span class="phys-label">θ₁</span>
+              <div class="num-ctrl">
+                <button class="num-btn" data-target="angle-theta1" data-dir="-1">−</button>
+                <input type="number" id="angle-theta1" value="75" min="-180" max="180" step="1" />
+                <button class="num-btn" data-target="angle-theta1" data-dir="1">+</button>
+              </div>
+              <span class="phys-unit">°</span>
+            </div>
+            <div class="phys-row">
+              <span class="phys-label">θ₂</span>
+              <div class="num-ctrl">
+                <button class="num-btn" data-target="angle-theta2" data-dir="-1">−</button>
+                <input type="number" id="angle-theta2" value="45" min="-180" max="180" step="1" />
+                <button class="num-btn" data-target="angle-theta2" data-dir="1">+</button>
+              </div>
+              <span class="phys-unit">°</span>
+            </div>
           </div>
-          <span class="help-icon" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle: tiny differences grow into completely different trajectories, revealing chaos.">?</span>
-        </div>
-        <div class="phys-row">
-          <span class="phys-row-label">Spread</span>
-          <div class="num-ctrl">
-            <button class="num-btn" data-target="deltaAngle" data-dir="-1">−</button>
-            <input type="number" id="deltaAngle" value="5" min="0.2" max="45" step="0.2" />
-            <button class="num-btn" data-target="deltaAngle" data-dir="1">+</button>
+
+          <div class="phys-divider"></div>
+          <div class="phys-panel-section">
+            <div class="phys-section-label">Simulation</div>
+            <div class="phys-row">
+              <span class="phys-row-label">Show</span>
+              <div id="showSelectContainer" class="custom-select"></div>
+            </div>
+            <div class="phys-row">
+              <span class="phys-row-label">Pendulums</span>
+              <div class="num-ctrl">
+                <button class="num-btn" data-target="numPendulums" data-dir="-1">−</button>
+                <input type="number" id="numPendulums" value="1" min="1" max="50" step="1" />
+                <button class="num-btn" data-target="numPendulums" data-dir="1">+</button>
+              </div>
+              <span class="help-icon" data-tip="Number of pendulums simulated at once. Each starts at a slightly different angle: tiny differences grow into completely different trajectories, revealing chaos.">?</span>
+            </div>
+            <div class="phys-row">
+              <span class="phys-row-label">Spread</span>
+              <div class="num-ctrl">
+                <button class="num-btn" data-target="deltaAngle" data-dir="-1">−</button>
+                <input type="number" id="deltaAngle" value="5" min="0.2" max="45" step="0.2" />
+                <button class="num-btn" data-target="deltaAngle" data-dir="1">+</button>
+              </div>
+              <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions: larger values spread them across a wider range.">?</span>
+            </div>
           </div>
-          <span class="help-icon" data-tip="Starting angle between adjacent pendulums. Smaller values tightly cluster initial conditions: larger values spread them across a wider range.">?</span>
         </div>
+
+        <div id="panel-section-phasemap" hidden>
+          <div class="panel-row panel-row-controls">
+            <button id="mapPlayPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
+            <button id="mapResetView"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
+          </div>
+          <div class="panel-row">
+            <span class="ctrl-label">Speed</span>
+            <input type="range" id="mapSpeed" min="1" max="50" value="10" />
+            <span class="ctrl-value" id="mapSpeedLabel">10</span>
+          </div>
+          <button id="mapExportBtn" class="btn-magenta">↓ Export PNG</button>
+
+          <div class="phys-divider"></div>
+          <div class="phys-panel-section">
+            <div class="phys-section-label">Display</div>
+            <div class="phys-row">
+              <span class="phys-row-label">Resolution</span>
+              <select id="mapRes">
+                <option value="100">100 × 100</option>
+                <option value="200">200 × 200</option>
+                <option value="400">400 × 400</option>
+                <option value="800" selected>800 × 800</option>
+                <option value="1200">1200 × 1200</option>
+                <option value="1600">1600 × 1600</option>
+              </select>
+            </div>
+            <div class="phys-row">
+              <span class="phys-row-label">Mode</span>
+              <select id="mapMode">
+                <option value="theta2" selected>Live angle</option>
+                <option value="flipTime">Time to first flip</option>
+              </select>
+            </div>
+            <div class="phys-row">
+              <span class="phys-row-label">Palette</span>
+              <select id="mapPalette">
+                <option value="rainbow" selected>Rainbow</option>
+                <option value="lsd">LSD</option>
+                <option value="shrooms">Shrooms</option>
+                <option value="snow">Snow</option>
+                <option value="acid">Acid</option>
+                <option value="mdma">MDMA</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-bottom" class="panel">
+        <div class="phys-panel-section">
+          <div class="phys-section-label">Rod &amp; Bob</div>
+          <div class="phys-row">
+            <span class="phys-label">L₁</span>
+            <div class="num-ctrl">
+              <button class="num-btn" data-target="phys-L1" data-dir="-1">−</button>
+              <input type="number" id="phys-L1" value="1.0" min="0.1" max="5" step="0.1" />
+              <button class="num-btn" data-target="phys-L1" data-dir="1">+</button>
+            </div>
+            <span class="phys-unit">m</span>
+          </div>
+          <div class="phys-row">
+            <span class="phys-label">m₁</span>
+            <div class="num-ctrl">
+              <button class="num-btn" data-target="phys-m1" data-dir="-1">−</button>
+              <input type="number" id="phys-m1" value="1.0" min="0.1" max="10" step="0.1" />
+              <button class="num-btn" data-target="phys-m1" data-dir="1">+</button>
+            </div>
+            <span class="phys-unit">kg</span>
+          </div>
+          <div class="phys-row">
+            <span class="phys-label">L₂</span>
+            <div class="num-ctrl">
+              <button class="num-btn" data-target="phys-L2" data-dir="-1">−</button>
+              <input type="number" id="phys-L2" value="1.0" min="0.1" max="5" step="0.1" />
+              <button class="num-btn" data-target="phys-L2" data-dir="1">+</button>
+            </div>
+            <span class="phys-unit">m</span>
+          </div>
+          <div class="phys-row">
+            <span class="phys-label">m₂</span>
+            <div class="num-ctrl">
+              <button class="num-btn" data-target="phys-m2" data-dir="-1">−</button>
+              <input type="number" id="phys-m2" value="1.0" min="0.1" max="10" step="0.1" />
+              <button class="num-btn" data-target="phys-m2" data-dir="1">+</button>
+            </div>
+            <span class="phys-unit">kg</span>
+          </div>
+        </div>
+
+        <div class="phys-divider"></div>
+        <div class="phys-panel-section">
+          <div class="phys-section-label">Damping</div>
+          <div class="phys-row">
+            <span class="phys-label">b</span>
+            <div class="num-ctrl">
+              <button class="num-btn" data-target="phys-damping" data-dir="-1">−</button>
+              <input type="number" id="phys-damping" value="0" min="0" max="2" step="0.05" />
+              <button class="num-btn" data-target="phys-damping" data-dir="1">+</button>
+            </div>
+            <span class="phys-unit">s⁻¹</span>
+          </div>
+        </div>
+
+        <div class="phys-divider"></div>
+        <button id="phys-reset-btn" class="phys-reset-btn">Reset to defaults</button>
       </div>
     </div>
 
-    <div id="panel-section-phasemap" hidden>
-      <div class="phys-panel-section">
-        <div class="phys-section-label">Display</div>
-        <div class="phys-row">
-          <span class="phys-row-label">Resolution</span>
-          <select id="mapRes">
-            <option value="100">100 × 100</option>
-            <option value="200">200 × 200</option>
-            <option value="400">400 × 400</option>
-            <option value="800" selected>800 × 800</option>
-            <option value="1200">1200 × 1200</option>
-            <option value="1600">1600 × 1600</option>
-          </select>
-        </div>
-        <div class="phys-row">
-          <span class="phys-row-label">Mode</span>
-          <select id="mapMode">
-            <option value="theta2" selected>Live angle</option>
-            <option value="flipTime">Time to first flip</option>
-          </select>
-        </div>
-        <div class="phys-row">
-          <span class="phys-row-label">Palette</span>
-          <select id="mapPalette">
-            <option value="rainbow" selected>Rainbow</option>
-            <option value="lsd">LSD</option>
-            <option value="shrooms">Shrooms</option>
-            <option value="snow">Snow</option>
-            <option value="acid">Acid</option>
-            <option value="mdma">MDMA</option>
-          </select>
-        </div>
-      </div>
-    </div>
+    <!-- ── Floating canvas card: holds whichever page's simulation grid is active ── -->
+    <div id="canvas-card">
 
-    <div class="phys-divider"></div>
-
-    <div class="phys-panel-section">
-      <div class="phys-section-label">Rod &amp; Bob</div>
-      <div class="phys-row">
-        <span class="phys-label">L₁</span>
-        <div class="num-ctrl">
-          <button class="num-btn" data-target="phys-L1" data-dir="-1">−</button>
-          <input type="number" id="phys-L1" value="1.0" min="0.1" max="5" step="0.1" />
-          <button class="num-btn" data-target="phys-L1" data-dir="1">+</button>
-        </div>
-        <span class="phys-unit">m</span>
-      </div>
-      <div class="phys-row">
-        <span class="phys-label">m₁</span>
-        <div class="num-ctrl">
-          <button class="num-btn" data-target="phys-m1" data-dir="-1">−</button>
-          <input type="number" id="phys-m1" value="1.0" min="0.1" max="10" step="0.1" />
-          <button class="num-btn" data-target="phys-m1" data-dir="1">+</button>
-        </div>
-        <span class="phys-unit">kg</span>
-      </div>
-      <div class="phys-row">
-        <span class="phys-label">L₂</span>
-        <div class="num-ctrl">
-          <button class="num-btn" data-target="phys-L2" data-dir="-1">−</button>
-          <input type="number" id="phys-L2" value="1.0" min="0.1" max="5" step="0.1" />
-          <button class="num-btn" data-target="phys-L2" data-dir="1">+</button>
-        </div>
-        <span class="phys-unit">m</span>
-      </div>
-      <div class="phys-row">
-        <span class="phys-label">m₂</span>
-        <div class="num-ctrl">
-          <button class="num-btn" data-target="phys-m2" data-dir="-1">−</button>
-          <input type="number" id="phys-m2" value="1.0" min="0.1" max="10" step="0.1" />
-          <button class="num-btn" data-target="phys-m2" data-dir="1">+</button>
-        </div>
-        <span class="phys-unit">kg</span>
-      </div>
-    </div>
-
-    <div class="phys-divider"></div>
-
-    <div class="phys-panel-section">
-      <div class="phys-section-label">Damping</div>
-      <div class="phys-row">
-        <span class="phys-label">b</span>
-        <div class="num-ctrl">
-          <button class="num-btn" data-target="phys-damping" data-dir="-1">−</button>
-          <input type="number" id="phys-damping" value="0" min="0" max="2" step="0.05" />
-          <button class="num-btn" data-target="phys-damping" data-dir="1">+</button>
-        </div>
-        <span class="phys-unit">s⁻¹</span>
-      </div>
-    </div>
-
-    <div class="phys-divider"></div>
-    <button id="phys-reset-btn" class="phys-reset-btn">Reset to defaults</button>
-  </div>
-
-  <div id="app-content">
-  <!-- ── Page 1: Pendulum ── -->
-  <div id="page-pendulum">
-
-    <div class="ctrl-bar">
-      <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
-      <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
-      <div class="ctrl-sep"></div>
-      <select id="presetsSelect" class="presets-select">
-        <option value="" disabled selected>Presets</option>
-      </select>
-      <button id="physicsToggleBtn" class="phys-toggle-btn"><svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="3" fill="currentColor"/><circle cx="16" cy="18" r="3" fill="currentColor"/></svg>Physics</button>
-      <div class="ctrl-sep"></div>
-      <span class="ctrl-label">Speed</span>
-      <input type="range" id="speed" min="0" max="10" value="5" />
-      <span class="ctrl-value" id="speedLabel">5</span>
-    </div>
-
-    <div id="pendulum-grid">
-      <div class="quad-cell">
-        <span class="quad-label">Pendulum</span>
-        <canvas id="canvas-pendulum"></canvas>
-      </div>
-      <div class="quad-cell">
-        <canvas id="canvas-t1"></canvas>
-        <div class="tile-hint" id="tile-hint-t1">
-          <span class="tile-hint-arrow">←</span>
-          <span class="tile-hint-text">drag the pendulum to set your starting position</span>
+      <!-- ── Page 1: Pendulum ── -->
+      <div id="page-pendulum" class="page">
+        <div id="pendulum-grid">
+          <div class="quad-cell">
+            <span class="quad-label">Pendulum</span>
+            <canvas id="canvas-pendulum"></canvas>
+          </div>
+          <div class="quad-cell">
+            <canvas id="canvas-t1"></canvas>
+            <div class="tile-hint" id="tile-hint-t1">
+              <span class="tile-hint-arrow">←</span>
+              <span class="tile-hint-text">drag the pendulum to set your starting position</span>
+            </div>
+          </div>
+          <div class="quad-cell">
+            <canvas id="canvas-t2"></canvas>
+            <div class="tile-hint" id="tile-hint-t2">
+              <span class="tile-hint-arrow">↑</span>
+              <span class="tile-hint-text">drag the pendulum to set your starting position</span>
+            </div>
+          </div>
+          <div class="quad-cell">
+            <canvas id="canvas-phase"></canvas>
+            <div class="tile-hint" id="tile-hint-phase">
+              <span class="tile-hint-arrow">↙</span>
+              <span class="tile-hint-text">drag the pendulum to set your starting position</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="quad-cell">
-        <canvas id="canvas-t2"></canvas>
-        <div class="tile-hint" id="tile-hint-t2">
-          <span class="tile-hint-arrow">↑</span>
-          <span class="tile-hint-text">drag the pendulum to set your starting position</span>
+
+      <!-- ── Page 2: Phase Map ── -->
+      <div id="page-phasemap" class="page">
+        <div id="phasemap-grid">
+          <div class="quad-cell">
+            <span class="quad-label">Pendulum</span>
+            <canvas id="canvas-probe-pendulum"></canvas>
+          </div>
+          <div class="quad-cell">
+            <span class="quad-label">Phase portrait θ₁ vs θ₂</span>
+            <canvas id="canvas-probe-phase"></canvas>
+          </div>
+          <div id="phasemap-map-cell">
+            <div id="phase-canvas-wrap">
+              <canvas id="canvas-phasemap"></canvas>
+            </div>
+            <div id="probe-map-hint">click the map to inspect a pendulum</div>
+            <div id="no-gpu-msg">
+              <strong>WebGPU unavailable</strong>
+              Phase Map requires Chrome 113+ or another WebGPU-enabled browser.
+            </div>
+          </div>
         </div>
       </div>
-      <div class="quad-cell">
-        <canvas id="canvas-phase"></canvas>
-        <div class="tile-hint" id="tile-hint-phase">
-          <span class="tile-hint-arrow">↙</span>
-          <span class="tile-hint-text">drag the pendulum to set your starting position</span>
-        </div>
-      </div>
-    </div>
 
-  </div>
+    </div><!-- #canvas-card -->
 
-  <!-- ── Page 2: Phase Map ── -->
-  <div id="page-phasemap">
+  </div><!-- #app -->
 
-    <div class="ctrl-bar">
-      <button id="mapPlayPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
-      <button id="mapResetView"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
-      <div class="ctrl-sep"></div>
-      <button id="mapPhysicsToggleBtn" class="phys-toggle-btn"><svg width="13" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="3" fill="currentColor"/><circle cx="16" cy="18" r="3" fill="currentColor"/></svg>Physics</button>
-      <div class="ctrl-sep"></div>
-      <span class="ctrl-label">Speed</span>
-      <input type="range" id="mapSpeed" min="1" max="50" value="10" />
-      <span class="ctrl-value" id="mapSpeedLabel">10</span>
-      <div class="ctrl-spacer"></div>
-      <button id="mapExportBtn">↓ Export PNG</button>
-    </div>
-
-    <div id="phasemap-grid">
-      <div class="quad-cell">
-        <span class="quad-label">Pendulum</span>
-        <canvas id="canvas-probe-pendulum"></canvas>
-      </div>
-      <div class="quad-cell">
-        <span class="quad-label">Phase portrait θ₁ vs θ₂</span>
-        <canvas id="canvas-probe-phase"></canvas>
-      </div>
-      <div id="phasemap-map-cell">
-        <div id="phase-canvas-wrap">
-          <canvas id="canvas-phasemap"></canvas>
-        </div>
-        <div id="probe-map-hint">click the map to inspect a pendulum</div>
-        <div id="no-gpu-msg">
-          <strong>WebGPU unavailable</strong>
-          Phase Map requires Chrome 113+ or another WebGPU-enabled browser.
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ── Page 3: How it works ── -->
+  <!-- ── Page 3: How it works (own full-viewport overlay, no side panels) ── -->
   <div id="page-tech" style="display:none">
     <div class="tech-content">
       <h1>How it works</h1>
@@ -1623,8 +435,17 @@ field:   θ₁    ω₁    θ₂    ω₂  flipCount  firstFlipTime  elapsed  fr
       <p class="tech-credit">Built by William Ragnarsson · <a href="mailto:william.ragnarsson@gmail.com">william.ragnarsson@gmail.com</a> · <a href="https://github.com/william-popmie/double-pendulum" target="_blank" rel="noopener">Source on GitHub →</a></p>
     </div>
   </div>
-  </div><!-- #app-content -->
-  </div><!-- #app-body -->
+
+  <!-- ── Floating nav: 3 separate pills, no joining bar ── -->
+  <nav id="nav">
+    <button class="tab-pill active" id="tab-pendulum">Pendulum</button>
+    <button class="tab-pill" id="tab-phasemap">Phase Map</button>
+    <button class="tab-pill" id="tab-tech">How it works</button>
+  </nav>
+
+  <!-- ── Mobile-only trigger for the side-panel drawer ── -->
+  <button id="settingsFab" class="settings-fab" aria-label="Settings">⚙</button>
+
   <div id="physics-backdrop"></div>
 
   <!-- ── Export modal ── -->
