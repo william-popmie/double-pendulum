@@ -24,6 +24,7 @@ async function init(): Promise<void> {
   const tabPendulum  = document.getElementById('tab-pendulum')    as HTMLButtonElement;
   const tabPhasemap  = document.getElementById('tab-phasemap')    as HTMLButtonElement;
   const tabTech      = document.getElementById('tab-tech')        as HTMLButtonElement;
+  const app          = document.getElementById('app')             as HTMLElement;
   const pagePendulum = document.getElementById('page-pendulum')   as HTMLElement;
   const pagePhasemap = document.getElementById('page-phasemap')   as HTMLElement;
   const pageTech     = document.getElementById('page-tech')       as HTMLElement;
@@ -60,11 +61,9 @@ async function init(): Promise<void> {
   const probeMapHint     = document.getElementById('probe-map-hint')        as HTMLElement;
 
   // Physics panel refs
-  const physicsToggleBtn    = document.getElementById('physicsToggleBtn')    as HTMLButtonElement;
-  const mapPhysicsToggleBtn = document.getElementById('mapPhysicsToggleBtn') as HTMLButtonElement;
-  const physicsPanel        = document.getElementById('physics-panel')       as HTMLElement;
+  const panels              = document.getElementById('panels')              as HTMLElement;
+  const settingsFab         = document.getElementById('settingsFab')         as HTMLButtonElement;
   const physicsBackdrop     = document.getElementById('physics-backdrop')    as HTMLElement;
-  const physicsPanelClose   = document.getElementById('physics-panel-close') as HTMLButtonElement;
   const physL1Input         = document.getElementById('phys-L1')             as HTMLInputElement;
   const physL2Input         = document.getElementById('phys-L2')             as HTMLInputElement;
   const physM1Input         = document.getElementById('phys-m1')             as HTMLInputElement;
@@ -120,27 +119,22 @@ async function init(): Promise<void> {
     resetPresetLabel();
   };
 
-  // ── Physics panel ─────────────────────────────────────────────────────────
-  let physicsEverOpened = false;
+  // ── Physics panel (always-visible floating panels on desktop; a collapsible
+  //    bottom sheet, opened via #settingsFab, on mobile) ──────────────────────
   const mobileMQ = window.matchMedia('(max-width: 767px)');
+  pendulumView.showPhysicsLabels = true;
 
   function setPhysicsPanelOpen(open: boolean): void {
-    physicsPanel.hidden = !open;
-    physicsToggleBtn.classList.toggle('active', open);
-    mapPhysicsToggleBtn.classList.toggle('active', open);
-    pendulumView.showPhysicsLabels = open;
+    panels.classList.toggle('sheet-open', open);
+    settingsFab.classList.toggle('active', open);
+    if (mobileMQ.matches) pendulumView.showPhysicsLabels = open;
     physicsBackdrop.classList.toggle('active', open && mobileMQ.matches);
     if (open) {
       dismissTileHints();
       presetsSelect.classList.remove('phys-btn-glow');
-      if (!physicsEverOpened) {
-        physicsEverOpened = true;
-      }
       if (mobileMQ.matches) {
         const closeOnOutside = (ev: PointerEvent) => {
-          if (!physicsPanel.contains(ev.target as Node) &&
-              ev.target !== physicsToggleBtn &&
-              ev.target !== mapPhysicsToggleBtn) {
+          if (!panels.contains(ev.target as Node) && ev.target !== settingsFab) {
             setPhysicsPanelOpen(false);
             document.removeEventListener('pointerdown', closeOnOutside, true);
           }
@@ -151,20 +145,21 @@ async function init(): Promise<void> {
   }
 
   mobileMQ.addEventListener('change', () => {
-    if (!physicsPanel.hidden) {
-      physicsBackdrop.classList.toggle('active', mobileMQ.matches);
+    if (mobileMQ.matches) {
+      if (panels.classList.contains('sheet-open')) {
+        physicsBackdrop.classList.toggle('active', true);
+      }
+    } else {
+      setPhysicsPanelOpen(false);
+      pendulumView.showPhysicsLabels = true;
     }
   });
 
-  const physBtnClickHandler = (e: MouseEvent): void => {
-    e.stopPropagation();
-    setPhysicsPanelOpen(physicsPanel.hasAttribute('hidden'));
-  };
-
-  physicsPanelClose.addEventListener('click', () => setPhysicsPanelOpen(false));
   physicsBackdrop.addEventListener('click', () => setPhysicsPanelOpen(false));
-  physicsToggleBtn.addEventListener('click', physBtnClickHandler);
-  mapPhysicsToggleBtn.addEventListener('click', physBtnClickHandler);
+  settingsFab.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setPhysicsPanelOpen(!panels.classList.contains('sheet-open'));
+  });
 
   function readPhysics() {
     return {
@@ -522,11 +517,15 @@ async function init(): Promise<void> {
     panelSectionPhasemap.hidden = page !== 'phasemap';
 
     if (page === 'pendulum') {
+      app.style.display = 'flex';
+      settingsFab.style.display = '';
       pagePendulum.style.display = 'flex';
       tabPendulum.classList.add('active');
       phaseMapView?.deactivate();
       pendulumView.activate();
     } else if (page === 'phasemap') {
+      app.style.display = 'flex';
+      settingsFab.style.display = '';
       pagePhasemap.style.display = 'flex';
       tabPhasemap.classList.add('active');
       tabPhasemap.classList.remove('tab-flash');
@@ -534,6 +533,8 @@ async function init(): Promise<void> {
       phaseMapView?.activate();
     } else {
       setPhysicsPanelOpen(false);
+      app.style.display = 'none';
+      settingsFab.style.display = 'none';
       pageTech.style.display = 'flex';
       tabTech.classList.add('active');
       pendulumView.deactivate();
