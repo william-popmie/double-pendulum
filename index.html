@@ -17,7 +17,7 @@
     <!-- ── Floating side panels: always visible on desktop, collapse to a side drawer on narrow screens ── -->
     <div id="panels">
       <div id="panel-top" class="panel">
-        <div id="panel-section-pendulum">
+        <div id="panel-section-pendulum" hidden>
           <div class="panel-row panel-row-controls">
             <button id="playPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
             <button id="resetBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
@@ -82,7 +82,7 @@
           </div>
         </div>
 
-        <div id="panel-section-phasemap" hidden>
+        <div id="panel-section-phasemap">
           <div class="panel-row panel-row-controls">
             <button id="mapPlayPauseBtn" class="btn-play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play</button>
             <button id="mapResetView"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Reset</button>
@@ -438,8 +438,8 @@ field:   θ₁    ω₁    θ₂    ω₂  flipCount  firstFlipTime  elapsed  fr
 
   <!-- ── Floating nav: 3 separate pills, no joining bar ── -->
   <nav id="nav">
-    <button class="tab-pill active" id="tab-pendulum">Pendulum</button>
-    <button class="tab-pill" id="tab-phasemap">Phase Map</button>
+    <button class="tab-pill" id="tab-pendulum">Pendulum</button>
+    <button class="tab-pill active" id="tab-phasemap">Phase Map</button>
     <button class="tab-pill" id="tab-tech">How it works</button>
   </nav>
 

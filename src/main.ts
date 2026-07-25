@@ -499,8 +499,12 @@ async function init(): Promise<void> {
   const panelSectionPendulum  = document.getElementById('panel-section-pendulum')  as HTMLElement;
   const panelSectionPhasemap  = document.getElementById('panel-section-phasemap')  as HTMLElement;
 
-  let currentPage: 'pendulum' | 'phasemap' | 'tech' = 'pendulum';
-  pendulumView.activate();
+  // Default landing page is Phase Map (matches the initial HTML/CSS active state,
+  // so there is no visible tab flash on load). Falls back to Pendulum below when
+  // WebGPU is unavailable.
+  let currentPage: 'pendulum' | 'phasemap' | 'tech' = phaseMapView ? 'phasemap' : 'pendulum';
+  if (phaseMapView) phaseMapView.activate();
+  else pendulumView.activate();
 
   function switchTo(page: 'pendulum' | 'phasemap' | 'tech'): void {
     if (page === currentPage) return;
@@ -545,6 +549,13 @@ async function init(): Promise<void> {
   tabPendulum.addEventListener('click', () => { switchTo('pendulum'); posthog.capture('tab switched', { tab: 'pendulum' }); });
   tabPhasemap.addEventListener('click', () => { if (phaseMapView) { switchTo('phasemap'); posthog.capture('tab switched', { tab: 'phasemap' }); } });
   tabTech.addEventListener('click', () => { switchTo('tech'); posthog.capture('tab switched', { tab: 'tech' }); });
+
+  // ── Without WebGPU, correct the Phase Map default back to Pendulum ──────────
+  if (!phaseMapView) {
+    // Force the DOM (which defaults to Phase Map) onto the Pendulum page.
+    currentPage = 'phasemap';
+    switchTo('pendulum');
+  }
 
   // ── Help-icon tooltips (fixed position, avoids sidebar overflow clipping) ───
   const helpTooltip = document.createElement('div');
