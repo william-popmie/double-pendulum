@@ -610,7 +610,7 @@ button:active {
 }
 
 #page-pendulum {
-  display: flex;
+  display: none;
   flex-direction: column;
 }
 
@@ -653,7 +653,7 @@ button:active {
 
 /* ── Phase map page ───────────────────────────────────────────────────────── */
 #page-phasemap {
-  display: none;
+  display: flex;
   flex-direction: column;
 }
 
