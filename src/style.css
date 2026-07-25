@@ -144,7 +144,6 @@ body {
   background: #0e0e0e;
   border: var(--border-width-chunky) solid var(--border-hover);
   border-radius: var(--radius-chunky);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--border-hover);
   overflow: hidden;
 }
 
@@ -162,7 +161,6 @@ body {
   background: #0e0e0e;
   border: var(--border-width-chunky) solid var(--border-hover);
   border-radius: var(--radius-chunky);
-  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--border-hover);
   padding: 14px 14px 16px;
   display: flex;
   flex-direction: column;
