@@ -982,12 +982,31 @@ button:active {
   z-index: 2;
   overflow-y: auto;
   background: var(--bg);
+  padding: 0 16px 16px;
+  box-sizing: border-box;
+  /* This page is shown via display:flex (set on tab switch). Without this, the
+     default `align-items: stretch` fixes the card's height to the viewport and
+     its taller content spills out below the border. flex-start lets the card
+     grow to fit its content instead. */
+  align-items: flex-start;
 }
 
+/* Card wrapper — matches the floating #canvas-card on the other two pages so the
+   "How it works" page feels part of the same set. The top margin clears the
+   fixed nav pills with room to breathe. */
 .tech-content {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 48px 40px 80px;
+  /* Wide enough that the equations of motion fit inside the padding (they are
+     ~780px rendered); a narrower card would clip them at the border. */
+  max-width: 900px;
+  margin: 88px auto 24px;
+  padding: 40px 40px 48px;
+  background: #0e0e0e;
+  border: var(--border-width-chunky) solid var(--border-hover);
+  border-radius: var(--radius-chunky);
+  /* Safety net: on windows too narrow to fit a wide equation, clip anything
+     that would otherwise bleed past the rounded border. `clip` avoids the
+     forced vertical scrollbar that `hidden` would introduce. */
+  overflow-x: clip;
 }
 
 .tech-content h1 {
@@ -1190,5 +1209,14 @@ details[open] > .tech-summary::after {
   #physics-backdrop.active {
     background: rgba(0, 0, 0, 0.55);
     pointer-events: auto;
+  }
+
+  #page-tech {
+    padding: 0 8px 8px;
+  }
+
+  .tech-content {
+    margin: 64px auto 16px;
+    padding: 28px 22px 36px;
   }
 }
